@@ -2,6 +2,14 @@
 
 const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
 
+// Safari ne supporte pas les hex 8 chiffres (#rrggbbaa) — conversion en rgba()
+function hexAlpha(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
 // Each planet: L0 = mean longitude at J2000 (degrees), dL = daily motion (deg/day)
 const ORBITAL_ELEMENTS = [
   { id:'mercury', name:'Mercure', L0:252.25, dL:4.09234, color:'#a8a8a8', r:4,  orbitR:58  },
@@ -187,9 +195,9 @@ class SolarSystem {
 
       // Planet glow
       const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, el.r * 2.5);
-      grad.addColorStop(0,   el.color + 'cc');
-      grad.addColorStop(0.4, el.color + '44');
-      grad.addColorStop(1,   el.color + '00');
+      grad.addColorStop(0,   hexAlpha(el.color, 0.8));
+      grad.addColorStop(0.4, hexAlpha(el.color, 0.27));
+      grad.addColorStop(1,   hexAlpha(el.color, 0));
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, el.r * 2.5, 0, Math.PI * 2);
