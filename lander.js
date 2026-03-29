@@ -261,12 +261,6 @@ class Terrain {
 
     // Atmospheric fog overlay
     if (cfg.hasFog) {
-      const fogGrad = ctx.createLinearGradient(0, 0, 0, H);
-      fogGrad.addColorStop(0, cfg.fogColor.replace(')', ', 0.7)').replace('rgba(', 'rgba(').replace(/, 0.[\d]+\)$/, ', 0.6)'));
-      fogGrad.addColorStop(0.6, cfg.fogColor);
-      fogGrad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = cfg.fogColor;
-      // Just a subtle top haze
       const haze = ctx.createLinearGradient(0, 0, 0, H * 0.4);
       haze.addColorStop(0, cfg.fogColor.replace(/[\d.]+\)$/, '0.7)'));
       haze.addColorStop(1, cfg.fogColor.replace(/[\d.]+\)$/, '0)'));
