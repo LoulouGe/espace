@@ -63,8 +63,6 @@ const elCardResult= document.getElementById('card-result');
 const elTooltip   = document.getElementById('tooltip');
 
 // ─── Canvas interactions ──────────────────────────────────────────────────────
-const LANDABLE = new Set(['moon','mercury','mars','titan','earth','venus']);
-
 canvas.addEventListener('click', e => {
   if (state !== S.SOLAR) return;
   const id = solar.getBodyAt(e.clientX, e.clientY);
