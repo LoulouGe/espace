@@ -278,82 +278,100 @@ function updateHUD() {
   if (stormEl) stormEl.style.display = game.wind.isStorming() ? '' : 'none';
 }
 
+// ─── Error overlay ───────────────────────────────────────────────────────────
+function showError(msg) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#f44';
+  ctx.font = 'bold 16px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ERREUR JS :', canvas.width / 2, canvas.height / 2 - 20);
+  ctx.fillStyle = '#faa';
+  ctx.font = '13px monospace';
+  ctx.fillText(String(msg).slice(0, 120), canvas.width / 2, canvas.height / 2 + 10);
+  ctx.fillStyle = '#888';
+  ctx.font = '11px monospace';
+  ctx.fillText('Ouvre la console (F12) pour plus de détails', canvas.width / 2, canvas.height / 2 + 36);
+}
+
 // ─── Main loop ────────────────────────────────────────────────────────────────
 let lastTime = 0;
 
 function loop(ts) {
+  // requestAnimationFrame EN PREMIER — la boucle continue même si une erreur survient
+  requestAnimationFrame(loop);
+
   const dt = Math.min((ts - lastTime) / 1000, 0.05);
   lastTime  = ts;
 
-  // ── Update ──────────────────────────────────────────────────────────────
-  if (state === S.SOLAR) {
-    solar.update(dt * timeScale);
-    if (elSimDate) elSimDate.textContent = solar.getSimDate();
-    if (tooltipTimer > 0) {
-      tooltipTimer -= dt;
-      if (tooltipTimer <= 0) elTooltip.classList.add('hidden');
+  try {
+    // ── Update ────────────────────────────────────────────────────────────
+    if (state === S.SOLAR) {
+      solar.update(dt * timeScale);
+      if (elSimDate) elSimDate.textContent = solar.getSimDate();
+      if (tooltipTimer > 0) {
+        tooltipTimer -= dt;
+        if (tooltipTimer <= 0) elTooltip.classList.add('hidden');
+      }
+
+    } else if (state === S.FADING) {
+      fadeProgress = Math.min(1, fadeProgress + dt / FADE_DUR);
+      zoomScale    = 1 + easeInOut(fadeProgress) * 22;
+      if (fadeProgress >= 1) {
+        state = S.SELECT;
+        hideSolarUI();
+        showPlanetCard(selectedBody);
+      }
+
+    } else if (state === S.PLAYING && game) {
+      game.input = { ...keys };
+      game.update(dt);
+      updateHUD();
+
+      if (game.result && !resultShown && game.resultDelay > (game.result === 'crash' ? 1.4 : 0.6)) {
+        resultShown = true;
+        showResultCard(game.result === 'land', game.getScore());
+        state = S.RESULT;
+      }
+
+    } else if (state === S.RESULT && game) {
+      game.update(dt);
     }
 
-  } else if (state === S.FADING) {
-    fadeProgress = Math.min(1, fadeProgress + dt / FADE_DUR);
-    zoomScale    = 1 + easeInOut(fadeProgress) * 22;
-    if (fadeProgress >= 1) {
-      state = S.SELECT;
-      hideSolarUI();
-      showPlanetCard(selectedBody);
-    }
+    // ── Draw ──────────────────────────────────────────────────────────────
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  } else if (state === S.PLAYING && game) {
-    game.input = { ...keys };
-    game.update(dt);
-    updateHUD();
+    if (state === S.SOLAR) {
+      solar.draw(ctx, dt);
 
-    if (game.result && !resultShown && game.resultDelay > (game.result === 'crash' ? 1.4 : 0.6)) {
-      resultShown = true;
-      showResultCard(game.result === 'land', game.getScore());
-      state = S.RESULT;
-    }
+    } else if (state === S.FADING) {
+      const t  = easeInOut(fadeProgress);
+      ctx.save();
+      ctx.translate(zoomOX, zoomOY);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-zoomOX, -zoomOY);
+      solar.draw(ctx, 0);
+      ctx.restore();
+      if (t > 0.5) {
+        ctx.fillStyle = `rgba(0,0,6,${((t - 0.5) / 0.5).toFixed(3)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
-  } else if (state === S.RESULT && game) {
-    // Keep particles animating on result screen
-    game.update(dt);
-  }
-
-  // ── Draw ─────────────────────────────────────────────────────────────────
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (state === S.SOLAR) {
-    solar.draw(ctx, dt);
-
-  } else if (state === S.FADING) {
-    // Zoom into planet position then fade to black
-    const t  = easeInOut(fadeProgress);
-    const sc = zoomScale;
-    ctx.save();
-    // Scale around target planet point
-    ctx.translate(zoomOX, zoomOY);
-    ctx.scale(sc, sc);
-    ctx.translate(-zoomOX, -zoomOY);
-    solar.draw(ctx, 0);
-    ctx.restore();
-    // Fade overlay
-    if (t > 0.5) {
-      ctx.fillStyle = `rgba(0,0,6,${((t - 0.5) / 0.5).toFixed(3)})`;
+    } else if (state === S.SELECT) {
+      ctx.fillStyle = '#000008';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      solar.draw(ctx, 0);
+      ctx.fillStyle = 'rgba(0,0,8,0.65)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    } else if (state === S.PLAYING || state === S.RESULT) {
+      if (game) game.draw(ctx);
     }
 
-  } else if (state === S.SELECT) {
-    ctx.fillStyle = '#000008';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    solar.draw(ctx, 0);
-    ctx.fillStyle = 'rgba(0,0,8,0.65)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  } else if (state === S.PLAYING || state === S.RESULT) {
-    if (game) game.draw(ctx);
+  } catch (err) {
+    console.error('Game loop error:', err);
+    showError(err.message || err);
   }
-
-  requestAnimationFrame(loop);
 }
 
 // ─── Resize ───────────────────────────────────────────────────────────────────

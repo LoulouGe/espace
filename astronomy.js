@@ -4,14 +4,14 @@ const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
 
 // Each planet: L0 = mean longitude at J2000 (degrees), dL = daily motion (deg/day)
 const ORBITAL_ELEMENTS = [
-  { id:'mercury', name:'Mercure', L0:252.25, dL:4.09234, color:'#a8a8a8', r:4  },
-  { id:'venus',   name:'Vénus',   L0:181.98, dL:1.60214, color:'#e8c56a', r:7  },
-  { id:'earth',   name:'Terre',   L0:100.46, dL:0.98565, color:'#2e86ab', r:8  },
-  { id:'mars',    name:'Mars',    L0:355.43, dL:0.52404, color:'#c1440e', r:6  },
-  { id:'jupiter', name:'Jupiter', L0:34.40,  dL:0.08306, color:'#c88b3a', r:17 },
-  { id:'saturn',  name:'Saturne', L0:49.94,  dL:0.03346, color:'#e4d191', r:13 },
-  { id:'uranus',  name:'Uranus',  L0:313.23, dL:0.01177, color:'#7de8e8', r:11 },
-  { id:'neptune', name:'Neptune', L0:304.88, dL:0.00600, color:'#3f54ba', r:10 },
+  { id:'mercury', name:'Mercure', L0:252.25, dL:4.09234, color:'#a8a8a8', r:4,  orbitR:58  },
+  { id:'venus',   name:'Vénus',   L0:181.98, dL:1.60214, color:'#e8c56a', r:7,  orbitR:92  },
+  { id:'earth',   name:'Terre',   L0:100.46, dL:0.98565, color:'#2e86ab', r:8,  orbitR:128 },
+  { id:'mars',    name:'Mars',    L0:355.43, dL:0.52404, color:'#c1440e', r:6,  orbitR:170 },
+  { id:'jupiter', name:'Jupiter', L0:34.40,  dL:0.08306, color:'#c88b3a', r:17, orbitR:230 },
+  { id:'saturn',  name:'Saturne', L0:49.94,  dL:0.03346, color:'#e4d191', r:13, orbitR:290 },
+  { id:'uranus',  name:'Uranus',  L0:313.23, dL:0.01177, color:'#7de8e8', r:11, orbitR:345 },
+  { id:'neptune', name:'Neptune', L0:304.88, dL:0.00600, color:'#3f54ba', r:10, orbitR:390 },
 ];
 
 // Orbit display radii (pixels at base scale 1.0, i.e. canvas 900px min dim)
