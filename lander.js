@@ -208,7 +208,9 @@ class Terrain {
     ctx.lineTo(toSX(this.width), H + 10);
     ctx.lineTo(toSX(0), H + 10);
     ctx.closePath();
-    const grad = ctx.createLinearGradient(0, toSY(this.maxH), 0, H);
+    const gradY0 = toSY(this.maxH);
+    const gradY1 = Math.max(gradY0 + 2, H); // évite gradient de hauteur nulle (Safari)
+    const grad = ctx.createLinearGradient(0, gradY0, 0, gradY1);
     grad.addColorStop(0, cfg.groundColor);
     grad.addColorStop(0.4, cfg.groundAccent);
     grad.addColorStop(1, cfg.groundDark);
@@ -560,20 +562,21 @@ class Lander {
     const cfg = this.cfg;
 
     // --- Rotation ---
+    // ← penche le haut vers la gauche (angle négatif), → vers la droite
     const rotSpeed = 80; // deg/s
     if (input.left)  this.angle -= rotSpeed * dt;
     if (input.right) this.angle += rotSpeed * dt;
-    // Clamp rotation (can't go fully upside down)
     this.angle = Math.max(-85, Math.min(85, this.angle));
 
+    // angle=0 → nez vers le haut. La poussée va dans le sens du nez.
     const rad  = this.angle * Math.PI / 180;
     let fx = windForce;
     let fy = -cfg.gravity;
 
     // --- Main engine (up) ---
     if (input.up && this.fuel > 0) {
-      const thrust = cfg.gravity * 3.2; // must be > gravity
-      fx += thrust * Math.sin(-rad);
+      const thrust = cfg.gravity * 3.2;
+      fx += thrust * Math.sin(rad);   // incliné à droite → pousse à droite
       fy += thrust * Math.cos(rad);
       this.fuel -= dt * 14;
       if (this.fuel < 0) this.fuel = 0;
@@ -633,11 +636,11 @@ class Lander {
     const tilt   = Math.abs(this.angle);
     const onPad  = Math.abs(this.x - terrain.padCenter) <= terrain.padWidth / 2;
 
-    if (!onPad)                  return 'crash';
-    if (vDown  > cfg.maxVSpeed)  return 'crash';
-    if (hSpeed > cfg.maxHSpeed)  return 'crash';
-    if (tilt   > cfg.maxAngle)   return 'crash';
-    return 'land';
+    if (!onPad)                  return { type:'crash', reason:'Hors de la zone d\'atterrissage !' };
+    if (vDown  > cfg.maxVSpeed)  return { type:'crash', reason:`Vitesse verticale trop élevée : ${vDown.toFixed(1)} m/s (max ${cfg.maxVSpeed})` };
+    if (hSpeed > cfg.maxHSpeed)  return { type:'crash', reason:`Vitesse horizontale trop élevée : ${hSpeed.toFixed(1)} m/s (max ${cfg.maxHSpeed})` };
+    if (tilt   > cfg.maxAngle)   return { type:'crash', reason:`Inclinaison trop forte : ${tilt.toFixed(1)}° (max ${cfg.maxAngle}°)` };
+    return { type:'land' };
   }
 
   // Bottom-center of lander (nozzle position) for particles
@@ -842,16 +845,16 @@ class LanderGame {
 
     // Collision
     const col = this.lander.checkCollision(this.terrain);
-    if (col === 'crash') {
-      this.lander.alive  = false;
+    if (col && col.type === 'crash') {
+      this.lander.alive   = false;
       this.lander.crashed = true;
       this.particles.emitExplosion(this.lander.x, this.lander.y);
-      this.result = 'crash';
+      this.result      = col;
       this.resultDelay = 0;
-    } else if (col === 'land') {
+    } else if (col && col.type === 'land') {
       this.lander.alive  = false;
       this.lander.landed = true;
-      this.result = 'land';
+      this.result      = col;
       this.resultDelay = 0;
     }
 

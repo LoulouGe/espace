@@ -42,6 +42,7 @@ let zoomOX       = 0;         // target planet screen X
 let zoomOY       = 0;         // target planet screen Y
 const FADE_DUR   = 0.9;       // seconds
 let selectedBody = null;
+let hoveredBody  = null;
 
 // ─── Time scale ───────────────────────────────────────────────────────────────
 let timeScale = 1;
@@ -82,8 +83,8 @@ canvas.addEventListener('click', e => {
 
 canvas.addEventListener('mousemove', e => {
   if (state !== S.SOLAR) return;
-  const id = solar.getBodyAt(e.clientX, e.clientY);
-  canvas.style.cursor = id ? 'pointer' : 'crosshair';
+  hoveredBody = solar.getBodyAt(e.clientX, e.clientY);
+  canvas.style.cursor = hoveredBody ? 'pointer' : 'crosshair';
 });
 
 // ─── Time buttons ─────────────────────────────────────────────────────────────
@@ -176,7 +177,7 @@ function showPlanetCard(id) {
 }
 
 // ─── Result card population ───────────────────────────────────────────────────
-function showResultCard(success, score) {
+function showResultCard(success, score, reason) {
   const titleEl = document.getElementById('res-title');
   titleEl.textContent = success ? 'ATTERRISSAGE RÉUSSI !' : 'MISSION ÉCHOUÉE';
   titleEl.style.color = success ? '#0f0' : '#f44';
@@ -186,7 +187,12 @@ function showResultCard(success, score) {
   const ss  = String(Math.floor(score.time % 60)).padStart(2, '0');
   const fpct= ((score.fuel / BODY_DATA[selectedBody].startFuel) * 100).toFixed(0);
 
+  const reasonRow = (!success && reason)
+    ? `<div class="stat-row" style="color:#f88"><span class="stat-lbl">Cause</span><span class="stat-val" style="color:#faa;font-size:11px">${reason}</span></div>`
+    : '';
+
   document.getElementById('res-stats').innerHTML = `
+    ${reasonRow}
     <div class="stat-row"><span class="stat-lbl">Temps</span><span class="stat-val">${mm}:${ss}</span></div>
     <div class="stat-row"><span class="stat-lbl">Carburant restant</span><span class="stat-val">${fpct}%</span></div>
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
@@ -328,9 +334,9 @@ function loop(ts) {
       game.update(dt);
       updateHUD();
 
-      if (game.result && !resultShown && game.resultDelay > (game.result === 'crash' ? 1.4 : 0.6)) {
+      if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 0.6)) {
         resultShown = true;
-        showResultCard(game.result === 'land', game.getScore());
+        showResultCard(game.result.type === 'land', game.getScore(), game.result.reason);
         state = S.RESULT;
       }
 
@@ -342,7 +348,7 @@ function loop(ts) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state === S.SOLAR) {
-      solar.draw(ctx, dt);
+      solar.draw(ctx, dt, hoveredBody);
 
     } else if (state === S.FADING) {
       const t  = easeInOut(fadeProgress);
@@ -350,7 +356,7 @@ function loop(ts) {
       ctx.translate(zoomOX, zoomOY);
       ctx.scale(zoomScale, zoomScale);
       ctx.translate(-zoomOX, -zoomOY);
-      solar.draw(ctx, 0);
+      solar.draw(ctx, 0, null);
       ctx.restore();
       if (t > 0.5) {
         ctx.fillStyle = `rgba(0,0,6,${((t - 0.5) / 0.5).toFixed(3)})`;
@@ -360,7 +366,7 @@ function loop(ts) {
     } else if (state === S.SELECT) {
       ctx.fillStyle = '#000008';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      solar.draw(ctx, 0);
+      solar.draw(ctx, 0, null);
       ctx.fillStyle = 'rgba(0,0,8,0.65)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 

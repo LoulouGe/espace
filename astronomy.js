@@ -127,7 +127,7 @@ class SolarSystem {
     this.simTime += dt * 1000;
   }
 
-  draw(ctx, dtSec) {
+  draw(ctx, dtSec, hoveredId) {
     const t = this.simTime;
 
     // Background
@@ -193,18 +193,20 @@ class SolarSystem {
       const el = ORBITAL_ELEMENTS[i];
       const pos = this._pos(el, t);
 
-      // Planet glow
-      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, el.r * 2.5);
-      grad.addColorStop(0,   hexAlpha(el.color, 0.8));
-      grad.addColorStop(0.4, hexAlpha(el.color, 0.27));
+      // Hover glow
+      const isHovered = hoveredId === el.id;
+      const glowR = isHovered ? el.r * 5 : el.r * 2.5;
+      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowR);
+      grad.addColorStop(0,   hexAlpha(el.color, isHovered ? 1.0 : 0.8));
+      grad.addColorStop(0.4, hexAlpha(el.color, isHovered ? 0.5 : 0.27));
       grad.addColorStop(1,   hexAlpha(el.color, 0));
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, el.r * 2.5, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, glowR, 0, Math.PI * 2);
       ctx.fill();
 
       // Planet body
-      ctx.fillStyle = el.color;
+      ctx.fillStyle = isHovered ? lightenColor(el.color, 40) : el.color;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, el.r, 0, Math.PI * 2);
       ctx.fill();
@@ -246,7 +248,16 @@ class SolarSystem {
 
     // Moon
     const moonPos = this._moonPos(earthPos, MOON_EL, t);
-    ctx.fillStyle = MOON_EL.color;
+    const moonHov = hoveredId === 'moon';
+    if (moonHov) {
+      const mg = ctx.createRadialGradient(moonPos.x, moonPos.y, 0, moonPos.x, moonPos.y, MOON_EL.r * 5);
+      mg.addColorStop(0, hexAlpha(MOON_EL.color, 1.0));
+      mg.addColorStop(0.4, hexAlpha(MOON_EL.color, 0.5));
+      mg.addColorStop(1, hexAlpha(MOON_EL.color, 0));
+      ctx.fillStyle = mg;
+      ctx.beginPath(); ctx.arc(moonPos.x, moonPos.y, MOON_EL.r * 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = moonHov ? lightenColor(MOON_EL.color, 40) : MOON_EL.color;
     ctx.beginPath();
     ctx.arc(moonPos.x, moonPos.y, MOON_EL.r, 0, Math.PI * 2);
     ctx.fill();
@@ -257,7 +268,16 @@ class SolarSystem {
 
     // Titan
     const titanPos = this._moonPos(saturnPos, TITAN_EL, t);
-    ctx.fillStyle = TITAN_EL.color;
+    const titanHov = hoveredId === 'titan';
+    if (titanHov) {
+      const tg = ctx.createRadialGradient(titanPos.x, titanPos.y, 0, titanPos.x, titanPos.y, TITAN_EL.r * 5);
+      tg.addColorStop(0, hexAlpha(TITAN_EL.color, 1.0));
+      tg.addColorStop(0.4, hexAlpha(TITAN_EL.color, 0.5));
+      tg.addColorStop(1, hexAlpha(TITAN_EL.color, 0));
+      ctx.fillStyle = tg;
+      ctx.beginPath(); ctx.arc(titanPos.x, titanPos.y, TITAN_EL.r * 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = titanHov ? lightenColor(TITAN_EL.color, 40) : TITAN_EL.color;
     ctx.beginPath();
     ctx.arc(titanPos.x, titanPos.y, TITAN_EL.r, 0, Math.PI * 2);
     ctx.fill();
@@ -277,4 +297,11 @@ class SolarSystem {
     const d = new Date(this.simTime);
     return d.toLocaleDateString('fr-FR', { year:'numeric', month:'short', day:'numeric' });
   }
+}
+
+function lightenColor(hex, amt) {
+  const r = Math.min(255, parseInt(hex.slice(1,3),16) + amt);
+  const g = Math.min(255, parseInt(hex.slice(3,5),16) + amt);
+  const b = Math.min(255, parseInt(hex.slice(5,7),16) + amt);
+  return `rgb(${r},${g},${b})`;
 }
