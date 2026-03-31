@@ -14,12 +14,14 @@ const BODY_DATA = {
     terrainRoughness: 0.75,
     padWidth: 65, startAlt: 165, startFuel: 800,
     maxVSpeed: 3.0, maxHSpeed: 2.0, maxAngle: 15,
+    hazardType: 'meteor',
     conditions: [
       {ci:'🌑', txt:"Pas d'atmosphère"},
       {ci:'⚖️', txt:'Faible gravité: 1.62 m/s²'},
       {ci:'🪨', txt:'Surface cratérisée'},
+      {ci:'☄️', txt:'Impacts météoritiques'},
     ],
-    desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère, conditions prévisibles. Idéal pour débuter.',
+    desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère. Des météorites peuvent vous percuter à tout moment.',
   },
   mercury: {
     name: 'Mercure', emoji: '⚫', stars: 2,
@@ -33,13 +35,14 @@ const BODY_DATA = {
     terrainRoughness: 1.0,
     padWidth: 52, startAlt: 165, startFuel: 900,
     maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 12,
+    hazardType: 'flare',
     conditions: [
       {ci:'⚫', txt:"Pas d'atmosphère"},
       {ci:'⚖️', txt:'Gravité: 3.7 m/s²'},
       {ci:'🌋', txt:'Terrain très accidenté'},
-      {ci:'🌡️', txt:'Températures extrêmes'},
+      {ci:'☀️', txt:'Éruptions solaires (moteur coupé)'},
     ],
-    desc: 'Proche du Soleil, terrain chaotique et très accidenté. La gravité est plus forte que sur la Lune.',
+    desc: 'Proche du Soleil, terrain chaotique. Des éruptions solaires peuvent couper votre moteur au pire moment.',
   },
   mars: {
     name: 'Mars', emoji: '🔴', stars: 3,
@@ -55,13 +58,14 @@ const BODY_DATA = {
     terrainRoughness: 0.7,
     padWidth: 45, startAlt: 155, startFuel: 1000,
     maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 10,
+    hazardType: 'magnetic',
     conditions: [
       {ci:'💨', txt:'Vent: 4–20 m/s'},
       {ci:'🌪️', txt:'Tempêtes de poussière'},
-      {ci:'⚖️', txt:'Gravité: 3.72 m/s²'},
+      {ci:'🧲', txt:'Orages magnétiques (gyroscope inversé)'},
       {ci:'🌫️', txt:'Atmosphère fine (CO₂)'},
     ],
-    desc: 'La planète rouge. Des tempêtes de poussière peuvent surgir à tout moment et dévier votre trajectoire.',
+    desc: 'La planète rouge. Tempêtes de poussière et orages magnétiques qui inversent vos commandes de rotation.',
   },
   titan: {
     name: 'Titan', emoji: '🟠', stars: 3,
@@ -75,13 +79,14 @@ const BODY_DATA = {
     terrainRoughness: 0.55,
     padWidth: 42, startAlt: 155, startFuel: 1050,
     maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 10,
+    hazardType: 'downburst',
     conditions: [
       {ci:'💨', txt:'Vents forts: 10–32 m/s'},
       {ci:'🌫️', txt:'Atmosphère épaisse (azote/méthane)'},
-      {ci:'⚡', txt:'Cisaillement du vent'},
+      {ci:'⬇️', txt:'Rafales verticales soudaines'},
       {ci:'⚖️', txt:'Faible gravité: 1.35 m/s²'},
     ],
-    desc: 'Lune de Saturne. Atmosphère épaisse, vents forts et imprévisibles. La faible gravité est votre seul atout.',
+    desc: 'Lune de Saturne. Vents forts et rafales verticales descendantes soudaines. La faible gravité est votre seul atout.',
   },
   earth: {
     name: 'Terre', emoji: '🌍', stars: 4,
@@ -96,13 +101,14 @@ const BODY_DATA = {
     terrainRoughness: 0.45,
     padWidth: 38, startAlt: 145, startFuel: 1250,
     maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 8,
+    hazardType: 'lightning',
     conditions: [
       {ci:'🌬️', txt:'Vent: 7–27 m/s + turbulences'},
       {ci:'⚖️', txt:'Forte gravité: 9.81 m/s²'},
-      {ci:'☁️', txt:'Météo variable'},
+      {ci:'⚡', txt:'Risque de foudre (impulsion latérale)'},
       {ci:'🌊', txt:'Courants atmosphériques'},
     ],
-    desc: 'Atterrir sur Terre est sous-estimé: forte gravité et vents capricieux testent vos réflexes.',
+    desc: 'Atterrir sur Terre est sous-estimé: forte gravité, turbulences, et coups de foudre qui vous déstabilisent.',
   },
   venus: {
     name: 'Vénus', emoji: '🌕', stars: 5,
@@ -116,14 +122,15 @@ const BODY_DATA = {
     terrainRoughness: 0.85,
     padWidth: 28, startAlt: 155, startFuel: 1400,
     maxVSpeed: 1.5, maxHSpeed: 0.8, maxAngle: 5,
+    hazardType: 'acidrain',
     conditions: [
       {ci:'🌪️', txt:'Vents dévastateurs: 22–52 m/s'},
       {ci:'⚖️', txt:'Gravité: 8.87 m/s²'},
       {ci:'🔥', txt:'Température: 462°C'},
-      {ci:'⚗️', txt:'Pluie d\'acide sulfurique'},
+      {ci:'☠️', txt:'Pluie d\'acide (carburant 2× plus vite)'},
       {ci:'💀', txt:'Atmosphère ultra-dense (CO₂)'},
     ],
-    desc: 'ENFER. Vents dévastateurs, pression écrasante, chaleur mortelle. Réservé aux meilleurs pilotes.',
+    desc: 'ENFER. Vents dévastateurs et pluies d\'acide qui rongent votre carburant deux fois plus vite. Réservé aux meilleurs.',
   },
 };
 
@@ -534,6 +541,143 @@ class WindSystem {
   }
 }
 
+// ─── Hazard System ────────────────────────────────────────────────────────────
+class HazardSystem {
+  constructor(bodyId) {
+    this.bodyId = bodyId;
+    this._t     = 0;
+    this._active = false;
+    this._timer  = 0;
+    this._engineCutout  = false;
+    this._rotationMult  = 1;
+    this._fuelDrainMult = 1;
+    this._vertForce     = 0;
+    this._impulse       = null;
+    this._warning       = null;
+  }
+
+  update(dt) {
+    this._t += dt;
+    this._impulse = null;
+    switch (this.bodyId) {
+      case 'moon':    this._updateMeteor(dt);    break;
+      case 'mercury': this._updateFlare(dt);     break;
+      case 'mars':    this._updateMagnetic(dt);  break;
+      case 'titan':   this._updateDownburst(dt); break;
+      case 'earth':   this._updateLightning(dt); break;
+      case 'venus':   this._updateAcidRain(dt);  break;
+    }
+  }
+
+  _updateMeteor(dt) {
+    if (!this._active) {
+      if (Math.random() < 0.0005 * dt * 60) {
+        this._active  = true;
+        this._timer   = 0.12;
+        const mag  = 7 + Math.random() * 10;
+        const sign = Math.random() < 0.5 ? 1 : -1;
+        this._impulse = { vx: mag * sign, vy: 2 + Math.random() * 4 };
+        this._warning = '☄ IMPACT MÉTÉORITE !';
+      }
+    } else {
+      this._timer -= dt;
+      if (this._timer <= 0) { this._active = false; this._warning = null; }
+    }
+  }
+
+  _updateFlare(dt) {
+    if (!this._active) {
+      if (Math.random() < 0.0003 * dt * 60) {
+        this._active        = true;
+        this._timer         = 1.5 + Math.random();
+        this._engineCutout  = true;
+        this._warning = '☀ ÉRUPTION SOLAIRE — Moteur hors ligne !';
+      }
+    } else {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._active       = false;
+        this._engineCutout = false;
+        this._warning      = null;
+      }
+    }
+  }
+
+  _updateMagnetic(dt) {
+    if (!this._active) {
+      if (Math.random() < 0.0003 * dt * 60) {
+        this._active       = true;
+        this._timer        = 2 + Math.random() * 2;
+        this._rotationMult = -1;
+        this._warning = '🧲 ORAGE MAGNÉTIQUE — Gyroscope inversé !';
+      }
+    } else {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._active       = false;
+        this._rotationMult = 1;
+        this._warning      = null;
+      }
+    }
+  }
+
+  _updateDownburst(dt) {
+    if (!this._active) {
+      if (Math.random() < 0.0007 * dt * 60) {
+        this._active    = true;
+        this._timer     = 1 + Math.random() * 1.5;
+        this._vertForce = -(16 + Math.random() * 12);
+        this._warning   = '⬇ RAFALE VERTICALE !';
+      }
+    } else {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._active    = false;
+        this._vertForce = 0;
+        this._warning   = null;
+      }
+    }
+  }
+
+  _updateLightning(dt) {
+    if (!this._active) {
+      if (Math.random() < 0.0005 * dt * 60) {
+        this._active = true;
+        this._timer  = 0.08;
+        const mag  = 12 + Math.random() * 14;
+        const sign = Math.random() < 0.5 ? 1 : -1;
+        this._impulse = { vx: mag * sign, vy: 3 + Math.random() * 5 };
+        this._warning = '⚡ FOUDRE !';
+      }
+    } else {
+      this._timer -= dt;
+      if (this._timer <= 0) { this._active = false; this._warning = null; }
+    }
+  }
+
+  _updateAcidRain(_dt) {
+    const period     = 12;
+    const onFraction = 0.45;
+    const phase = (this._t % period) / period;
+    if (phase < onFraction) {
+      this._active        = true;
+      this._fuelDrainMult = 2.5;
+      this._warning = '☠ PLUIE ACIDE — Carburant corrodé !';
+    } else {
+      this._active        = false;
+      this._fuelDrainMult = 1;
+      this._warning       = null;
+    }
+  }
+
+  get engineCutout()  { return this._engineCutout; }
+  get rotationMult()  { return this._rotationMult; }
+  get fuelDrainMult() { return this._fuelDrainMult; }
+  get vertForce()     { return this._vertForce; }
+  get warning()       { return this._warning; }
+  consumeImpulse()    { const i = this._impulse; this._impulse = null; return i; }
+}
+
 // ─── Lander ───────────────────────────────────────────────────────────────────
 class Lander {
   constructor(bodyId, terrain) {
@@ -556,41 +700,45 @@ class Lander {
     this.hh = 4.5; // half-height
   }
 
-  update(dt, input, windForce) {
+  update(dt, input, windForce, hazard) {
     if (!this.alive) return;
 
     const cfg = this.cfg;
+    const rotMult    = hazard ? hazard.rotationMult  : 1;
+    const fuelMult   = hazard ? hazard.fuelDrainMult : 1;
+    const engineOff  = hazard ? hazard.engineCutout  : false;
+    const extraVert  = hazard ? hazard.vertForce     : 0;
 
     // --- Rotation ---
     // ← penche le haut vers la gauche (angle négatif), → vers la droite
     const rotSpeed = 80; // deg/s
-    if (input.left)  this.angle -= rotSpeed * dt;
-    if (input.right) this.angle += rotSpeed * dt;
+    if (input.left)  this.angle -= rotSpeed * dt * rotMult;
+    if (input.right) this.angle += rotSpeed * dt * rotMult;
     this.angle = Math.max(-85, Math.min(85, this.angle));
 
     // angle=0 → nez vers le haut. La poussée va dans le sens du nez.
     const rad  = this.angle * Math.PI / 180;
     let fx = windForce;
-    let fy = -cfg.gravity;
+    let fy = -cfg.gravity + extraVert;
 
     // --- Main engine (up) ---
-    if (input.up && this.fuel > 0) {
+    if (input.up && this.fuel > 0 && !engineOff) {
       const thrust = cfg.gravity * 3.2;
       fx += thrust * Math.sin(rad);   // incliné à droite → pousse à droite
       fy += thrust * Math.cos(rad);
-      this.fuel -= dt * 14;
+      this.fuel -= dt * 14 * fuelMult;
       if (this.fuel < 0) this.fuel = 0;
     }
 
     // --- Retro thrusters (space) ---
-    if (input.space && this.fuel > 0) {
+    if (input.space && this.fuel > 0 && !engineOff) {
       const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
       if (spd > 0.1) {
         const retroForce = cfg.gravity * 2.2;
         fx -= (this.vx / spd) * retroForce;
         fy -= (this.vy / spd) * retroForce;
       }
-      this.fuel -= dt * 9;
+      this.fuel -= dt * 9 * fuelMult;
       if (this.fuel < 0) this.fuel = 0;
     }
 
@@ -790,6 +938,7 @@ class LanderGame {
     this.lander   = new Lander(bodyId, this.terrain);
     this.particles= new ParticleSystem();
     this.wind     = new WindSystem(bodyId);
+    this.hazard   = new HazardSystem(bodyId);
 
     // Camera: follows lander
     this.camX     = this.lander.x;
@@ -823,8 +972,16 @@ class LanderGame {
     this.wind.update(dt);
     const windF = this.wind.getForce();
 
+    // Hazards
+    this.hazard.update(dt);
+    const impulse = this.hazard.consumeImpulse();
+    if (impulse) {
+      this.lander.vx += impulse.vx;
+      this.lander.vy += impulse.vy;
+    }
+
     // Lander
-    this.lander.update(dt, this.input, windF);
+    this.lander.update(dt, this.input, windF, this.hazard);
 
     // Particles
     if (this.input.up && this.lander.fuel > 0 && this.lander.alive) {
@@ -971,7 +1128,21 @@ class LanderGame {
     }
 
     const stormEl = document.getElementById('storm-warn');
-    if (stormEl) stormEl.style.display = this.wind.isStorming() ? '' : 'none';
+    if (stormEl) {
+      const hw = this.hazard.warning;
+      const storming = this.wind.isStorming();
+      if (hw) {
+        stormEl.style.display = '';
+        const wt = stormEl.querySelector('.warn-txt');
+        if (wt) wt.textContent = hw;
+      } else if (storming) {
+        stormEl.style.display = '';
+        const wt = stormEl.querySelector('.warn-txt');
+        if (wt) wt.textContent = '⚠ TEMPÊTE';
+      } else {
+        stormEl.style.display = 'none';
+      }
+    }
 
     // Speed values for DOM
     const vsEl  = document.getElementById('v-vs');
