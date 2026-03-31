@@ -957,6 +957,10 @@ class LanderGame {
 
     // Post-explosion delay
     this.resultDelay = 0;
+
+    // Lander trail
+    this._trail = [];
+    this._trailTimer = 0;
   }
 
   update(dt) {
@@ -994,6 +998,18 @@ class LanderGame {
       this.particles.emitDust(this.lander.x, this.terrain.heightAt(this.lander.x), windF);
     }
     this.particles.update(dt, this.cfg.gravity * 0.1);
+
+    // Lander trail
+    const spd = Math.sqrt(this.lander.vx ** 2 + this.lander.vy ** 2);
+    this._trailTimer += dt;
+    if (spd > 4 && this._trailTimer > 0.04 && this.lander.alive) {
+      this._trail.push({ x: this.lander.x, y: this.lander.y, age: 0, spd });
+      this._trailTimer = 0;
+    }
+    for (let i = this._trail.length - 1; i >= 0; i--) {
+      this._trail[i].age += dt;
+      if (this._trail[i].age > 0.7) this._trail.splice(i, 1);
+    }
 
     // Cloud drift
     for (const c of this.clouds) {
@@ -1068,13 +1084,46 @@ class LanderGame {
     // Particles (behind lander)
     this.particles.draw(ctx, cx, cy, S, W, H);
 
+    // Lander trail
+    for (const pt of this._trail) {
+      const sx = (pt.x - cx) * S + W / 2;
+      const sy = H / 2 - (pt.y - cy) * S;
+      const a  = Math.max(0, (1 - pt.age / 0.7) * 0.35);
+      ctx.fillStyle = `rgba(150,200,255,${a.toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, Math.max(0.5, (1 - pt.age / 0.7) * 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     // Lander
     this.lander.draw(ctx, cx, cy, S, W, H, this.input);
 
     // Crash flash
-    if (this.result === 'crash' && this.resultDelay < 0.15) {
+    if (this.result && this.result.type === 'crash' && this.resultDelay < 0.15) {
       ctx.fillStyle = `rgba(255,150,0,${0.5 - this.resultDelay * 3})`;
       ctx.fillRect(0, 0, W, H);
+    }
+
+    // Hazard flash overlays
+    if (this.hazard) {
+      const hw = this.hazard.warning;
+      if (hw && hw.startsWith('⚡')) {
+        // Lightning — blanc intense
+        ctx.fillStyle = `rgba(255,255,255,${0.18 + 0.12 * Math.sin(Date.now() * 0.04)})`;
+        ctx.fillRect(0, 0, W, H);
+      } else if (hw && hw.startsWith('☄')) {
+        // Météorite — flash orange
+        ctx.fillStyle = 'rgba(255,120,0,0.22)';
+        ctx.fillRect(0, 0, W, H);
+      } else if (hw && hw.startsWith('☀')) {
+        // Éruption solaire — flash jaune
+        ctx.fillStyle = `rgba(255,220,50,${0.1 + 0.06 * Math.sin(Date.now() * 0.02)})`;
+        ctx.fillRect(0, 0, W, H);
+      } else if (hw && hw.startsWith('☠')) {
+        // Pluie d'acide — teinte verte
+        ctx.fillStyle = `rgba(80,200,40,${0.07 + 0.03 * Math.sin(Date.now() * 0.008)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
     }
 
     // HUD speed/tilt indicators

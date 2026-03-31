@@ -44,6 +44,47 @@ const FADE_DUR   = 0.9;       // seconds
 let selectedBody = null;
 let hoveredBody  = null;
 
+// ─── Campaign & Leaderboard ───────────────────────────────────────────────────
+const CAMPAIGN_ORDER = ['moon','mercury','mars','titan','earth','venus'];
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem('sl_progress') || '{}'); } catch { return {}; }
+}
+function saveProgress(p) {
+  try { localStorage.setItem('sl_progress', JSON.stringify(p)); } catch {}
+}
+function loadLeaderboard() {
+  try { return JSON.parse(localStorage.getItem('sl_lb') || '{}'); } catch { return {}; }
+}
+function saveLeaderboard(lb) {
+  try { localStorage.setItem('sl_lb', JSON.stringify(lb)); } catch {}
+}
+
+// Returns Set of locked body IDs
+function getLockedIds() {
+  const progress = loadProgress();
+  const locked   = new Set();
+  for (let i = 1; i < CAMPAIGN_ORDER.length; i++) {
+    const prev = CAMPAIGN_ORDER[i - 1];
+    if (!progress[prev]) locked.add(CAMPAIGN_ORDER[i]);
+  }
+  return locked;
+}
+
+function unlockBody(id) {
+  const p = loadProgress();
+  p[id] = true;
+  saveProgress(p);
+}
+
+function updateLeaderboard(id, score) {
+  const lb = loadLeaderboard();
+  if (!lb[id] || score.total > lb[id].total) {
+    lb[id] = { total: score.total, time: score.time, fuel: score.fuel, stars: score.stars };
+    saveLeaderboard(lb);
+  }
+}
+
 // ─── Time scale ───────────────────────────────────────────────────────────────
 let timeScale = 1;
 
@@ -72,6 +113,13 @@ canvas.addEventListener('click', e => {
     showTooltip(e.clientX, e.clientY, nonLandableMsg(id));
     return;
   }
+  if (getLockedIds().has(id)) {
+    const idx = CAMPAIGN_ORDER.indexOf(id);
+    const prev = CAMPAIGN_ORDER[idx - 1];
+    const prevName = prev ? (BODY_DATA[prev] ? BODY_DATA[prev].name : prev) : '?';
+    showTooltip(e.clientX, e.clientY, `🔒 Terminez d'abord ${prevName} pour débloquer cette destination.`);
+    return;
+  }
   selectedBody = id;
   const pos    = solar.getBodyScreenPos(id);
   zoomOX       = pos.x;
@@ -81,10 +129,35 @@ canvas.addEventListener('click', e => {
   state        = S.FADING;
 });
 
+let _hoverFactIdx = 0;
+let _lastHovered  = null;
+let _factTimer    = 0;
+
 canvas.addEventListener('mousemove', e => {
   if (state !== S.SOLAR) return;
+  const prev = hoveredBody;
   hoveredBody = solar.getBodyAt(e.clientX, e.clientY);
   canvas.style.cursor = hoveredBody ? 'pointer' : 'crosshair';
+
+  if (hoveredBody !== prev) {
+    _hoverFactIdx = 0;
+    _lastHovered  = hoveredBody;
+    _factTimer    = 0;
+  }
+
+  if (hoveredBody) {
+    const dist  = solar.getDistFromEarth(hoveredBody);
+    const fact  = solar.getFact(hoveredBody, _hoverFactIdx);
+    const locked = getLockedIds().has(hoveredBody);
+    let html = `<b>${BODY_DATA[hoveredBody] ? BODY_DATA[hoveredBody].name : hoveredBody}</b>`;
+    if (dist)  html += `<br>📡 Distance Terre : ${dist}`;
+    if (fact)  html += `<br>💡 ${fact}`;
+    if (locked) html += `<br>🔒 Terminez la planète précédente`;
+    showTooltipHTML(e.clientX, e.clientY, html);
+  } else {
+    elTooltip.classList.add('hidden');
+    tooltipTimer = 0;
+  }
 });
 
 // ─── Time buttons ─────────────────────────────────────────────────────────────
@@ -191,11 +264,18 @@ function showResultCard(success, score, reason) {
     ? `<div class="stat-row" style="color:#f88"><span class="stat-lbl">Cause</span><span class="stat-val" style="color:#faa;font-size:11px">${reason}</span></div>`
     : '';
 
+  const lb    = loadLeaderboard();
+  const best  = lb[selectedBody];
+  const bestRow = (success && best && best.total >= (score.total || 0))
+    ? `<div class="stat-row"><span class="stat-lbl">🏆 Meilleur</span><span class="stat-val" style="color:#fc0">${best.total} pts</span></div>`
+    : '';
+
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
     <div class="stat-row"><span class="stat-lbl">Temps</span><span class="stat-val">${mm}:${ss}</span></div>
     <div class="stat-row"><span class="stat-lbl">Carburant restant</span><span class="stat-val">${fpct}%</span></div>
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
+    ${bestRow}
   `;
 
   const starsEl = document.getElementById('res-stars');
@@ -223,6 +303,14 @@ function showTooltip(x, y, msg) {
   elTooltip.style.top   = (y - 36) + 'px';
   elTooltip.classList.remove('hidden');
   tooltipTimer = 2.8;
+}
+
+function showTooltipHTML(x, y, html) {
+  elTooltip.innerHTML   = html;
+  elTooltip.style.left  = Math.min(x + 14, window.innerWidth - 260) + 'px';
+  elTooltip.style.top   = (y - 36) + 'px';
+  elTooltip.classList.remove('hidden');
+  tooltipTimer = 0; // persistent while hovered
 }
 
 function nonLandableMsg(id) {
@@ -319,6 +407,14 @@ function loop(ts) {
         tooltipTimer -= dt;
         if (tooltipTimer <= 0) elTooltip.classList.add('hidden');
       }
+      // Rotate fun fact every 3s while hovering
+      if (hoveredBody) {
+        _factTimer += dt;
+        if (_factTimer >= 3) {
+          _factTimer = 0;
+          _hoverFactIdx++;
+        }
+      }
 
     } else if (state === S.FADING) {
       fadeProgress = Math.min(1, fadeProgress + dt / FADE_DUR);
@@ -336,7 +432,12 @@ function loop(ts) {
 
       if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 0.6)) {
         resultShown = true;
-        showResultCard(game.result.type === 'land', game.getScore(), game.result.reason);
+        const score = game.getScore();
+        if (game.result.type === 'land') {
+          unlockBody(selectedBody);
+          updateLeaderboard(selectedBody, score);
+        }
+        showResultCard(game.result.type === 'land', score, game.result.reason);
         state = S.RESULT;
       }
 
@@ -348,7 +449,7 @@ function loop(ts) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state === S.SOLAR) {
-      solar.draw(ctx, dt, hoveredBody);
+      solar.draw(ctx, dt, hoveredBody, getLockedIds());
 
     } else if (state === S.FADING) {
       const t  = easeInOut(fadeProgress);

@@ -36,6 +36,26 @@ const LANDABLE   = new Set(['moon','mercury','mars','titan','earth','venus']);
 // Landable body metadata for tooltip/display
 const LANDABLE_STARS = { moon:1, mercury:2, mars:3, titan:3, earth:4, venus:5 };
 
+const PLANET_FACTS = {
+  mercury: ["Révolution : 88 jours terrestres","Surface : −180°C la nuit, +430°C le jour","Aucune lune, aucune atmosphère","Son noyau représente 85% de son rayon"],
+  venus:   ["Rotation rétrograde — le Soleil se lève à l'ouest","Pression atm. : 90× celle de la Terre","Une journée vénusienne dure plus qu'une année","Planète la plus chaude : 462°C en permanence"],
+  earth:   ["Seule planète connue abritant la vie","71% de la surface est de l'eau","La Lune stabilise l'inclinaison axiale à 23°","Le champ magnétique dévie les vents solaires"],
+  mars:    ["Olympus Mons : 22 km de haut, 3× l'Everest","Un sol martien dure 24h 37min","La poussière colore le ciel en rose-orangé","Deux lunes : Phobos (déclin) et Deimos"],
+  jupiter: ["1 300 Terres tiendraient dans Jupiter","La Grande Tache Rouge dure depuis 350+ ans","95 lunes confirmées","Champ magnétique 20 000× celui de la Terre"],
+  saturn:  ["Anneaux : 70 000 km de large, <1 km d'épaisseur","Densité inférieure à l'eau — il flotterait !","146 lunes connues","Les anneaux disparaîtront dans ~100 Ma"],
+  uranus:  ["Axe incliné à 98° — il 'roule' autour du Soleil","Saisons de 21 ans terrestres chacune","27 lunes nommées d'après Shakespeare","Planète la plus froide : −224°C"],
+  neptune: ["Vents à 2 100 km/h — record du système solaire","Voyager 2 seul visiteur humain (1989)","Un an Neptune = 165 ans terrestres","Triton orbite à l'envers et se rapproche"],
+  moon:    ["S'éloigne de la Terre de 3,8 cm par an","12 humains y ont marché entre 1969 et 1972","Toujours la même face est tournée vers la Terre","Ses marées ralentissent la rotation terrestre"],
+  titan:   ["Seule lune du système avec une atmosphère dense","Lacs de méthane liquide en surface","Pression atm. : 1,45× celle de la Terre","Température : −179°C"],
+};
+
+// Semi-grand axe en UA (pour calcul de distance approximative)
+const PLANET_AU = {
+  mercury:0.387, venus:0.723, earth:1.000, mars:1.524,
+  jupiter:5.203, saturn:9.537, uranus:19.19, neptune:30.07,
+};
+const AU_KM = 149597871;
+
 class SolarSystem {
   constructor(w, h) {
     this.w = w; this.h = h;
@@ -127,7 +147,7 @@ class SolarSystem {
     this.simTime += dt * 1000;
   }
 
-  draw(ctx, dtSec, hoveredId) {
+  draw(ctx, dtSec, hoveredId, lockedIds) {
     const t = this.simTime;
 
     // Background
@@ -167,6 +187,37 @@ class SolarSystem {
     ctx.arc(saturnPos.x, saturnPos.y, TITAN_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Orbital trails (dernières positions comme pointillés)
+    const TRAIL_N = 55;
+    const TRAIL_DAYS = 3; // jours par point
+    for (const el of ORBITAL_ELEMENTS) {
+      for (let k = 1; k <= TRAIL_N; k++) {
+        const pastT = t - k * TRAIL_DAYS * 86400000;
+        const pp    = this._pos(el, pastT);
+        const alpha = (1 - k / TRAIL_N) * 0.5;
+        ctx.fillStyle = hexAlpha(el.color, alpha);
+        ctx.beginPath();
+        ctx.arc(pp.x, pp.y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // Moon trail
+    for (let k = 1; k <= 35; k++) {
+      const pastT = t - k * 0.7 * 86400000;
+      const ep    = this._pos(ORBITAL_ELEMENTS[2], pastT);
+      const mp    = this._moonPos(ep, MOON_EL, pastT);
+      ctx.fillStyle = `rgba(184,184,184,${((1 - k/35) * 0.4).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(mp.x, mp.y, 1, 0, Math.PI * 2); ctx.fill();
+    }
+    // Titan trail
+    for (let k = 1; k <= 35; k++) {
+      const pastT = t - k * 0.5 * 86400000;
+      const sp    = this._pos(ORBITAL_ELEMENTS[5], pastT);
+      const tp2   = this._moonPos(sp, TITAN_EL, pastT);
+      ctx.fillStyle = `rgba(204,136,51,${((1 - k/35) * 0.4).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(tp2.x, tp2.y, 1, 0, Math.PI * 2); ctx.fill();
+    }
+
     // Sun corona
     const sg = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, 70);
     sg.addColorStop(0,   'rgba(255,240,150,0.9)');
@@ -192,6 +243,10 @@ class SolarSystem {
     for (let i = 0; i < ORBITAL_ELEMENTS.length; i++) {
       const el = ORBITAL_ELEMENTS[i];
       const pos = this._pos(el, t);
+      const isLocked = lockedIds && lockedIds.has(el.id);
+
+      ctx.save();
+      if (isLocked) ctx.globalAlpha = 0.35;
 
       // Hover glow
       const isHovered = hoveredId === el.id;
@@ -213,7 +268,6 @@ class SolarSystem {
 
       // Saturn rings
       if (el.id === 'saturn') {
-        ctx.save();
         ctx.strokeStyle = 'rgba(228,209,145,0.55)';
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -224,7 +278,14 @@ class SolarSystem {
         ctx.beginPath();
         ctx.ellipse(pos.x, pos.y, el.r * 2.7, el.r * 0.85, 0.4, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.restore();
+      }
+
+      // Lock icon
+      if (isLocked) {
+        ctx.fillStyle = 'rgba(255,200,100,0.9)';
+        ctx.font = `${Math.max(10, el.r)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText('🔒', pos.x, pos.y + el.r * 0.4);
       }
 
       // Label
@@ -235,20 +296,22 @@ class SolarSystem {
 
       // Landable indicator
       if (LANDABLE.has(el.id)) {
-        const stars = LANDABLE_STARS[el.id];
-        ctx.fillStyle = '#fc0';
+        ctx.fillStyle = isLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
         ctx.font = '8px monospace';
-        ctx.fillText('★'.repeat(stars) + '☆'.repeat(5 - stars), pos.x, pos.y + el.r + 24);
+        ctx.fillText('★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]), pos.x, pos.y + el.r + 24);
       } else {
         ctx.fillStyle = 'rgba(150,150,180,0.5)';
         ctx.font = '8px monospace';
         ctx.fillText('⛔ gaz', pos.x, pos.y + el.r + 24);
       }
+      ctx.restore();
     }
 
     // Moon
     const moonPos = this._moonPos(earthPos, MOON_EL, t);
     const moonHov = hoveredId === 'moon';
+    const moonLocked = lockedIds && lockedIds.has('moon');
+    if (moonLocked) ctx.globalAlpha = 0.35;
     if (moonHov) {
       const mg = ctx.createRadialGradient(moonPos.x, moonPos.y, 0, moonPos.x, moonPos.y, MOON_EL.r * 5);
       mg.addColorStop(0, hexAlpha(MOON_EL.color, 1.0));
@@ -261,6 +324,11 @@ class SolarSystem {
     ctx.beginPath();
     ctx.arc(moonPos.x, moonPos.y, MOON_EL.r, 0, Math.PI * 2);
     ctx.fill();
+    if (moonLocked) {
+      ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('🔒', moonPos.x, moonPos.y + MOON_EL.r * 0.4);
+    }
+    ctx.globalAlpha = 1;
     ctx.fillStyle = 'rgba(190,190,190,0.75)';
     ctx.font = '9px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
@@ -269,6 +337,8 @@ class SolarSystem {
     // Titan
     const titanPos = this._moonPos(saturnPos, TITAN_EL, t);
     const titanHov = hoveredId === 'titan';
+    const titanLocked = lockedIds && lockedIds.has('titan');
+    if (titanLocked) ctx.globalAlpha = 0.35;
     if (titanHov) {
       const tg = ctx.createRadialGradient(titanPos.x, titanPos.y, 0, titanPos.x, titanPos.y, TITAN_EL.r * 5);
       tg.addColorStop(0, hexAlpha(TITAN_EL.color, 1.0));
@@ -281,6 +351,11 @@ class SolarSystem {
     ctx.beginPath();
     ctx.arc(titanPos.x, titanPos.y, TITAN_EL.r, 0, Math.PI * 2);
     ctx.fill();
+    if (titanLocked) {
+      ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('🔒', titanPos.x, titanPos.y + TITAN_EL.r * 0.4);
+    }
+    ctx.globalAlpha = 1;
     ctx.fillStyle = 'rgba(200,150,60,0.75)';
     ctx.font = '9px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
@@ -291,6 +366,28 @@ class SolarSystem {
     ctx.font = '12px "Share Tech Mono", monospace';
     ctx.textAlign = 'left';
     ctx.fillText('Cliquez sur une planète pour atterrir', 14, this.h - 14);
+  }
+
+  getDistFromEarth(id) {
+    if (id === 'moon')  return '384 400 km';
+    if (id === 'titan') id = 'saturn'; // use saturn position
+    const au = PLANET_AU[id];
+    if (!au) return null;
+    const earthEl  = ORBITAL_ELEMENTS[2];
+    const targetEl = ORBITAL_ELEMENTS.find(e => e.id === id);
+    if (!targetEl) return null;
+    const eA = this._angle(earthEl,  this.simTime) * Math.PI / 180;
+    const tA = this._angle(targetEl, this.simTime) * Math.PI / 180;
+    const dKm = Math.sqrt(1 + au*au - 2*au*Math.cos(tA - eA)) * AU_KM;
+    if (dKm > 1e9)  return (dKm / 1e9).toFixed(2) + ' Md km';
+    if (dKm > 1e6)  return Math.round(dKm / 1e6) + ' M km';
+    return Math.round(dKm / 1000) + ' k km';
+  }
+
+  getFact(id, idx) {
+    const facts = PLANET_FACTS[id];
+    if (!facts) return null;
+    return facts[((idx || 0) % facts.length + facts.length) % facts.length];
   }
 
   getSimDate() {
