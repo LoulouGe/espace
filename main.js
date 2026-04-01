@@ -618,7 +618,7 @@ function loop(ts) {
       game.update(dt);
       updateHUD();
 
-      if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 0.6)) {
+      if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 4.5)) {
         resultShown = true;
         const score = game.getScore();
         if (game.result.type === 'land') {

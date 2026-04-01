@@ -210,7 +210,7 @@ class Terrain {
     ctx.moveTo(toSX(0), toSY(pts[0]));
     for (let i = 1; i < pts.length; i++) {
       ctx.lineTo(toSX(i * this.step), toSY(pts[i]));
-    }
+i    }
     ctx.lineTo(toSX(this.width), H + 10);
     ctx.lineTo(toSX(0), H + 10);
     ctx.closePath();
@@ -896,7 +896,7 @@ class Lander {
   get nozzleY() { return this.y - this.hh + 0.5; }
 
   draw(ctx, camX, camY, scale, W, H, input) {
-    if (!this.alive && !this.crashed) return;
+    if (!this.alive && !this.crashed && !this.landed) return;
     const toSX = wx => (wx - camX) * scale + W / 2;
     const toSY = wy => H / 2 - (wy - camY) * scale;
 
@@ -1295,7 +1295,7 @@ class LanderGame {
     }
 
     // Feature 10: lander shadow
-    if (this.lander.alive) {
+    if (this.lander.alive || this.lander.landed) {
       const groundY = this.terrain.heightAt(this.lander.x);
       const altPx = (this.lander.y - this.lander.hh - groundY) * S;
       const shadowAlpha = Math.max(0, 0.4 - altPx / 300);
@@ -1315,6 +1315,10 @@ class LanderGame {
 
     // Lander
     this.lander.draw(ctx, cx, cy, S, W, H, this.input);
+
+    if (this.result && this.result.type === 'land') {
+      this._drawChicken(ctx, cx, cy, S, W, H);
+    }
 
     // Feature 13: draw ghost
     if (this._ghost && this._ghost.length > 1) {
@@ -1508,6 +1512,154 @@ class LanderGame {
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(dist + 'm', 0, 18);
+    ctx.restore();
+  }
+
+  _drawChicken(ctx, cx, cy, S, W, H) {
+    const l = this.lander;
+    const t = Math.max(0, this.resultDelay - 0.5); // Start animation after 0.5s
+    if (t === 0) return;
+
+    const sx = (l.x - cx) * S + W / 2;
+    // Base de la capsule est à peu près l.y - l.hh * 0.3
+    const sy = H / 2 - (l.y - l.hh * 0.3 - cy) * S;
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(l.angle * Math.PI / 180); // Tourne le coq en fonction du vaisseau
+    
+    // Sort d'abord à droite
+    let cx_local = 0;
+    let cy_local = 0;
+
+    const pullOutDist = 5.0 * S; // Distance de sortie
+    const walkSpeed = 3.0 * S; // Vitesse de marche
+
+    if (t < 1.0) {
+      // Phase 1 : Emerge de la porte
+      cx_local = (t / 1.0) * pullOutDist;
+      cy_local = 0;
+    } else {
+      // Phase 2 : Marche / sautille
+      cx_local = pullOutDist + (t - 1.0) * walkSpeed;
+      cy_local = -Math.abs(Math.sin((t - 1.0) * 8)) * 1.5 * S;
+    }
+
+    ctx.translate(cx_local, cy_local);
+    // Annule la rotation du vaisseau pour que le poulet soit droit sur le sol
+    ctx.rotate(-l.angle * Math.PI / 180);
+
+    const chS = S * 1.5; // Taille de la poule (beaucoup plus grosse)
+
+    // Ombre du poulet
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(0, 0.8 * chS, 1.2 * chS, 0.4 * chS, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Casque (Bulle) derrière la tête
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, -1.8 * chS, 1.5 * chS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps (Combinaison spatiale)
+    ctx.fillStyle = '#fefefe';
+    ctx.beginPath();
+    ctx.ellipse(0, -0.6 * chS, 1.0 * chS, 1.2 * chS, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#cccccc';
+    ctx.stroke();
+
+    // Rayures / boutons sur le torse
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(-0.4 * chS, -1.0 * chS, 0.8 * chS, 0.2 * chS);
+    ctx.fillStyle = '#3388ff';
+    ctx.beginPath();
+    ctx.arc(0, -0.5 * chS, 0.2 * chS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tête de la poule
+    ctx.fillStyle = '#ffffff'; // Plumes blanches
+    ctx.beginPath();
+    ctx.arc(0, -1.8 * chS, 0.8 * chS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crête rouge
+    ctx.fillStyle = '#ff2222';
+    ctx.beginPath();
+    ctx.arc(-0.2 * chS, -2.5 * chS, 0.3 * chS, 0, Math.PI * 2);
+    ctx.arc(0.2 * chS, -2.4 * chS, 0.2 * chS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bec jaune
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.moveTo(0.5 * chS, -1.9 * chS);
+    ctx.lineTo(1.2 * chS, -1.75 * chS);
+    ctx.lineTo(0.5 * chS, -1.6 * chS);
+    ctx.fill();
+
+    // Oeil
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(0.4 * chS, -2.0 * chS, 0.15 * chS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Casque (Bulle) devant
+    ctx.beginPath();
+    ctx.arc(0, -1.8 * chS, 1.5 * chS, 0, Math.PI * 2);
+    ctx.stroke();
+    // Reflet casque
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, -1.8 * chS, 1.3 * chS, Math.PI * 1.2, Math.PI * 1.6);
+    ctx.stroke();
+
+    // Pattes (bottes d'astronaute)
+    const animRot = (t >= 1.0) ? Math.sin((t - 1.0) * 16) * 0.4 : 0;
+    
+    ctx.fillStyle = '#bbbbcc';
+    // Patte gauche
+    ctx.save();
+    ctx.translate(-0.4 * chS, 0.6 * chS);
+    if (t >= 1.0) ctx.rotate(animRot);
+    ctx.fillRect(-0.2 * chS, 0, 0.4 * chS, 0.6 * chS);
+    ctx.fillRect(-0.2 * chS, 0.4 * chS, 0.6 * chS, 0.3 * chS);
+    ctx.restore();
+
+    // Patte droite
+    ctx.save();
+    ctx.translate(0.4 * chS, 0.6 * chS);
+    if (t >= 1.0) ctx.rotate(-animRot);
+    ctx.fillRect(-0.2 * chS, 0, 0.4 * chS, 0.6 * chS);
+    ctx.fillRect(-0.2 * chS, 0.4 * chS, 0.6 * chS, 0.3 * chS);
+    ctx.restore();
+
+    // Drapeau planté !
+    if (t > 2.5) {
+      // Interpolate pop up
+      const dtF = Math.min(1, (t - 2.5) * 4);
+      ctx.save();
+      ctx.translate(1.5 * chS, 0.6 * chS);
+      ctx.scale(dtF, dtF);
+      // Mât
+      ctx.fillStyle = '#aaaaaa';
+      ctx.fillRect(0, -3.5 * chS, 0.1 * chS, 3.5 * chS);
+      // Drapeau
+      ctx.fillStyle = '#ff2222';
+      ctx.fillRect(0.1 * chS, -3.5 * chS, 1.5 * chS, 1.0 * chS);
+      // Trou blanc au milieu
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0.85 * chS, -3.0 * chS, 0.3 * chS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
