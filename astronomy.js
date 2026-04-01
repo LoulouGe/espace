@@ -56,6 +56,47 @@ const PLANET_AU = {
 };
 const AU_KM = 149597871;
 
+// Feature 9: Meteor system for solar view
+class SolarMeteorSystem {
+  constructor() { this.meteors = []; }
+  update(dt, W, H) {
+    if (Math.random() < 0.002 * dt * 60) {
+      const fromLeft = Math.random() < 0.5;
+      this.meteors.push({
+        x: fromLeft ? -20 : W + 20,
+        y: Math.random() * H * 0.6,
+        vx: (fromLeft ? 1 : -1) * (150 + Math.random() * 200),
+        vy: 50 + Math.random() * 100,
+        len: 20 + Math.random() * 40,
+        alpha: 0.5 + Math.random() * 0.4,
+      });
+    }
+    for (let i = this.meteors.length - 1; i >= 0; i--) {
+      const m = this.meteors[i];
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.x < -100 || m.x > W + 100 || m.y > H + 100) this.meteors.splice(i, 1);
+    }
+  }
+  draw(ctx) {
+    for (const m of this.meteors) {
+      const angle = Math.atan2(m.vy, m.vx);
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(angle);
+      const g = ctx.createLinearGradient(-m.len, 0, 4, 0);
+      g.addColorStop(0, `rgba(255,255,255,0)`);
+      g.addColorStop(0.7, `rgba(200,220,255,${m.alpha * 0.5})`);
+      g.addColorStop(1, `rgba(255,255,255,${m.alpha})`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-m.len, 0); ctx.lineTo(4, 0); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${m.alpha})`;
+      ctx.beginPath(); ctx.arc(0, 0, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
 class SolarSystem {
   constructor(w, h) {
     this.w = w; this.h = h;
@@ -65,6 +106,8 @@ class SolarSystem {
     this._buildStars(350);
     // Twinkle state
     this._twinkle = new Float32Array(350).map(() => Math.random());
+    // Feature 9: meteors in solar view
+    this.meteors = new SolarMeteorSystem();
   }
 
   _computeScale() {
@@ -82,6 +125,7 @@ class SolarSystem {
     this.cx = w / 2; this.cy = h / 2;
     this._computeScale();
     this._buildStars(350);
+    this.meteors = new SolarMeteorSystem();
   }
 
   _buildStars(n) {
@@ -147,7 +191,8 @@ class SolarSystem {
     this.simTime += dt * 1000;
   }
 
-  draw(ctx, dtSec, hoveredId, lockedIds) {
+  // Feature 1 & 5: draw(ctx, dtSec, hoveredId, lockedIds, fuelInfo, leaderboard)
+  draw(ctx, dtSec, hoveredId, lockedIds, fuelInfo, leaderboard) {
     const t = this.simTime;
 
     // Background
@@ -163,6 +208,10 @@ class SolarSystem {
       ctx.arc(s.x * this.w, s.y * this.h, s.s, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Feature 9: meteors in solar view
+    this.meteors.update(dtSec || 0.016, this.w, this.h);
+    this.meteors.draw(ctx);
 
     // Orbit rings
     ctx.strokeStyle = 'rgba(255,255,255,0.06)';
@@ -294,11 +343,22 @@ class SolarSystem {
       ctx.textAlign = 'center';
       ctx.fillText(el.name, pos.x, pos.y + el.r + 13);
 
-      // Landable indicator
+      // Feature 5: leaderboard stars under label for landable planets
       if (LANDABLE.has(el.id)) {
-        ctx.fillStyle = isLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
-        ctx.font = '8px monospace';
-        ctx.fillText('★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]), pos.x, pos.y + el.r + 24);
+        if (leaderboard && leaderboard[el.id]) {
+          const lbStars = leaderboard[el.id].stars || 0;
+          ctx.fillStyle = '#fc0';
+          ctx.font = '6px monospace';
+          ctx.fillText(
+            '★'.repeat(lbStars) + '☆'.repeat(3 - lbStars),
+            pos.x, pos.y + el.r + 24
+          );
+        } else {
+          ctx.fillStyle = isLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
+          ctx.font = '8px monospace';
+          ctx.fillText('★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]), pos.x, pos.y + el.r + 24);
+        }
+        // Feature 1: fuel bar under stars for landable planets removed
       } else {
         ctx.fillStyle = 'rgba(150,150,180,0.5)';
         ctx.font = '8px monospace';
@@ -329,10 +389,23 @@ class SolarSystem {
       ctx.fillText('🔒', moonPos.x, moonPos.y + MOON_EL.r * 0.4);
     }
     ctx.globalAlpha = 1;
+
+    // Moon label + Feature 5 leaderboard stars
     ctx.fillStyle = 'rgba(190,190,190,0.75)';
     ctx.font = '9px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Lune ★☆☆☆☆', moonPos.x, moonPos.y + MOON_EL.r + 12);
+    ctx.fillText('Lune', moonPos.x, moonPos.y + MOON_EL.r + 12);
+    if (leaderboard && leaderboard['moon']) {
+      const lbStars = leaderboard['moon'].stars || 0;
+      ctx.fillStyle = '#fc0';
+      ctx.font = '6px monospace';
+      ctx.fillText('★'.repeat(lbStars) + '☆'.repeat(3 - lbStars), moonPos.x, moonPos.y + MOON_EL.r + 20);
+    } else {
+      ctx.fillStyle = moonLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
+      ctx.font = '7px monospace';
+      ctx.fillText('★☆☆☆☆', moonPos.x, moonPos.y + MOON_EL.r + 20);
+    }
+    // Feature 1: Moon fuel bar removed
 
     // Titan
     const titanPos = this._moonPos(saturnPos, TITAN_EL, t);
@@ -356,10 +429,23 @@ class SolarSystem {
       ctx.fillText('🔒', titanPos.x, titanPos.y + TITAN_EL.r * 0.4);
     }
     ctx.globalAlpha = 1;
+
+    // Titan label + Feature 5 leaderboard stars
     ctx.fillStyle = 'rgba(200,150,60,0.75)';
     ctx.font = '9px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Titan ★★★☆☆', titanPos.x, titanPos.y + TITAN_EL.r + 12);
+    ctx.fillText('Titan', titanPos.x, titanPos.y + TITAN_EL.r + 12);
+    if (leaderboard && leaderboard['titan']) {
+      const lbStars = leaderboard['titan'].stars || 0;
+      ctx.fillStyle = '#fc0';
+      ctx.font = '6px monospace';
+      ctx.fillText('★'.repeat(lbStars) + '☆'.repeat(3 - lbStars), titanPos.x, titanPos.y + TITAN_EL.r + 20);
+    } else {
+      ctx.fillStyle = titanLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
+      ctx.font = '7px monospace';
+      ctx.fillText('★★★☆☆', titanPos.x, titanPos.y + TITAN_EL.r + 20);
+    }
+    // Feature 1: Titan fuel bar removed
 
     // Title
     ctx.fillStyle = 'rgba(150,180,255,0.5)';
