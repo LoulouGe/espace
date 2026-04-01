@@ -16,9 +16,9 @@ const BODY_DATA = {
     maxVSpeed: 3.0, maxHSpeed: 2.0, maxAngle: 15,
     hazardType: 'none',
     conditions: [
-      {ci:'🌑', txt:"Pas d'atmosphère"},
-      {ci:'⚖️', txt:'Faible gravité: 1.62 m/s²'},
-      {ci:'🪨', txt:'Surface cratérisée'},
+      { ci: '🌑', txt: "Pas d'atmosphère" },
+      { ci: '⚖️', txt: 'Faible gravité: 1.62 m/s²' },
+      { ci: '🪨', txt: 'Surface cratérisée' },
     ],
     desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère, conditions prévisibles. Idéal pour débuter.',
   },
@@ -36,10 +36,10 @@ const BODY_DATA = {
     maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 12,
     hazardType: 'flare',
     conditions: [
-      {ci:'⚫', txt:"Pas d'atmosphère"},
-      {ci:'⚖️', txt:'Gravité: 3.7 m/s²'},
-      {ci:'🌋', txt:'Terrain très accidenté'},
-      {ci:'☀️', txt:'Éruptions solaires (moteur coupé)'},
+      { ci: '⚫', txt: "Pas d'atmosphère" },
+      { ci: '⚖️', txt: 'Gravité: 3.7 m/s²' },
+      { ci: '🌋', txt: 'Terrain très accidenté' },
+      { ci: '☀️', txt: 'Éruptions solaires (moteur coupé)' },
     ],
     desc: 'Proche du Soleil, terrain chaotique. Des éruptions solaires peuvent couper votre moteur au pire moment.',
   },
@@ -59,10 +59,10 @@ const BODY_DATA = {
     maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 10,
     hazardType: 'magnetic',
     conditions: [
-      {ci:'💨', txt:'Vent: 4–20 m/s'},
-      {ci:'🌪️', txt:'Tempêtes de poussière'},
-      {ci:'🧲', txt:'Orages magnétiques (gyroscope inversé)'},
-      {ci:'🌫️', txt:'Atmosphère fine (CO₂)'},
+      { ci: '💨', txt: 'Vent: 4–20 m/s' },
+      { ci: '🌪️', txt: 'Tempêtes de poussière' },
+      { ci: '🧲', txt: 'Orages magnétiques (gyroscope inversé)' },
+      { ci: '🌫️', txt: 'Atmosphère fine (CO₂)' },
     ],
     desc: 'La planète rouge. Tempêtes de poussière et orages magnétiques qui inversent vos commandes de rotation.',
   },
@@ -80,10 +80,10 @@ const BODY_DATA = {
     maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 10,
     hazardType: 'downburst',
     conditions: [
-      {ci:'💨', txt:'Vents forts: 10–32 m/s'},
-      {ci:'🌫️', txt:'Atmosphère épaisse (azote/méthane)'},
-      {ci:'⬇️', txt:'Rafales verticales soudaines'},
-      {ci:'⚖️', txt:'Faible gravité: 1.35 m/s²'},
+      { ci: '💨', txt: 'Vents forts: 10–32 m/s' },
+      { ci: '🌫️', txt: 'Atmosphère épaisse (azote/méthane)' },
+      { ci: '⬇️', txt: 'Rafales verticales soudaines' },
+      { ci: '⚖️', txt: 'Faible gravité: 1.35 m/s²' },
     ],
     desc: 'Lune de Saturne. Vents forts et rafales verticales descendantes soudaines. La faible gravité est votre seul atout.',
   },
@@ -102,10 +102,10 @@ const BODY_DATA = {
     maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 8,
     hazardType: 'lightning',
     conditions: [
-      {ci:'🌬️', txt:'Vent: 7–27 m/s + turbulences'},
-      {ci:'⚖️', txt:'Forte gravité: 9.81 m/s²'},
-      {ci:'⚡', txt:'Risque de foudre (impulsion latérale)'},
-      {ci:'🌊', txt:'Courants atmosphériques'},
+      { ci: '🌬️', txt: 'Vent: 7–27 m/s + turbulences' },
+      { ci: '⚖️', txt: 'Forte gravité: 9.81 m/s²' },
+      { ci: '⚡', txt: 'Risque de foudre (impulsion latérale)' },
+      { ci: '🌊', txt: 'Courants atmosphériques' },
     ],
     desc: 'Atterrir sur Terre est sous-estimé: forte gravité, turbulences, et coups de foudre qui vous déstabilisent.',
   },
@@ -123,11 +123,11 @@ const BODY_DATA = {
     maxVSpeed: 1.5, maxHSpeed: 0.8, maxAngle: 5,
     hazardType: 'acidrain',
     conditions: [
-      {ci:'🌪️', txt:'Vents dévastateurs: 22–52 m/s'},
-      {ci:'⚖️', txt:'Gravité: 8.87 m/s²'},
-      {ci:'🔥', txt:'Température: 462°C'},
-      {ci:'☠️', txt:'Pluie d\'acide (carburant 2× plus vite)'},
-      {ci:'💀', txt:'Atmosphère ultra-dense (CO₂)'},
+      { ci: '🌪️', txt: 'Vents dévastateurs: 22–52 m/s' },
+      { ci: '⚖️', txt: 'Gravité: 8.87 m/s²' },
+      { ci: '🔥', txt: 'Température: 462°C' },
+      { ci: '☠️', txt: 'Pluie d\'acide (carburant 2× plus vite)' },
+      { ci: '💀', txt: 'Atmosphère ultra-dense (CO₂)' },
     ],
     desc: 'ENFER. Vents dévastateurs et pluies d\'acide qui rongent votre carburant deux fois plus vite. Réservé aux meilleurs.',
   },
@@ -136,7 +136,7 @@ const BODY_DATA = {
 // ─── Pseudo-random (seeded) ───────────────────────────────────────────────────
 function seededRand(seed) {
   let s = seed;
-  return function() {
+  return function () {
     s = (s * 1664525 + 1013904223) & 0xffffffff;
     return (s >>> 0) / 0xffffffff;
   };
@@ -147,14 +147,14 @@ class Terrain {
   // width in meters, seed for reproducibility
   constructor(bodyId, width, seed) {
     const cfg = BODY_DATA[bodyId];
-    this.cfg      = cfg;
-    this.bodyId   = bodyId;
-    this.width    = width;
-    this.step     = 4;   // sample every 4 meters
-    const rng     = seededRand(seed || 12345);
-    this.points   = [];  // y heights in meters
+    this.cfg = cfg;
+    this.bodyId = bodyId;
+    this.width = width;
+    this.step = 4;   // sample every 4 meters
+    const rng = seededRand(seed || 12345);
+    this.points = [];  // y heights in meters
     this.padCenter = 0;
-    this.padWidth  = cfg.padWidth;
+    this.padWidth = cfg.padWidth;
     this._generate(cfg, rng);
   }
 
@@ -168,17 +168,17 @@ class Terrain {
       let h = 28;
       h += Math.sin(x * 0.018) * 22 * R;
       h += Math.sin(x * 0.040 + 1.5) * 13 * R;
-      h += Math.sin(x * 0.080 + 3.0) * 7  * R;
-      h += Math.sin(x * 0.150 + 0.7) * 4  * R;
+      h += Math.sin(x * 0.080 + 3.0) * 7 * R;
+      h += Math.sin(x * 0.150 + 0.7) * 4 * R;
       h += (rng() - 0.5) * 18 * R;
       this.points.push(Math.max(14, h));
     }
 
     // Landing pad — centered around 40–65% of width
-    const padCx  = w * (0.40 + rng() * 0.25);
-    const pIdx   = Math.round(padCx / this.step);
-    const pHalf  = Math.ceil(this.padWidth / 2 / this.step);
-    const padH   = this.points[Math.min(pIdx, this.points.length - 1)];
+    const padCx = w * (0.40 + rng() * 0.25);
+    const pIdx = Math.round(padCx / this.step);
+    const pHalf = Math.ceil(this.padWidth / 2 / this.step);
+    const padH = this.points[Math.min(pIdx, this.points.length - 1)];
     this.padCenter = padCx;
     this.padHeight = padH;
     for (let i = pIdx - pHalf; i <= pIdx + pHalf + 1; i++) {
@@ -191,16 +191,16 @@ class Terrain {
 
   heightAt(x) {
     const fi = x / this.step;
-    const i  = Math.max(0, Math.min(Math.floor(fi), this.points.length - 2));
-    const t  = fi - i;
+    const i = Math.max(0, Math.min(Math.floor(fi), this.points.length - 2));
+    const t = fi - i;
     return this.points[i] * (1 - t) + this.points[i + 1] * t;
   }
 
   draw(ctx, camX, camY, scale, canvasW, canvasH) {
     const cfg = this.cfg;
     const pts = this.points;
-    const s   = scale;
-    const W   = canvasW, H = canvasH;
+    const s = scale;
+    const W = canvasW, H = canvasH;
 
     const toSX = wx => (wx - camX) * s + W / 2;
     const toSY = wy => H / 2 - (wy - camY) * s;
@@ -237,7 +237,7 @@ class Terrain {
     const padL = this.padCenter - this.padWidth / 2;
     const padR = this.padCenter + this.padWidth / 2;
     const padY = this.padHeight;
-    const sxL  = toSX(padL), sxR = toSX(padR), syP = toSY(padY);
+    const sxL = toSX(padL), sxR = toSX(padR), syP = toSY(padY);
 
     // Pad base
     ctx.fillStyle = 'rgba(0,200,100,0.15)';
@@ -280,14 +280,14 @@ class Terrain {
   _drawDecorations(ctx, camX, camY, scale, W, H) {
     const toSX = wx => (wx - camX) * scale + W / 2;
     const toSY = wy => H / 2 - (wy - camY) * scale;
-    const rng  = seededRand(987654);
+    const rng = seededRand(987654);
 
     if (this.bodyId === 'moon' || this.bodyId === 'mercury') {
       // Craters
       for (let i = 0; i < 30; i++) {
         const cx = rng() * this.width;
         const cy = this.heightAt(cx);
-        const r  = 3 + rng() * 12;
+        const r = 3 + rng() * 12;
         const sx = toSX(cx), sy = toSY(cy);
         ctx.strokeStyle = 'rgba(50,50,50,0.5)';
         ctx.lineWidth = 1;
@@ -337,8 +337,8 @@ class ParticleSystem {
     const count = intense ? 5 : 3;
     for (let i = 0; i < count; i++) {
       const spread = (Math.random() - 0.5) * 0.8;
-      const speed  = 8 + Math.random() * 15;
-      const rad    = (angle + 180) * Math.PI / 180 + spread;
+      const speed = 8 + Math.random() * 15;
+      const rad = (angle + 180) * Math.PI / 180 + spread;
       this.particles.push({
         x: wx, y: wy,
         vx: Math.sin(rad) * speed,
@@ -444,8 +444,8 @@ class ParticleSystem {
       const p = this.particles[i];
       p.life -= dt / p.maxLife;
       if (p.life <= 0) { this.particles.splice(i, 1); continue; }
-      p.x  += p.vx * dt;
-      p.y  += p.vy * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
       if (p.type === 'smoke') {
         // smoke rises (vy positive = world up), slight deceleration
         p.vy = Math.max(0, p.vy - 0.3 * dt);
@@ -501,14 +501,14 @@ class ParticleSystem {
 // ─── Wind System ──────────────────────────────────────────────────────────────
 class WindSystem {
   constructor(bodyId) {
-    this.cfg    = BODY_DATA[bodyId];
-    this.t      = 0;
+    this.cfg = BODY_DATA[bodyId];
+    this.t = 0;
     this.current = 0;  // current wind acceleration in m/s²
-    this.gustTimer  = 0;
+    this.gustTimer = 0;
     this.gustActive = false;
     this.gustStrength = 0;
-    this.stormActive  = false;
-    this.stormTimer   = 0;
+    this.stormState = 0; // 0=idle, 1=warning, 2=active
+    this.stormTimer = 0;
     this.stormStrength = 0;
     this.direction = 1;  // +1 or -1
   }
@@ -527,7 +527,7 @@ class WindSystem {
       if (!this.gustActive) {
         if (Math.random() < cfg.windGustChance * dt * 60) {
           this.gustActive = true;
-          this.gustTimer  = 0.8 + Math.random() * 2;
+          this.gustTimer = 0.8 + Math.random() * 2;
           this.gustStrength = (cfg.windBase + Math.random() * cfg.windAmp) * (Math.random() < 0.5 ? 1 : -1);
         }
       } else {
@@ -537,32 +537,38 @@ class WindSystem {
       }
       // Dust storm
       if (cfg.hasDustStorm) {
-        if (!this.stormActive) {
+        if (this.stormState === 0) {
           if (Math.random() < cfg.dustStormChance * dt * 60) {
-            this.stormActive   = true;
-            this.stormTimer    = 4 + Math.random() * 5;
+            this.stormState = 1;
+            this.stormTimer = 2.5; // warning duration
+          }
+        } else if (this.stormState === 1) {
+          this.stormTimer -= dt;
+          if (this.stormTimer <= 0) {
+            this.stormState = 2;
+            this.stormTimer = 4 + Math.random() * 5;
             this.stormStrength = (cfg.windAmp + Math.random() * 10) * (Math.random() < 0.5 ? 1 : -1);
           }
-        } else {
+        } else if (this.stormState === 2) {
           wind += this.stormStrength;
           this.stormTimer -= dt;
-          if (this.stormTimer <= 0) this.stormActive = false;
+          if (this.stormTimer <= 0) this.stormState = 0;
         }
       }
     } else if (cfg.windType === 'shear') {
       // Low-frequency oscillation (Titan)
-      wind  = Math.sin(this.t * 0.18) * cfg.windBase;
+      wind = Math.sin(this.t * 0.18) * cfg.windBase;
       wind += Math.sin(this.t * 0.43 + 1.2) * cfg.windAmp * 0.4;
       wind += (Math.random() - 0.5) * cfg.windBase * 0.3;
     } else if (cfg.windType === 'turbulent') {
       // Earth turbulence
-      wind  = Math.sin(this.t * 0.35) * cfg.windBase;
+      wind = Math.sin(this.t * 0.35) * cfg.windBase;
       wind += Math.sin(this.t * 1.1 + 0.8) * cfg.windAmp * 0.3;
       wind += Math.sin(this.t * 2.7 + 2.1) * cfg.windAmp * 0.15;
       wind += (Math.random() - 0.5) * cfg.windBase * 0.5;
     } else if (cfg.windType === 'hurricane') {
       // Venus — constant strong push + chaos
-      wind  = cfg.windBase * 1.5 * this.direction;
+      wind = cfg.windBase * 1.5 * this.direction;
       wind += Math.sin(this.t * 0.6) * cfg.windAmp * 0.6;
       wind += Math.sin(this.t * 1.8) * cfg.windAmp * 0.3;
       wind += (Math.random() - 0.5) * cfg.windAmp * 0.4;
@@ -575,7 +581,8 @@ class WindSystem {
   }
 
   getForce() { return this.current; }
-  isStorming() { return this.stormActive; }
+  isStorming() { return this.stormState === 2; }
+  isWarning() { return this.stormState === 1; }
   getDisplaySpeed() {
     // Convert back to approximate m/s for display
     return Math.abs(this.current) * 2.5;
@@ -586,155 +593,196 @@ class WindSystem {
 class HazardSystem {
   constructor(bodyId) {
     this.bodyId = bodyId;
-    this._t     = 0;
-    this._active = false;
-    this._timer  = 0;
-    this._engineCutout  = false;
-    this._rotationMult  = 1;
+    this._t = 0;
+    this._state = 0; // 0: idle, 1: warning, 2: active
+    this._timer = 0;
+    this._engineCutout = false;
+    this._rotationMult = 1;
     this._fuelDrainMult = 1;
-    this._vertForce     = 0;
-    this._impulse       = null;
-    this._warning       = null;
+    this._vertForce = 0;
+    this._impulse = null;
+    this._warning = null;
   }
 
   update(dt) {
     this._t += dt;
     this._impulse = null;
     switch (this.bodyId) {
-      case 'moon':    this._updateMeteor(dt);    break;
-      case 'mercury': this._updateFlare(dt);     break;
-      case 'mars':    this._updateMagnetic(dt);  break;
-      case 'titan':   this._updateDownburst(dt); break;
-      case 'earth':   this._updateLightning(dt); break;
-      case 'venus':   this._updateAcidRain(dt);  break;
+      case 'moon': this._updateMeteor(dt); break;
+      case 'mercury': this._updateFlare(dt); break;
+      case 'mars': this._updateMagnetic(dt); break;
+      case 'titan': this._updateDownburst(dt); break;
+      case 'earth': this._updateLightning(dt); break;
+      case 'venus': this._updateAcidRain(dt); break;
     }
   }
 
   _updateMeteor(dt) {
-    if (!this._active) {
+    if (this._state === 0) {
       if (Math.random() < 0.0005 * dt * 60) {
-        this._active  = true;
-        this._timer   = 0.12;
-        const mag  = 7 + Math.random() * 10;
+        this._state = 1;
+        this._timer = 2.5;
+        this._warning = '☄ IMPACT MÉTÉORITE IMMINENT !';
+      }
+    } else if (this._state === 1) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 2;
+        this._timer = 0.12;
+        const mag = 7 + Math.random() * 10;
         const sign = Math.random() < 0.5 ? 1 : -1;
         this._impulse = { vx: mag * sign, vy: 2 + Math.random() * 4 };
         this._warning = '☄ IMPACT MÉTÉORITE !';
       }
-    } else {
+    } else if (this._state === 2) {
       this._timer -= dt;
-      if (this._timer <= 0) { this._active = false; this._warning = null; }
+      if (this._timer <= 0) { this._state = 0; this._warning = null; }
     }
   }
 
   _updateFlare(dt) {
-    if (!this._active) {
+    if (this._state === 0) {
       if (Math.random() < 0.0003 * dt * 60) {
-        this._active        = true;
-        this._timer         = 1.5 + Math.random();
-        this._engineCutout  = true;
-        this._warning = '☀ ÉRUPTION SOLAIRE — Moteur hors ligne !';
+        this._state = 1;
+        this._timer = 2.5;
+        this._warning = '☀ ÉRUPTION SOLAIRE IMMINENTE !';
       }
-    } else {
+    } else if (this._state === 1) {
       this._timer -= dt;
       if (this._timer <= 0) {
-        this._active       = false;
+        this._state = 2;
+        this._timer = 1.5 + Math.random();
+        this._engineCutout = true;
+        this._warning = '☀ ÉRUPTION SOLAIRE — Moteur hors ligne !';
+      }
+    } else if (this._state === 2) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 0;
         this._engineCutout = false;
-        this._warning      = null;
+        this._warning = null;
       }
     }
   }
 
   _updateMagnetic(dt) {
-    if (!this._active) {
+    if (this._state === 0) {
       if (Math.random() < 0.0003 * dt * 60) {
-        this._active       = true;
-        this._timer        = 2 + Math.random() * 2;
+        this._state = 1;
+        this._timer = 2.5;
+        this._warning = '🧲 ORAGE MAGNÉTIQUE IMMINENT !';
+      }
+    } else if (this._state === 1) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 2;
+        this._timer = 2 + Math.random() * 2;
         this._rotationMult = -1;
         this._warning = '🧲 ORAGE MAGNÉTIQUE — Gyroscope inversé !';
       }
-    } else {
+    } else if (this._state === 2) {
       this._timer -= dt;
       if (this._timer <= 0) {
-        this._active       = false;
+        this._state = 0;
         this._rotationMult = 1;
-        this._warning      = null;
+        this._warning = null;
       }
     }
   }
 
   _updateDownburst(dt) {
-    if (!this._active) {
+    if (this._state === 0) {
       if (Math.random() < 0.0007 * dt * 60) {
-        this._active    = true;
-        this._timer     = 1 + Math.random() * 1.5;
-        this._vertForce = -(16 + Math.random() * 12);
-        this._warning   = '⬇ RAFALE VERTICALE !';
+        this._state = 1;
+        this._timer = 2.5;
+        this._warning = '⬇ RAFALE VERTICALE IMMINENTE !';
       }
-    } else {
+    } else if (this._state === 1) {
       this._timer -= dt;
       if (this._timer <= 0) {
-        this._active    = false;
+        this._state = 2;
+        this._timer = 1 + Math.random() * 1.5;
+        this._vertForce = -(16 + Math.random() * 12);
+        this._warning = '⬇ RAFALE VERTICALE !';
+      }
+    } else if (this._state === 2) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 0;
         this._vertForce = 0;
-        this._warning   = null;
+        this._warning = null;
       }
     }
   }
 
   _updateLightning(dt) {
-    if (!this._active) {
+    if (this._state === 0) {
       if (Math.random() < 0.0005 * dt * 60) {
-        this._active = true;
-        this._timer  = 0.08;
-        const mag  = 12 + Math.random() * 14;
+        this._state = 1;
+        this._timer = 2.0;
+        this._warning = '⚡ FOUDRE IMMINENTE !';
+      }
+    } else if (this._state === 1) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 2;
+        this._timer = 0.08;
+        const mag = 12 + Math.random() * 14;
         const sign = Math.random() < 0.5 ? 1 : -1;
         this._impulse = { vx: mag * sign, vy: 3 + Math.random() * 5 };
         this._warning = '⚡ FOUDRE !';
       }
-    } else {
+    } else if (this._state === 2) {
       this._timer -= dt;
-      if (this._timer <= 0) { this._active = false; this._warning = null; }
+      if (this._timer <= 0) { this._state = 0; this._warning = null; }
     }
   }
 
   _updateAcidRain(_dt) {
-    const period     = 12;
+    const period = 12;
     const onFraction = 0.45;
     const phase = (this._t % period) / period;
-    if (phase < onFraction) {
-      this._active        = true;
+
+    if (phase > 0.8) {
+      this._state = 1;
+      this._fuelDrainMult = 1;
+      this._warning = '☠ PLUIE ACIDE IMMINENTE !';
+    } else if (phase < onFraction) {
+      this._state = 2;
       this._fuelDrainMult = 2.5;
       this._warning = '☠ PLUIE ACIDE — Carburant corrodé !';
     } else {
-      this._active        = false;
+      this._state = 0;
       this._fuelDrainMult = 1;
-      this._warning       = null;
+      this._warning = null;
     }
   }
 
-  get engineCutout()  { return this._engineCutout; }
-  get rotationMult()  { return this._rotationMult; }
+  get engineCutout() { return this._engineCutout; }
+  get rotationMult() { return this._rotationMult; }
   get fuelDrainMult() { return this._fuelDrainMult; }
-  get vertForce()     { return this._vertForce; }
-  get warning()       { return this._warning; }
-  get isActive()      { return this._active; }
-  consumeImpulse()    { const i = this._impulse; this._impulse = null; return i; }
+  get vertForce() { return this._vertForce; }
+  get warning() { return this._warning; }
+  get isActive() { return this._state === 2; }
+  get isWarning() { return this._state === 1; }
+  consumeImpulse() { const i = this._impulse; this._impulse = null; return i; }
 }
 
 // ─── Lander ───────────────────────────────────────────────────────────────────
 class Lander {
   constructor(bodyId, terrain) {
-    const cfg    = BODY_DATA[bodyId];
-    this.bodyId  = bodyId;
-    this.cfg     = cfg;
+    const cfg = BODY_DATA[bodyId];
+    this.bodyId = bodyId;
+    this.cfg = cfg;
     // Start above center of terrain
-    this.x  = terrain.padCenter + (Math.random() - 0.5) * terrain.width * 0.5;
-    this.x  = Math.max(20, Math.min(terrain.width - 20, this.x));
-    this.y  = terrain.maxH + cfg.startAlt;
+    this.x = terrain.padCenter + (Math.random() - 0.5) * terrain.width * 0.5;
+    this.x = Math.max(20, Math.min(terrain.width - 20, this.x));
+    this.y = terrain.maxH + cfg.startAlt;
     // Feature 3: angle + drift de départ aléatoire par difficulté
     this.vx = (Math.random() - 0.5) * cfg.stars * 1.2;
     this.vy = -7 - Math.random() * 4;        // falling
     this.angle = (Math.random() - 0.5) * cfg.stars * 8;
-    this.fuel  = cfg.startFuel;
+    this.fuel = cfg.startFuel;
     this.alive = true;
     this.landed = false;
     this.crashed = false;
@@ -749,21 +797,21 @@ class Lander {
     if (!this.alive) return;
 
     const cfg = this.cfg;
-    const rotMult    = hazard ? hazard.rotationMult  : 1;
-    const fuelMult   = hazard ? hazard.fuelDrainMult : 1;
-    const engineOff  = hazard ? hazard.engineCutout  : false;
-    const extraVert  = hazard ? hazard.vertForce     : 0;
+    const rotMult = hazard ? hazard.rotationMult : 1;
+    const fuelMult = hazard ? hazard.fuelDrainMult : 1;
+    const engineOff = hazard ? hazard.engineCutout : false;
+    const extraVert = hazard ? hazard.vertForce : 0;
 
     // --- Rotation with inertia (Feature 8) ---
     const rotAcc = 280; // deg/s²
-    if (input.left)  this.rotVel -= rotAcc * dt * rotMult;
+    if (input.left) this.rotVel -= rotAcc * dt * rotMult;
     if (input.right) this.rotVel += rotAcc * dt * rotMult;
     this.rotVel *= Math.pow(0.08, dt); // forte friction — s'arrête vite mais pas instantané
     this.angle += this.rotVel * dt;
     this.angle = Math.max(-85, Math.min(85, this.angle));
 
     // angle=0 → nez vers le haut. La poussée va dans le sens du nez.
-    const rad  = this.angle * Math.PI / 180;
+    const rad = this.angle * Math.PI / 180;
     let fx = windForce;
     let fy = -cfg.gravity + extraVert;
 
@@ -807,18 +855,18 @@ class Lander {
     // --- Integrate ---
     this.vx += fx * dt;
     this.vy += fy * dt;
-    this.x  += this.vx * dt;
-    this.y  += this.vy * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
 
     // Boundary wrap (horizontal)
-    if (this.x < 0)  this.x = 0,  this.vx = Math.abs(this.vx) * 0.3;
+    if (this.x < 0) this.x = 0, this.vx = Math.abs(this.vx) * 0.3;
     // Don't let the lander leave the top
     // (nothing to check; it just floats)
   }
 
   checkCollision(terrain) {
     const bottomY = this.y - this.hh;
-    const th      = terrain.heightAt(this.x);
+    const th = terrain.heightAt(this.x);
     if (bottomY > th + 0.5) return null; // still in air
 
     // Capture impact velocities BEFORE stopping
@@ -826,21 +874,21 @@ class Lander {
     const impactVX = this.vx;
 
     // Stop lander on ground
-    this.y  = th + this.hh;
+    this.y = th + this.hh;
     this.vy = 0;
     this.vx = 0;
 
-    const cfg    = this.cfg;
-    const vDown  = -impactVY;           // positive = descending
+    const cfg = this.cfg;
+    const vDown = -impactVY;           // positive = descending
     const hSpeed = Math.abs(impactVX);
-    const tilt   = Math.abs(this.angle);
-    const onPad  = Math.abs(this.x - terrain.padCenter) <= terrain.padWidth / 2;
+    const tilt = Math.abs(this.angle);
+    const onPad = Math.abs(this.x - terrain.padCenter) <= terrain.padWidth / 2;
 
-    if (!onPad)                  return { type:'crash', reason:'Hors de la zone d\'atterrissage !' };
-    if (vDown  > cfg.maxVSpeed)  return { type:'crash', reason:`Vitesse verticale trop élevée : ${vDown.toFixed(1)} m/s (max ${cfg.maxVSpeed})` };
-    if (hSpeed > cfg.maxHSpeed)  return { type:'crash', reason:`Vitesse horizontale trop élevée : ${hSpeed.toFixed(1)} m/s (max ${cfg.maxHSpeed})` };
-    if (tilt   > cfg.maxAngle)   return { type:'crash', reason:`Inclinaison trop forte : ${tilt.toFixed(1)}° (max ${cfg.maxAngle}°)` };
-    return { type:'land' };
+    if (!onPad) return { type: 'crash', reason: 'Hors de la zone d\'atterrissage !' };
+    if (vDown > cfg.maxVSpeed) return { type: 'crash', reason: `Vitesse verticale trop élevée : ${vDown.toFixed(1)} m/s (max ${cfg.maxVSpeed})` };
+    if (hSpeed > cfg.maxHSpeed) return { type: 'crash', reason: `Vitesse horizontale trop élevée : ${hSpeed.toFixed(1)} m/s (max ${cfg.maxHSpeed})` };
+    if (tilt > cfg.maxAngle) return { type: 'crash', reason: `Inclinaison trop forte : ${tilt.toFixed(1)}° (max ${cfg.maxAngle}°)` };
+    return { type: 'land' };
   }
 
   // Bottom-center of lander (nozzle position) for particles
@@ -852,11 +900,11 @@ class Lander {
     const toSX = wx => (wx - camX) * scale + W / 2;
     const toSY = wy => H / 2 - (wy - camY) * scale;
 
-    const sx  = toSX(this.x);
-    const sy  = toSY(this.y);
+    const sx = toSX(this.x);
+    const sy = toSY(this.y);
     const rad = this.angle * Math.PI / 180;
-    const pw  = this.hw * 2 * scale;  // pixel width
-    const ph  = this.hh * 2 * scale;  // pixel height
+    const pw = this.hw * 2 * scale;  // pixel width
+    const ph = this.hh * 2 * scale;  // pixel height
 
     ctx.save();
     ctx.translate(sx, sy);
@@ -864,30 +912,30 @@ class Lander {
 
     // Legs
     ctx.strokeStyle = '#aaa';
-    ctx.lineWidth   = Math.max(1, scale * 0.5);
+    ctx.lineWidth = Math.max(1, scale * 0.5);
     const legW = pw * 0.55, legH = ph * 0.35;
     ctx.beginPath();
     ctx.moveTo(-pw * 0.4, ph * 0.1);
     ctx.lineTo(-legW / 2, ph * 0.5);
-    ctx.moveTo( pw * 0.4, ph * 0.1);
-    ctx.lineTo( legW / 2, ph * 0.5);
+    ctx.moveTo(pw * 0.4, ph * 0.1);
+    ctx.lineTo(legW / 2, ph * 0.5);
     ctx.stroke();
     // Foot pads
     ctx.strokeStyle = '#888';
-    ctx.lineWidth   = Math.max(1.5, scale * 0.6);
+    ctx.lineWidth = Math.max(1.5, scale * 0.6);
     ctx.beginPath();
     ctx.moveTo(-legW / 2 - 3, ph * 0.5);
     ctx.lineTo(-legW / 2 + 3, ph * 0.5);
-    ctx.moveTo( legW / 2 - 3, ph * 0.5);
-    ctx.lineTo( legW / 2 + 3, ph * 0.5);
+    ctx.moveTo(legW / 2 - 3, ph * 0.5);
+    ctx.lineTo(legW / 2 + 3, ph * 0.5);
     ctx.stroke();
 
     // Engine bell
     ctx.fillStyle = '#777';
     ctx.beginPath();
     ctx.moveTo(-pw * 0.35, ph * 0.1);
-    ctx.lineTo( pw * 0.35, ph * 0.1);
-    ctx.lineTo( pw * 0.25, ph * 0.45);
+    ctx.lineTo(pw * 0.35, ph * 0.1);
+    ctx.lineTo(pw * 0.25, ph * 0.45);
     ctx.lineTo(-pw * 0.25, ph * 0.45);
     ctx.closePath();
     ctx.fill();
@@ -920,13 +968,13 @@ class Lander {
       const fl = ph * (0.4 + Math.random() * 0.25);
       const fw = pw * (0.2 + Math.random() * 0.1);
       const flameGrad = ctx.createLinearGradient(0, ph * 0.45, 0, ph * 0.45 + fl);
-      flameGrad.addColorStop(0,   'rgba(255,240,100,0.95)');
+      flameGrad.addColorStop(0, 'rgba(255,240,100,0.95)');
       flameGrad.addColorStop(0.3, 'rgba(255,140,20,0.85)');
-      flameGrad.addColorStop(1,   'rgba(255,60,0,0)');
+      flameGrad.addColorStop(1, 'rgba(255,60,0,0)');
       ctx.fillStyle = flameGrad;
       ctx.beginPath();
       ctx.moveTo(-fw, ph * 0.42);
-      ctx.lineTo( fw, ph * 0.42);
+      ctx.lineTo(fw, ph * 0.42);
       ctx.quadraticCurveTo(fw * 0.5, ph * 0.45 + fl * 0.6, 0, ph * 0.45 + fl);
       ctx.quadraticCurveTo(-fw * 0.5, ph * 0.45 + fl * 0.6, -fw, ph * 0.42);
       ctx.fill();
@@ -935,11 +983,11 @@ class Lander {
     // Retro flame indicator
     if (input && input.space && this.fuel > 0) {
       ctx.strokeStyle = 'rgba(0,200,255,0.8)';
-      ctx.lineWidth   = 2;
+      ctx.lineWidth = 2;
       const rx = pw * 0.6;
       ctx.beginPath();
       ctx.moveTo(-rx, 0); ctx.lineTo(-rx - pw * 0.3, 0);
-      ctx.moveTo( rx, 0); ctx.lineTo( rx + pw * 0.3, 0);
+      ctx.moveTo(rx, 0); ctx.lineTo(rx + pw * 0.3, 0);
       ctx.stroke();
     }
 
@@ -947,7 +995,7 @@ class Lander {
     if (this.fuel < 150) {
       const pulse = 0.4 + 0.3 * Math.sin(Date.now() * 0.008);
       ctx.strokeStyle = `rgba(255,80,0,${pulse})`;
-      ctx.lineWidth   = 3;
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.roundRect(-pw / 2 - 2, -ph / 2 - 2, pw + 4, ph * 0.65 + 4, 6);
       ctx.stroke();
@@ -1021,34 +1069,34 @@ class MeteorSystem {
 // ─── LanderGame ───────────────────────────────────────────────────────────────
 class LanderGame {
   constructor(bodyId, canvasW, canvasH) {
-    this.bodyId   = bodyId;
-    this.cfg      = BODY_DATA[bodyId];
-    this.canvasW  = canvasW;
-    this.canvasH  = canvasH;
-    this.SCALE    = 4.5;  // pixels per meter
+    this.bodyId = bodyId;
+    this.cfg = BODY_DATA[bodyId];
+    this.canvasW = canvasW;
+    this.canvasH = canvasH;
+    this.SCALE = 4.5;  // pixels per meter
 
     // World
-    const seed    = Math.floor(Math.random() * 999999);
-    this.terrain  = new Terrain(bodyId, 600, seed);
-    this.lander   = new Lander(bodyId, this.terrain);
-    this.particles= new ParticleSystem();
-    this.wind     = new WindSystem(bodyId);
-    this.hazard   = new HazardSystem(bodyId);
+    const seed = Math.floor(Math.random() * 999999);
+    this.terrain = new Terrain(bodyId, 600, seed);
+    this.lander = new Lander(bodyId, this.terrain);
+    this.particles = new ParticleSystem();
+    this.wind = new WindSystem(bodyId);
+    this.hazard = new HazardSystem(bodyId);
 
     // Camera: follows lander
-    this.camX     = this.lander.x;
-    this.camY     = this.lander.y;
+    this.camX = this.lander.x;
+    this.camY = this.lander.y;
 
     // Stars for backdrop
-    this.stars    = genLandingStars(this.cfg.showStars ? 250 : 60);
-    this.clouds   = this.cfg.hasClouds ? genClouds() : [];
+    this.stars = genLandingStars(this.cfg.showStars ? 250 : 60);
+    this.clouds = this.cfg.hasClouds ? genClouds() : [];
 
     // Timer
-    this.elapsed  = 0;
-    this.result   = null;  // null | 'land' | 'crash'
+    this.elapsed = 0;
+    this.result = null;  // null | 'land' | 'crash'
 
     // Input snapshot (set externally)
-    this.input    = { up: false, left: false, right: false, space: false };
+    this.input = { up: false, left: false, right: false, space: false };
 
     // Post-explosion delay
     this.resultDelay = 0;
@@ -1065,8 +1113,8 @@ class LanderGame {
 
     // Feature 13: ghost recording
     this._recording = [];
-    this._recTimer  = 0;
-    this._ghost     = null;
+    this._recTimer = 0;
+    this._ghost = null;
   }
 
   update(dt) {
@@ -1132,8 +1180,8 @@ class LanderGame {
     // Pad shrink for hard levels (3★+)
     if (this.cfg.stars >= 3 && !this.result) {
       const shrinkDur = 60; // seconds to reach minimum
-      const minRatio  = 0.45;
-      const ratio     = Math.max(minRatio, 1 - (this.elapsed / shrinkDur) * (1 - minRatio));
+      const minRatio = 0.45;
+      const ratio = Math.max(minRatio, 1 - (this.elapsed / shrinkDur) * (1 - minRatio));
       this.terrain.padWidth = this.cfg.padWidth * ratio;
     }
 
@@ -1154,17 +1202,17 @@ class LanderGame {
     // Collision
     const col = this.lander.checkCollision(this.terrain);
     if (col && col.type === 'crash') {
-      this.lander.alive   = false;
+      this.lander.alive = false;
       this.lander.crashed = true;
       this.particles.emitExplosion(this.lander.x, this.lander.y);
-      this.result      = col;
+      this.result = col;
       this.resultDelay = 0;
       // Feature 11: crash shake
       this._shakeAmt = 8;
     } else if (col && col.type === 'land') {
-      this.lander.alive  = false;
+      this.lander.alive = false;
       this.lander.landed = true;
-      this.result      = col;
+      this.result = col;
       this.resultDelay = 0;
     }
 
@@ -1196,9 +1244,9 @@ class LanderGame {
 
     // Sky gradient
     const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0,   cfg.skyTop);
+    sky.addColorStop(0, cfg.skyTop);
     sky.addColorStop(0.7, cfg.skyBot);
-    sky.addColorStop(1,   lighten(cfg.groundColor, -20));
+    sky.addColorStop(1, lighten(cfg.groundColor, -20));
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
 
@@ -1213,14 +1261,14 @@ class LanderGame {
     }
 
     // Feature 9: Meteors (decorative, after stars before terrain)
-    this.meteors.update(1/60, W, H);
+    this.meteors.update(1 / 60, W, H);
     this.meteors.draw(ctx, W, H);
 
     // Clouds (Earth)
     for (const c of this.clouds) {
       const cx2 = c.x * W;
       const cy2 = c.y * H;
-      const cw  = c.w * W;
+      const cw = c.w * W;
       ctx.fillStyle = 'rgba(255,255,255,0.15)';
       for (let k = 0; k < 4; k++) {
         ctx.beginPath();
@@ -1239,7 +1287,7 @@ class LanderGame {
     for (const pt of this._trail) {
       const sx = (pt.x - cx) * S + W / 2;
       const sy = H / 2 - (pt.y - cy) * S;
-      const a  = Math.max(0, (1 - pt.age / 0.7) * 0.35);
+      const a = Math.max(0, (1 - pt.age / 0.7) * 0.35);
       ctx.fillStyle = `rgba(150,200,255,${a.toFixed(2)})`;
       ctx.beginPath();
       ctx.arc(sx, sy, Math.max(0.5, (1 - pt.age / 0.7) * 2), 0, Math.PI * 2);
@@ -1248,8 +1296,8 @@ class LanderGame {
 
     // Feature 10: lander shadow
     if (this.lander.alive) {
-      const groundY  = this.terrain.heightAt(this.lander.x);
-      const altPx    = (this.lander.y - this.lander.hh - groundY) * S;
+      const groundY = this.terrain.heightAt(this.lander.x);
+      const altPx = (this.lander.y - this.lander.hh - groundY) * S;
       const shadowAlpha = Math.max(0, 0.4 - altPx / 300);
       if (shadowAlpha > 0.01) {
         const shadowScale = Math.max(0.3, 1 - altPx / 400);
@@ -1308,7 +1356,7 @@ class LanderGame {
     }
 
     // Hazard flash overlays
-    if (this.hazard) {
+    if (this.hazard && this.hazard.isActive) {
       const hw = this.hazard.warning;
       if (hw && hw.startsWith('⚡')) {
         // Lightning — blanc intense
@@ -1329,6 +1377,23 @@ class LanderGame {
       }
     }
 
+    // Top center flashing warning text (Feature requested: red blinking warning before event)
+    let pendingWarn = null;
+    if (this.hazard && this.hazard.isWarning) pendingWarn = this.hazard.warning;
+    else if (this.wind && this.wind.isWarning()) pendingWarn = '⚠ TEMPÊTE IMMINENTE !';
+
+    if (pendingWarn && Math.floor(Date.now() / 200) % 2 === 0) {
+      ctx.save();
+      ctx.fillStyle = '#ff2222';
+      ctx.shadowColor = '#ff2222';
+      ctx.shadowBlur = 12;
+      ctx.font = 'bold 22px "Share Tech Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(pendingWarn, W / 2, 80);
+      ctx.restore();
+    }
+
     // HUD speed/tilt indicators
     this._drawSpeedIndicators(ctx, W, H);
 
@@ -1342,15 +1407,15 @@ class LanderGame {
   _drawSpeedIndicators(ctx, W, H) {
     const l = this.lander;
     if (!l.alive && !l.crashed) return;
-    const cfg  = this.cfg;
-    const vs   = -l.vy;   // positive = descending
-    const hs   = Math.abs(l.vx);
-    const ang  = Math.abs(l.angle);
+    const cfg = this.cfg;
+    const vs = -l.vy;   // positive = descending
+    const hs = Math.abs(l.vx);
+    const ang = Math.abs(l.angle);
 
     // Color logic
     const vc = vs > cfg.maxVSpeed ? '#f44' : (vs > cfg.maxVSpeed * 0.6 ? '#fa0' : '#0f0');
     const hc = hs > cfg.maxHSpeed ? '#f44' : (hs > cfg.maxHSpeed * 0.6 ? '#fa0' : '#0f0');
-    const ac = ang > cfg.maxAngle  ? '#f44' : (ang > cfg.maxAngle * 0.6 ? '#fa0' : '#0f0');
+    const ac = ang > cfg.maxAngle ? '#f44' : (ang > cfg.maxAngle * 0.6 ? '#fa0' : '#0f0');
 
     // Update DOM HUD
     const update = (id, val, color) => {
@@ -1358,8 +1423,8 @@ class LanderGame {
       if (!el) return;
       el.className = 'hval ' + (color === '#f44' ? 'danger' : color === '#fa0' ? 'warn' : 'safe');
     };
-    update('v-vs',  vs.toFixed(1), vc);
-    update('v-hs',  hs.toFixed(1), hc);
+    update('v-vs', vs.toFixed(1), vc);
+    update('v-hs', hs.toFixed(1), hc);
     update('v-ang', ang.toFixed(1), ac);
 
     const alt = Math.max(0, l.y - this.terrain.heightAt(l.x) - l.hh).toFixed(0);
@@ -1400,11 +1465,11 @@ class LanderGame {
     }
 
     // Speed values for DOM
-    const vsEl  = document.getElementById('v-vs');
-    const hsEl  = document.getElementById('v-hs');
+    const vsEl = document.getElementById('v-vs');
+    const hsEl = document.getElementById('v-hs');
     const angEl = document.getElementById('v-ang');
-    if (vsEl)  vsEl.textContent  = vs.toFixed(1);
-    if (hsEl)  hsEl.textContent  = hs.toFixed(1);
+    if (vsEl) vsEl.textContent = vs.toFixed(1);
+    if (hsEl) hsEl.textContent = hs.toFixed(1);
     if (angEl) angEl.textContent = ang.toFixed(1);
   }
 
@@ -1447,8 +1512,8 @@ class LanderGame {
   }
 
   getScore() {
-    const t   = this.elapsed;
-    const fuel= this.lander.fuel;
+    const t = this.elapsed;
+    const fuel = this.lander.fuel;
     const cfg = this.cfg;
     const base = 1000;
     const timeBonus = Math.max(0, 500 - Math.floor(t * 5));
@@ -1486,7 +1551,7 @@ function lighten(hex, amount) {
 
 // roundRect polyfill for older browsers
 if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     this.beginPath();
     this.moveTo(x + r, y);
     this.lineTo(x + w - r, y);

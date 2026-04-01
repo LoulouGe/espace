@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Space Lander 🚀</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <canvas id="game"></canvas>
 
@@ -14,9 +17,12 @@
   <div id="hud" class="hidden">
     <div id="hud-left">
       <div class="hrow"><span class="hlbl">ALT</span><span id="v-alt" class="hval">0 m</span></div>
-      <div class="hrow"><span class="hlbl">VIT ↓</span><span id="v-vs" class="hval safe">0.0</span><span class="hunit"> m/s</span></div>
-      <div class="hrow"><span class="hlbl">VIT →</span><span id="v-hs" class="hval safe">0.0</span><span class="hunit"> m/s</span></div>
-      <div class="hrow"><span class="hlbl">INCL</span><span id="v-ang" class="hval safe">0.0</span><span class="hunit">°</span></div>
+      <div class="hrow"><span class="hlbl">VIT ↓</span><span id="v-vs" class="hval safe">0.0</span><span class="hunit">
+          m/s</span></div>
+      <div class="hrow"><span class="hlbl">VIT →</span><span id="v-hs" class="hval safe">0.0</span><span class="hunit">
+          m/s</span></div>
+      <div class="hrow"><span class="hlbl">INCL</span><span id="v-ang" class="hval safe">0.0</span><span
+          class="hunit">°</span></div>
     </div>
     <div id="hud-center">
       <div id="hud-planet-name"></div>
@@ -25,7 +31,9 @@
     </div>
     <div id="hud-right">
       <div class="hrow"><span class="hlbl">CARBURANT</span></div>
-      <div id="fuel-wrap"><div id="fuel-bar"></div><span id="v-fuel">100%</span></div>
+      <div id="fuel-wrap">
+        <div id="fuel-bar"></div><span id="v-fuel">100%</span>
+      </div>
       <div class="hrow" id="wind-row"><span class="hlbl">VENT</span><span id="v-wind" class="hval">0.0 m/s</span></div>
       <div class="hrow" id="storm-warn" style="display:none"><span class="warn-txt">⚠ TEMPÊTE</span></div>
     </div>
@@ -69,9 +77,11 @@
   <!-- Contrôles temps (vue solaire) -->
   <div id="time-ctrl">
     <span id="sim-date"></span>
-    <button class="tbtn active" data-speed="1">×1</button>
-    <button class="tbtn" data-speed="1000">×1000</button>
-    <button class="tbtn" data-speed="100000">×100K</button>
+    <button class="tbtn" data-speed="1" style="display:none">×1</button>
+    <button class="tbtn" data-speed="1000" style="display:none">×1000</button>
+    <button class="tbtn active" data-speed="100000" style="display:none">×100K</button>
+    <button id="btn-reset"
+      style="margin-left:15px; background:rgba(200,50,50,0.3); color:#f55; border:1px solid #f55; border-radius:4px; padding:2px 8px; cursor:pointer; font-family:'Share Tech Mono', monospace; font-size:12px;">RESET</button>
   </div>
 
   <!-- Tooltip non atterrissable -->
@@ -81,4 +91,5 @@
   <script src="lander.js"></script>
   <script src="main.js"></script>
 </body>
+
 </html>

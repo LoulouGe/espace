@@ -358,18 +358,7 @@ class SolarSystem {
           ctx.font = '8px monospace';
           ctx.fillText('★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]), pos.x, pos.y + el.r + 24);
         }
-        // Feature 1: fuel bar under stars for landable planets
-        if (fuelInfo && fuelInfo[el.id] !== undefined) {
-          const pct = Math.max(0, Math.min(100, fuelInfo[el.id]));
-          const barW = 20, barH = 3;
-          const bx = pos.x - barW / 2;
-          const by = pos.y + el.r + 28;
-          ctx.fillStyle = 'rgba(0,0,0,0.5)';
-          ctx.fillRect(bx, by, barW, barH);
-          const fuelColor = pct < 20 ? '#f44' : pct < 50 ? '#fa0' : '#0f0';
-          ctx.fillStyle = fuelColor;
-          ctx.fillRect(bx, by, barW * pct / 100, barH);
-        }
+        // Feature 1: fuel bar under stars for landable planets removed
       } else {
         ctx.fillStyle = 'rgba(150,150,180,0.5)';
         ctx.font = '8px monospace';
@@ -416,17 +405,7 @@ class SolarSystem {
       ctx.font = '7px monospace';
       ctx.fillText('★☆☆☆☆', moonPos.x, moonPos.y + MOON_EL.r + 20);
     }
-    // Feature 1: Moon fuel bar
-    if (fuelInfo && fuelInfo['moon'] !== undefined) {
-      const pct = Math.max(0, Math.min(100, fuelInfo['moon']));
-      const barW = 20, barH = 3;
-      const bx = moonPos.x - barW / 2;
-      const by = moonPos.y + MOON_EL.r + 24;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(bx, by, barW, barH);
-      ctx.fillStyle = pct < 20 ? '#f44' : pct < 50 ? '#fa0' : '#0f0';
-      ctx.fillRect(bx, by, barW * pct / 100, barH);
-    }
+    // Feature 1: Moon fuel bar removed
 
     // Titan
     const titanPos = this._moonPos(saturnPos, TITAN_EL, t);
@@ -466,17 +445,7 @@ class SolarSystem {
       ctx.font = '7px monospace';
       ctx.fillText('★★★☆☆', titanPos.x, titanPos.y + TITAN_EL.r + 20);
     }
-    // Feature 1: Titan fuel bar
-    if (fuelInfo && fuelInfo['titan'] !== undefined) {
-      const pct = Math.max(0, Math.min(100, fuelInfo['titan']));
-      const barW = 20, barH = 3;
-      const bx = titanPos.x - barW / 2;
-      const by = titanPos.y + TITAN_EL.r + 24;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(bx, by, barW, barH);
-      ctx.fillStyle = pct < 20 ? '#f44' : pct < 50 ? '#fa0' : '#0f0';
-      ctx.fillRect(bx, by, barW * pct / 100, barH);
-    }
+    // Feature 1: Titan fuel bar removed
 
     // Title
     ctx.fillStyle = 'rgba(150,180,255,0.5)';

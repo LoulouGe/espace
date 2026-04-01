@@ -4,48 +4,48 @@
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('game');
-const ctx    = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
-  canvas.width  = window.innerWidth;
+  canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const S = { SOLAR:'solar', FADING:'fading', SELECT:'select', PLAYING:'playing', RESULT:'result', COUNTDOWN:'countdown' };
+const S = { SOLAR: 'solar', FADING: 'fading', SELECT: 'select', PLAYING: 'playing', RESULT: 'result', COUNTDOWN: 'countdown' };
 let state = S.SOLAR;
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
 let solar = new SolarSystem(canvas.width, canvas.height);
-let game  = null;
+let game = null;
 
 // ─── Input ────────────────────────────────────────────────────────────────────
-const keys = { up:false, left:false, right:false, space:false };
+const keys = { up: false, left: false, right: false, space: false };
 document.addEventListener('keydown', e => {
-  if (e.code === 'ArrowUp'    || e.code === 'KeyW') { keys.up    = true; e.preventDefault(); }
-  if (e.code === 'ArrowLeft'  || e.code === 'KeyA') { keys.left  = true; e.preventDefault(); }
+  if (e.code === 'ArrowUp' || e.code === 'KeyW') { keys.up = true; e.preventDefault(); }
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') { keys.left = true; e.preventDefault(); }
   if (e.code === 'ArrowRight' || e.code === 'KeyD') { keys.right = true; e.preventDefault(); }
-  if (e.code === 'Space')                           { keys.space = true; e.preventDefault(); }
+  if (e.code === 'Space') { keys.space = true; e.preventDefault(); }
 });
 document.addEventListener('keyup', e => {
-  if (e.code === 'ArrowUp'    || e.code === 'KeyW') keys.up    = false;
-  if (e.code === 'ArrowLeft'  || e.code === 'KeyA') keys.left  = false;
+  if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false;
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
   if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-  if (e.code === 'Space')                           keys.space = false;
+  if (e.code === 'Space') keys.space = false;
 });
 
 // ─── Fade + zoom state ────────────────────────────────────────────────────────
 let fadeProgress = 0;         // 0→1
-let zoomScale    = 1;
-let zoomOX       = 0;         // target planet screen X
-let zoomOY       = 0;         // target planet screen Y
-const FADE_DUR   = 0.9;       // seconds
+let zoomScale = 1;
+let zoomOX = 0;         // target planet screen X
+let zoomOY = 0;         // target planet screen Y
+const FADE_DUR = 0.9;       // seconds
 let selectedBody = null;
-let hoveredBody  = null;
+let hoveredBody = null;
 
 // ─── Solar view pan/zoom ──────────────────────────────────────────────────────
-const VIEW_MIN = 0.4;
+const VIEW_MIN = 1.0;
 const VIEW_MAX = 4.0;
 let viewZoom = 1;       // current solar zoom
 let viewPanX = 0;       // pan offset in canvas pixels (before zoom)
@@ -54,7 +54,7 @@ let viewPanY = 0;
 // Convert screen coords → solar canvas coords (inverse of view transform)
 function screenToSolar(sx, sy) {
   return {
-    x: (sx - canvas.width  / 2 - viewPanX) / viewZoom + canvas.width  / 2,
+    x: (sx - canvas.width / 2 - viewPanX) / viewZoom + canvas.width / 2,
     y: (sy - canvas.height / 2 - viewPanY) / viewZoom + canvas.height / 2,
   };
 }
@@ -69,11 +69,17 @@ function applySolarTransform(ctx) {
 // Zoom centred on a screen point
 function zoomViewAt(sx, sy, factor) {
   const newZoom = Math.max(VIEW_MIN, Math.min(VIEW_MAX, viewZoom * factor));
-  const ratio   = newZoom / viewZoom;
+  const ratio = newZoom / viewZoom;
   // Adjust pan so the point under cursor stays fixed
-  viewPanX = sx - canvas.width  / 2 - (sx - canvas.width  / 2 - viewPanX) * ratio;
+  viewPanX = sx - canvas.width / 2 - (sx - canvas.width / 2 - viewPanX) * ratio;
   viewPanY = sy - canvas.height / 2 - (sy - canvas.height / 2 - viewPanY) * ratio;
-  viewZoom  = newZoom;
+  viewZoom = newZoom;
+
+  const maxPanX = (canvas.width / 2) * (viewZoom - 1);
+  const maxPanY = (canvas.height / 2) * (viewZoom - 1);
+  viewPanX = Math.max(-maxPanX, Math.min(maxPanX, viewPanX));
+  viewPanY = Math.max(-maxPanY, Math.min(maxPanY, viewPanY));
+
   updateTimeCtrlVisibility();
 }
 
@@ -98,9 +104,9 @@ canvas.addEventListener('wheel', e => {
 }, { passive: false });
 
 // ─── Touch pinch/pan ──────────────────────────────────────────────────────────
-let _touches      = {};
+let _touches = {};
 let _lastPinchDist = null;
-let _lastPanMid   = null;
+let _lastPanMid = null;
 
 canvas.addEventListener('touchstart', e => {
   if (state !== S.SOLAR) return;
@@ -109,7 +115,7 @@ canvas.addEventListener('touchstart', e => {
   if (ids.length === 2) {
     const a = _touches[ids[0]], b = _touches[ids[1]];
     _lastPinchDist = Math.hypot(b.x - a.x, b.y - a.y);
-    _lastPanMid    = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    _lastPanMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
 }, { passive: true });
 
@@ -121,43 +127,49 @@ canvas.addEventListener('touchmove', e => {
   if (ids.length === 2) {
     const a = _touches[ids[0]], b = _touches[ids[1]];
     const dist = Math.hypot(b.x - a.x, b.y - a.y);
-    const mid  = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     if (_lastPinchDist) {
       zoomViewAt(mid.x, mid.y, dist / _lastPinchDist);
     }
     if (_lastPanMid) {
       viewPanX += mid.x - _lastPanMid.x;
       viewPanY += mid.y - _lastPanMid.y;
+
+      const maxPanX = (canvas.width / 2) * (viewZoom - 1);
+      const maxPanY = (canvas.height / 2) * (viewZoom - 1);
+      viewPanX = Math.max(-maxPanX, Math.min(maxPanX, viewPanX));
+      viewPanY = Math.max(-maxPanY, Math.min(maxPanY, viewPanY));
+
       updateTimeCtrlVisibility();
     }
     _lastPinchDist = dist;
-    _lastPanMid    = mid;
+    _lastPanMid = mid;
   }
 }, { passive: false });
 
 canvas.addEventListener('touchend', e => {
   Array.from(e.changedTouches).forEach(t => { delete _touches[t.identifier]; });
   _lastPinchDist = null;
-  _lastPanMid    = null;
+  _lastPanMid = null;
 }, { passive: true });
 
 // ─── Countdown state ─────────────────────────────────────────────────────────
 let countdownTimer = 0;
 
 // ─── Campaign & Leaderboard ───────────────────────────────────────────────────
-const CAMPAIGN_ORDER = ['moon','mercury','mars','titan','earth','venus'];
+const CAMPAIGN_ORDER = ['moon', 'mercury', 'mars', 'titan', 'earth', 'venus'];
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem('sl_progress') || '{}'); } catch { return {}; }
 }
 function saveProgress(p) {
-  try { localStorage.setItem('sl_progress', JSON.stringify(p)); } catch {}
+  try { localStorage.setItem('sl_progress', JSON.stringify(p)); } catch { }
 }
 function loadLeaderboard() {
   try { return JSON.parse(localStorage.getItem('sl_lb') || '{}'); } catch { return {}; }
 }
 function saveLeaderboard(lb) {
-  try { localStorage.setItem('sl_lb', JSON.stringify(lb)); } catch {}
+  try { localStorage.setItem('sl_lb', JSON.stringify(lb)); } catch { }
 }
 
 // ─── Feature 1: Global Fuel ───────────────────────────────────────────────────
@@ -165,7 +177,7 @@ function loadGlobalFuel() {
   try { return parseFloat(localStorage.getItem('sl_fuel') || '100'); } catch { return 100; }
 }
 function saveGlobalFuel(v) {
-  try { localStorage.setItem('sl_fuel', String(Math.max(0, Math.min(100, v)))); } catch {}
+  try { localStorage.setItem('sl_fuel', String(Math.max(0, Math.min(100, v)))); } catch { }
 }
 
 let globalFuel = loadGlobalFuel();
@@ -184,7 +196,7 @@ function saveGhost(id, frames) {
   try {
     const limited = frames.slice(0, 2000);
     localStorage.setItem('sl_ghost_' + id, JSON.stringify(limited));
-  } catch {}
+  } catch { }
 }
 function loadGhost(id) {
   try {
@@ -196,7 +208,7 @@ function loadGhost(id) {
 // Returns Set of locked body IDs
 function getLockedIds() {
   const progress = loadProgress();
-  const locked   = new Set();
+  const locked = new Set();
   for (let i = 1; i < CAMPAIGN_ORDER.length; i++) {
     const prev = CAMPAIGN_ORDER[i - 1];
     if (!progress[prev]) locked.add(CAMPAIGN_ORDER[i]);
@@ -221,7 +233,7 @@ function updateLeaderboard(id, score) {
 }
 
 // ─── Time scale ───────────────────────────────────────────────────────────────
-let timeScale = 1;
+let timeScale = 100000;
 
 // ─── Result shown guard ───────────────────────────────────────────────────────
 let resultShown = false;
@@ -230,14 +242,14 @@ let resultShown = false;
 let tooltipTimer = 0;
 
 // ─── UI refs ─────────────────────────────────────────────────────────────────
-const elHud       = document.getElementById('hud');
-const elCtrl      = document.getElementById('controls-bar');
-const elBtnSolar  = document.getElementById('btn-solar');
-const elTimeCtrl  = document.getElementById('time-ctrl');
-const elSimDate   = document.getElementById('sim-date');
-const elCardPlanet= document.getElementById('card-planet');
-const elCardResult= document.getElementById('card-result');
-const elTooltip   = document.getElementById('tooltip');
+const elHud = document.getElementById('hud');
+const elCtrl = document.getElementById('controls-bar');
+const elBtnSolar = document.getElementById('btn-solar');
+const elTimeCtrl = document.getElementById('time-ctrl');
+const elSimDate = document.getElementById('sim-date');
+const elCardPlanet = document.getElementById('card-planet');
+const elCardResult = document.getElementById('card-result');
+const elTooltip = document.getElementById('tooltip');
 
 // ─── Canvas interactions ──────────────────────────────────────────────────────
 canvas.addEventListener('click', e => {
@@ -262,45 +274,43 @@ canvas.addEventListener('click', e => {
   // pos en coordonnées solaires → convertir en coordonnées écran
   const solarPos = solar.getBodyScreenPos(id);
   const pos = {
-    x: (solarPos.x - canvas.width  / 2) * viewZoom + canvas.width  / 2 + viewPanX,
+    x: (solarPos.x - canvas.width / 2) * viewZoom + canvas.width / 2 + viewPanX,
     y: (solarPos.y - canvas.height / 2) * viewZoom + canvas.height / 2 + viewPanY,
   };
-  zoomOX       = pos.x;
-  zoomOY       = pos.y;
+  zoomOX = pos.x;
+  zoomOY = pos.y;
   fadeProgress = 0;
-  zoomScale    = 1;
-  state        = S.FADING;
+  zoomScale = 1;
+  state = S.FADING;
 });
 
 let _hoverFactIdx = 0;
-let _lastHovered  = null;
-let _factTimer    = 0;
+let _lastHovered = null;
+let _factTimer = 0;
 
 canvas.addEventListener('mousemove', e => {
   if (state !== S.SOLAR) return;
   const prev = hoveredBody;
-  const hsc  = screenToSolar(e.clientX, e.clientY);
+  const hsc = screenToSolar(e.clientX, e.clientY);
   hoveredBody = solar.getBodyAt(hsc.x, hsc.y);
   canvas.style.cursor = hoveredBody ? 'pointer' : 'crosshair';
 
   if (hoveredBody !== prev) {
     _hoverFactIdx = 0;
-    _lastHovered  = hoveredBody;
-    _factTimer    = 0;
+    _lastHovered = hoveredBody;
+    _factTimer = 0;
   }
 
   if (hoveredBody) {
-    const dist  = solar.getDistFromEarth(hoveredBody);
-    const fact  = solar.getFact(hoveredBody, _hoverFactIdx);
+    const dist = solar.getDistFromEarth(hoveredBody);
+    const fact = solar.getFact(hoveredBody, _hoverFactIdx);
     const locked = getLockedIds().has(hoveredBody);
     const lb = loadLeaderboard();
     const best = lb[hoveredBody];
     let html = `<b>${BODY_DATA[hoveredBody] ? BODY_DATA[hoveredBody].name : hoveredBody}</b>`;
-    if (dist)  html += `<br>📡 Distance Terre : ${dist}`;
-    if (fact)  html += `<br>💡 ${fact}`;
-    // Feature 1: show global fuel % in tooltip
-    if (LANDABLE.has(hoveredBody)) html += `<br>⛽ Carburant : ${globalFuel.toFixed(0)}%`;
-    if (best)  html += `<br>🏆 Record : ${best.total} pts`;
+    if (dist) html += `<br>📡 Distance Terre : ${dist}`;
+    if (fact) html += `<br>💡 ${fact}`;
+    if (best) html += `<br>🏆 Record : ${best.total} pts`;
     if (locked) html += `<br>🔒 Terminez la planète précédente`;
     showTooltipHTML(e.clientX, e.clientY, html);
   } else {
@@ -309,13 +319,12 @@ canvas.addEventListener('mousemove', e => {
   }
 });
 
-// ─── Time buttons ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tbtn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    timeScale = Number(btn.dataset.speed);
-    document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
+// ─── Reset Button ─────────────────────────────────────────────────────────────
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (confirm("Voulez-vous vraiment effacer votre progression (records, déblocages, carburant, fantômes) et recommencer à zéro ?")) {
+    localStorage.clear();
+    location.reload();
+  }
 });
 
 // ─── Planet card ─────────────────────────────────────────────────────────────
@@ -354,7 +363,7 @@ function returnToSolar() {
   elHud.classList.add('hidden');
   elCtrl.classList.add('hidden');
   elBtnSolar.classList.add('hidden');
-  game  = null;
+  game = null;
   state = S.SOLAR;
   showSolarUI();
 }
@@ -373,7 +382,7 @@ function startGame() {
 
   const cfg = BODY_DATA[selectedBody];
   document.getElementById('hud-planet-name').textContent = cfg.name.toUpperCase();
-  document.getElementById('wind-row').style.display  = cfg.windType !== 'none' ? '' : 'none';
+  document.getElementById('wind-row').style.display = cfg.windType !== 'none' ? '' : 'none';
   document.getElementById('storm-warn').style.display = 'none';
 
   elHud.classList.remove('hidden');
@@ -389,20 +398,20 @@ function startGame() {
 function showPlanetCard(id) {
   const cfg = BODY_DATA[id];
   document.getElementById('card-emoji').textContent = cfg.emoji;
-  document.getElementById('card-name').textContent  = cfg.name;
-  document.getElementById('card-desc').textContent  = cfg.desc;
+  document.getElementById('card-name').textContent = cfg.name;
+  document.getElementById('card-desc').textContent = cfg.desc;
 
   const starsEl = document.getElementById('card-stars');
   starsEl.innerHTML = '';
   for (let i = 1; i <= 5; i++) {
     const s = document.createElement('span');
     s.textContent = '★';
-    s.className   = i <= cfg.stars ? 'star-filled' : 'star-empty';
+    s.className = i <= cfg.stars ? 'star-filled' : 'star-empty';
     starsEl.appendChild(s);
   }
 
   // Feature 6: personal record in planet card
-  const lb   = loadLeaderboard();
+  const lb = loadLeaderboard();
   const best = lb[id];
   let condHTML = cfg.conditions.map(c => `<div class="cond-row"><span class="ci">${c.ci}</span><span>${c.txt}</span></div>`).join('');
   if (best) {
@@ -421,16 +430,16 @@ function showResultCard(success, score, reason) {
   titleEl.style.color = success ? '#0f0' : '#f44';
   document.getElementById('res-emoji').textContent = success ? '🎉' : '💥';
 
-  const mm  = String(Math.floor(score.time / 60)).padStart(2, '0');
-  const ss  = String(Math.floor(score.time % 60)).padStart(2, '0');
-  const fpct= ((score.fuel / BODY_DATA[selectedBody].startFuel) * 100).toFixed(0);
+  const mm = String(Math.floor(score.time / 60)).padStart(2, '0');
+  const ss = String(Math.floor(score.time % 60)).padStart(2, '0');
+  const fpct = ((score.fuel / BODY_DATA[selectedBody].startFuel) * 100).toFixed(0);
 
   const reasonRow = (!success && reason)
     ? `<div class="stat-row" style="color:#f88"><span class="stat-lbl">Cause</span><span class="stat-val" style="color:#faa;font-size:11px">${reason}</span></div>`
     : '';
 
-  const lb    = loadLeaderboard();
-  const best  = lb[selectedBody];
+  const lb = loadLeaderboard();
+  const best = lb[selectedBody];
   const bestRow = (success && best && best.total >= (score.total || 0))
     ? `<div class="stat-row"><span class="stat-lbl">🏆 Meilleur</span><span class="stat-val" style="color:#fc0">${best.total} pts</span></div>`
     : '';
@@ -454,8 +463,8 @@ function showResultCard(success, score, reason) {
   if (success) {
     for (let i = 1; i <= 3; i++) {
       const s = document.createElement('span');
-      s.textContent    = '★';
-      s.className      = i <= score.stars ? 'star-filled' : 'star-empty';
+      s.textContent = '★';
+      s.className = i <= score.stars ? 'star-filled' : 'star-empty';
       s.style.fontSize = '28px';
       starsEl.appendChild(s);
     }
@@ -470,16 +479,16 @@ function showResultCard(success, score, reason) {
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
 function showTooltip(x, y, msg) {
   elTooltip.textContent = msg;
-  elTooltip.style.left  = (x + 14) + 'px';
-  elTooltip.style.top   = (y - 36) + 'px';
+  elTooltip.style.left = (x + 14) + 'px';
+  elTooltip.style.top = (y - 36) + 'px';
   elTooltip.classList.remove('hidden');
   tooltipTimer = 2.8;
 }
 
 function showTooltipHTML(x, y, html) {
-  elTooltip.innerHTML   = html;
-  elTooltip.style.left  = Math.min(x + 14, window.innerWidth - 260) + 'px';
-  elTooltip.style.top   = (y - 36) + 'px';
+  elTooltip.innerHTML = html;
+  elTooltip.style.left = Math.min(x + 14, window.innerWidth - 260) + 'px';
+  elTooltip.style.top = (y - 36) + 'px';
   elTooltip.classList.remove('hidden');
   tooltipTimer = 0; // persistent while hovered
 }
@@ -487,20 +496,20 @@ function showTooltipHTML(x, y, html) {
 function nonLandableMsg(id) {
   const m = {
     jupiter: "Jupiter est une géante gazeuse — pas de surface solide !",
-    saturn:  "Saturne est une géante gazeuse. Cliquez sur Titan pour atterrir.",
-    uranus:  "Uranus est une géante de glace — pas d'atterrissage possible.",
+    saturn: "Saturne est une géante gazeuse. Cliquez sur Titan pour atterrir.",
+    uranus: "Uranus est une géante de glace — pas d'atterrissage possible.",
     neptune: "Neptune est une géante de glace — pas d'atterrissage possible.",
   };
   return m[id] || "Corps non atterrissable.";
 }
 
 // ─── Easing ───────────────────────────────────────────────────────────────────
-function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
 
 // ─── HUD update ───────────────────────────────────────────────────────────────
 function updateHUD() {
   if (!game) return;
-  const l   = game.lander;
+  const l = game.lander;
   const cfg = game.cfg;
 
   // Timer
@@ -513,16 +522,16 @@ function updateHUD() {
   document.getElementById('v-alt').textContent = alt.toFixed(0) + ' m';
 
   // Speeds with color
-  const vs    = Math.max(0, -l.vy);
-  const hs    = Math.abs(l.vx);
-  const ang   = Math.abs(l.angle);
+  const vs = Math.max(0, -l.vy);
+  const hs = Math.abs(l.vx);
+  const ang = Math.abs(l.angle);
   const color = (v, max) => v > max ? 'danger' : v > max * 0.65 ? 'warn' : 'safe';
 
-  const vsEl  = document.getElementById('v-vs');
-  const hsEl  = document.getElementById('v-hs');
+  const vsEl = document.getElementById('v-vs');
+  const hsEl = document.getElementById('v-hs');
   const angEl = document.getElementById('v-ang');
-  if (vsEl)  { vsEl.textContent  = vs.toFixed(1);  vsEl.className  = 'hval ' + color(vs,  cfg.maxVSpeed); }
-  if (hsEl)  { hsEl.textContent  = hs.toFixed(1);  hsEl.className  = 'hval ' + color(hs,  cfg.maxHSpeed); }
+  if (vsEl) { vsEl.textContent = vs.toFixed(1); vsEl.className = 'hval ' + color(vs, cfg.maxVSpeed); }
+  if (hsEl) { hsEl.textContent = hs.toFixed(1); hsEl.className = 'hval ' + color(hs, cfg.maxHSpeed); }
   if (angEl) { angEl.textContent = ang.toFixed(1); angEl.className = 'hval ' + color(ang, cfg.maxAngle); }
 
   // Fuel
@@ -533,10 +542,10 @@ function updateHUD() {
   if (fuelTxtEl) fuelTxtEl.textContent = fpct.toFixed(0) + '%';
 
   // Wind
-  const windEl  = document.getElementById('v-wind');
+  const windEl = document.getElementById('v-wind');
   const stormEl = document.getElementById('storm-warn');
   if (windEl && cfg.windType !== 'none') {
-    const ws   = game.wind.getDisplaySpeed();
+    const ws = game.wind.getDisplaySpeed();
     const wdir = game.wind.current >= 0 ? '→' : '←';
     windEl.textContent = wdir + ' ' + ws.toFixed(1) + ' m/s';
   }
@@ -567,7 +576,7 @@ function loop(ts) {
   requestAnimationFrame(loop);
 
   const dt = Math.min((ts - lastTime) / 1000, 0.05);
-  lastTime  = ts;
+  lastTime = ts;
 
   try {
     // ── Update ────────────────────────────────────────────────────────────
@@ -589,7 +598,7 @@ function loop(ts) {
 
     } else if (state === S.FADING) {
       fadeProgress = Math.min(1, fadeProgress + dt / FADE_DUR);
-      zoomScale    = 1 + easeInOut(fadeProgress) * 22;
+      zoomScale = 1 + easeInOut(fadeProgress) * 22;
       if (fadeProgress >= 1) {
         state = S.SELECT;
         hideSolarUI();
@@ -616,8 +625,8 @@ function loop(ts) {
           unlockBody(selectedBody);
           // Feature 1: deduct fuel consumed
           const startFuel = BODY_DATA[selectedBody].startFuel;
-          const fuelUsed  = startFuel - game.lander.fuel;
-          const fuelPct   = (fuelUsed / startFuel) * 100;
+          const fuelUsed = startFuel - game.lander.fuel;
+          const fuelPct = (fuelUsed / startFuel) * 100;
           globalFuel = Math.max(0, globalFuel - fuelPct * 0.5);
           if (globalFuel < 10) {
             console.warn('⚠ Carburant global faible: ' + globalFuel.toFixed(0) + '%');
@@ -632,8 +641,8 @@ function loop(ts) {
         } else {
           // crash: also deduct some fuel
           const startFuel = BODY_DATA[selectedBody].startFuel;
-          const fuelUsed  = startFuel - game.lander.fuel;
-          const fuelPct   = (fuelUsed / startFuel) * 100;
+          const fuelUsed = startFuel - game.lander.fuel;
+          const fuelPct = (fuelUsed / startFuel) * 100;
           globalFuel = Math.max(0, globalFuel - fuelPct * 0.3);
           saveGlobalFuel(globalFuel);
           updateLeaderboard(selectedBody, score);
@@ -656,7 +665,7 @@ function loop(ts) {
       ctx.restore();
 
     } else if (state === S.FADING) {
-      const t  = easeInOut(fadeProgress);
+      const t = easeInOut(fadeProgress);
       ctx.save();
       ctx.translate(zoomOX, zoomOY);
       ctx.scale(zoomScale, zoomScale);
@@ -684,8 +693,8 @@ function loop(ts) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = '#fff';
-      ctx.shadowBlur  = 40;
-      ctx.fillStyle   = 'rgba(255,255,255,0.95)';
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.fillText(String(num), canvas.width / 2, canvas.height / 2);
       ctx.shadowBlur = 0;
       ctx.restore();
