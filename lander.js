@@ -369,14 +369,15 @@ class ParticleSystem {
   }
 
   emitExplosion(wx, wy) {
-    for (let i = 0; i < 80; i++) {
+    // Explosion particles (doubled to 160)
+    for (let i = 0; i < 160; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 5 + Math.random() * 35;
       this.particles.push({
         x: wx, y: wy,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed * 0.6,
-        life: 1, maxLife: 0.6 + Math.random() * 0.8,
+        life: 1, maxLife: 1.0 + Math.random() * 1.0,
         size: 2 + Math.random() * 5,
         type: 'explosion',
         hue: Math.random() < 0.5 ? 20 + Math.random() * 20 : 40 + Math.random() * 20,
@@ -393,6 +394,33 @@ class ParticleSystem {
         life: 1, maxLife: 1.0 + Math.random() * 0.5,
         size: 1 + Math.random() * 2,
         type: 'debris', hue: 0,
+      });
+    }
+    // Smoke particles
+    for (let i = 0; i < 40; i++) {
+      this.particles.push({
+        x: wx + (Math.random() - 0.5) * 6,
+        y: wy + (Math.random() - 0.5) * 6,
+        vx: (Math.random() - 0.5) * 3,
+        vy: 1 + Math.random() * 3,  // positive = world up
+        life: 1, maxLife: 2.0 + Math.random() * 2.0,
+        size: 3 + Math.random() * 5,
+        type: 'smoke', hue: 0,
+      });
+    }
+  }
+
+  emitSmoke(wx, wy) {
+    // Ongoing crash smoke
+    if (Math.random() < 0.4) {
+      this.particles.push({
+        x: wx + (Math.random() - 0.5) * 8,
+        y: wy + (Math.random() - 0.5) * 4,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 0.5 + Math.random() * 2,
+        life: 1, maxLife: 1.5 + Math.random() * 1.5,
+        size: 2 + Math.random() * 4,
+        type: 'smoke', hue: 0,
       });
     }
   }
@@ -418,7 +446,13 @@ class ParticleSystem {
       if (p.life <= 0) { this.particles.splice(i, 1); continue; }
       p.x  += p.vx * dt;
       p.y  += p.vy * dt;
-      p.vy -= gravity * dt * 0.3;  // slight gravity on particles
+      if (p.type === 'smoke') {
+        // smoke rises (vy positive = world up), slight deceleration
+        p.vy = Math.max(0, p.vy - 0.3 * dt);
+        p.vx *= (1 - 0.5 * dt);
+      } else {
+        p.vy -= gravity * dt * 0.3;  // slight gravity on particles
+      }
       if (p.type === 'thrust' || p.type === 'retro') {
         p.vx *= (1 - 2 * dt);
         p.vy *= (1 - 2 * dt);
@@ -436,21 +470,29 @@ class ParticleSystem {
       const sx = toSX(p.x), sy = toSY(p.y);
       if (sx < -10 || sx > W + 10 || sy < -10 || sy > H + 10) continue;
 
-      ctx.globalAlpha = Math.max(0, alpha);
-      if (p.type === 'thrust') {
-        ctx.fillStyle = `hsl(${p.hue},100%,${40 + 40 * p.life}%)`;
-      } else if (p.type === 'retro') {
-        ctx.fillStyle = `hsl(180,80%,${50 + 30 * p.life}%)`;
-      } else if (p.type === 'explosion') {
-        ctx.fillStyle = `hsl(${p.hue},100%,${30 + 50 * p.life}%)`;
-      } else if (p.type === 'debris') {
-        ctx.fillStyle = `hsl(30,40%,${40 * p.life}%)`;
-      } else if (p.type === 'dust') {
-        ctx.fillStyle = `hsl(25,60%,${40 + 20 * p.life}%)`;
+      if (p.type === 'smoke') {
+        ctx.globalAlpha = Math.max(0, alpha * 0.6);
+        ctx.fillStyle = `rgba(80,80,80,1)`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, Math.max(1, p.size * scale * 0.15 * (2 - p.life)), 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.globalAlpha = Math.max(0, alpha);
+        if (p.type === 'thrust') {
+          ctx.fillStyle = `hsl(${p.hue},100%,${40 + 40 * p.life}%)`;
+        } else if (p.type === 'retro') {
+          ctx.fillStyle = `hsl(180,80%,${50 + 30 * p.life}%)`;
+        } else if (p.type === 'explosion') {
+          ctx.fillStyle = `hsl(${p.hue},100%,${30 + 50 * p.life}%)`;
+        } else if (p.type === 'debris') {
+          ctx.fillStyle = `hsl(30,40%,${40 * p.life}%)`;
+        } else if (p.type === 'dust') {
+          ctx.fillStyle = `hsl(25,60%,${40 + 20 * p.life}%)`;
+        }
+        ctx.beginPath();
+        ctx.arc(sx, sy, Math.max(0.5, p.size * scale * 0.1 * p.life), 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.beginPath();
-      ctx.arc(sx, sy, Math.max(0.5, p.size * scale * 0.1 * p.life), 0, Math.PI * 2);
-      ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
@@ -674,6 +716,7 @@ class HazardSystem {
   get fuelDrainMult() { return this._fuelDrainMult; }
   get vertForce()     { return this._vertForce; }
   get warning()       { return this._warning; }
+  get isActive()      { return this._active; }
   consumeImpulse()    { const i = this._impulse; this._impulse = null; return i; }
 }
 
@@ -687,9 +730,10 @@ class Lander {
     this.x  = terrain.padCenter + (Math.random() - 0.5) * terrain.width * 0.5;
     this.x  = Math.max(20, Math.min(terrain.width - 20, this.x));
     this.y  = terrain.maxH + cfg.startAlt;
-    this.vx = (Math.random() - 0.5) * 2.5;  // slight initial drift
+    // Feature 3: angle + drift de départ aléatoire par difficulté
+    this.vx = (Math.random() - 0.5) * cfg.stars * 1.2;
     this.vy = -7 - Math.random() * 4;        // falling
-    this.angle = 0;   // degrees, 0 = upright, + = clockwise
+    this.angle = (Math.random() - 0.5) * cfg.stars * 8;
     this.fuel  = cfg.startFuel;
     this.alive = true;
     this.landed = false;
@@ -697,6 +741,8 @@ class Lander {
     // Physics dims
     this.hw = 2.5; // half-width in meters
     this.hh = 4.5; // half-height
+    // Feature 8: rotation inertia
+    this.rotVel = 0;
   }
 
   update(dt, input, windForce, hazard) {
@@ -708,11 +754,12 @@ class Lander {
     const engineOff  = hazard ? hazard.engineCutout  : false;
     const extraVert  = hazard ? hazard.vertForce     : 0;
 
-    // --- Rotation ---
-    // ← penche le haut vers la gauche (angle négatif), → vers la droite
-    const rotSpeed = 80; // deg/s
-    if (input.left)  this.angle -= rotSpeed * dt * rotMult;
-    if (input.right) this.angle += rotSpeed * dt * rotMult;
+    // --- Rotation with inertia (Feature 8) ---
+    const rotAcc = 280; // deg/s²
+    if (input.left)  this.rotVel -= rotAcc * dt * rotMult;
+    if (input.right) this.rotVel += rotAcc * dt * rotMult;
+    this.rotVel *= Math.pow(0.08, dt); // forte friction — s'arrête vite mais pas instantané
+    this.angle += this.rotVel * dt;
     this.angle = Math.max(-85, Math.min(85, this.angle));
 
     // angle=0 → nez vers le haut. La poussée va dans le sens du nez.
@@ -738,6 +785,12 @@ class Lander {
         fy -= (this.vy / spd) * retroForce;
       }
       this.fuel -= dt * 9 * fuelMult;
+      if (this.fuel < 0) this.fuel = 0;
+    }
+
+    // --- Feature 7: hover fuel drain ---
+    if (this.alive && this.fuel > 0 && !input.up && !input.space && !engineOff) {
+      this.fuel -= dt * 0.8 * fuelMult;
       if (this.fuel < 0) this.fuel = 0;
     }
 
@@ -922,6 +975,49 @@ function genClouds() {
   return clouds;
 }
 
+// ─── Feature 9: Meteor System ────────────────────────────────────────────────
+class MeteorSystem {
+  constructor() { this.meteors = []; this._t = 0; }
+  update(dt, W, H) {
+    this._t += dt;
+    if (Math.random() < 0.003 * dt * 60) {
+      const fromLeft = Math.random() < 0.5;
+      this.meteors.push({
+        x: fromLeft ? -20 : W + 20,
+        y: Math.random() * H * 0.5,
+        vx: (fromLeft ? 1 : -1) * (200 + Math.random() * 300),
+        vy: 80 + Math.random() * 150,
+        len: 30 + Math.random() * 60,
+        alpha: 0.7 + Math.random() * 0.3,
+        life: 1,
+      });
+    }
+    for (let i = this.meteors.length - 1; i >= 0; i--) {
+      const m = this.meteors[i];
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.x < -100 || m.x > W + 100 || m.y > H + 100) this.meteors.splice(i, 1);
+    }
+  }
+  draw(ctx, W, H) {
+    for (const m of this.meteors) {
+      const angle = Math.atan2(m.vy, m.vx);
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(angle);
+      const g = ctx.createLinearGradient(-m.len, 0, 4, 0);
+      g.addColorStop(0, `rgba(255,255,255,0)`);
+      g.addColorStop(0.7, `rgba(200,220,255,${m.alpha * 0.5})`);
+      g.addColorStop(1, `rgba(255,255,255,${m.alpha})`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-m.len, 0); ctx.lineTo(4, 0); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${m.alpha})`;
+      ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
 // ─── LanderGame ───────────────────────────────────────────────────────────────
 class LanderGame {
   constructor(bodyId, canvasW, canvasH) {
@@ -960,12 +1056,29 @@ class LanderGame {
     // Lander trail
     this._trail = [];
     this._trailTimer = 0;
+
+    // Feature 9: Meteor system
+    this.meteors = new MeteorSystem();
+
+    // Feature 11: canvas shake
+    this._shakeAmt = 0;
+
+    // Feature 13: ghost recording
+    this._recording = [];
+    this._recTimer  = 0;
+    this._ghost     = null;
   }
 
   update(dt) {
     if (this.result) {
       this.resultDelay += dt;
+      // Feature 12: ongoing crash smoke for 3 seconds
+      if (this.result.type === 'crash' && this.resultDelay < 3) {
+        this.particles.emitSmoke(this.lander.x, this.lander.y + this.lander.hh * 0.5);
+      }
       this.particles.update(dt, this.cfg.gravity * 0.1);
+      // Feature 11: decay shake
+      this._shakeAmt *= Math.pow(0.05, dt);
       return;
     }
 
@@ -982,6 +1095,12 @@ class LanderGame {
       this.lander.vx += impulse.vx;
       this.lander.vy += impulse.vy;
     }
+
+    // Feature 11: shake on hazard for titan/venus
+    if (this.hazard.isActive && (this.bodyId === 'titan' || this.bodyId === 'venus')) {
+      this._shakeAmt = Math.max(this._shakeAmt, 2);
+    }
+    this._shakeAmt *= Math.pow(0.05, dt);
 
     // Lander
     this.lander.update(dt, this.input, windF, this.hazard);
@@ -1023,6 +1142,15 @@ class LanderGame {
       c.x = (c.x + c.speed * dt) % 1;
     }
 
+    // Feature 13: record ghost frames every ~0.05s
+    if (this.lander.alive) {
+      this._recTimer += dt;
+      if (this._recTimer >= 0.05 && this._recording.length < 3000) {
+        this._recording.push({ x: this.lander.x, y: this.lander.y, angle: this.lander.angle });
+        this._recTimer = 0;
+      }
+    }
+
     // Collision
     const col = this.lander.checkCollision(this.terrain);
     if (col && col.type === 'crash') {
@@ -1031,6 +1159,8 @@ class LanderGame {
       this.particles.emitExplosion(this.lander.x, this.lander.y);
       this.result      = col;
       this.resultDelay = 0;
+      // Feature 11: crash shake
+      this._shakeAmt = 8;
     } else if (col && col.type === 'land') {
       this.lander.alive  = false;
       this.lander.landed = true;
@@ -1054,6 +1184,16 @@ class LanderGame {
     const toSX = wx => (wx - cx) * S + W / 2;
     const toSY = wy => H / 2 - (wy - cy) * S;
 
+    // Feature 11: canvas shake
+    const shaking = this._shakeAmt > 0.2;
+    if (shaking) {
+      ctx.save();
+      ctx.translate(
+        (Math.random() - 0.5) * this._shakeAmt,
+        (Math.random() - 0.5) * this._shakeAmt
+      );
+    }
+
     // Sky gradient
     const sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0,   cfg.skyTop);
@@ -1071,6 +1211,10 @@ class LanderGame {
         ctx.fill();
       }
     }
+
+    // Feature 9: Meteors (decorative, after stars before terrain)
+    this.meteors.update(1/60, W, H);
+    this.meteors.draw(ctx, W, H);
 
     // Clouds (Earth)
     for (const c of this.clouds) {
@@ -1102,13 +1246,65 @@ class LanderGame {
       ctx.fill();
     }
 
+    // Feature 10: lander shadow
+    if (this.lander.alive) {
+      const groundY  = this.terrain.heightAt(this.lander.x);
+      const altPx    = (this.lander.y - this.lander.hh - groundY) * S;
+      const shadowAlpha = Math.max(0, 0.4 - altPx / 300);
+      if (shadowAlpha > 0.01) {
+        const shadowScale = Math.max(0.3, 1 - altPx / 400);
+        const gsx = (this.lander.x - cx) * S + W / 2;
+        const gsy = H / 2 - (groundY - cy) * S;
+        ctx.save();
+        ctx.globalAlpha = shadowAlpha;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.beginPath();
+        ctx.ellipse(gsx, gsy, this.lander.hw * 2 * S * shadowScale, 3 * shadowScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     // Lander
     this.lander.draw(ctx, cx, cy, S, W, H, this.input);
 
-    // Crash flash
-    if (this.result && this.result.type === 'crash' && this.resultDelay < 0.15) {
-      ctx.fillStyle = `rgba(255,150,0,${0.5 - this.resultDelay * 3})`;
-      ctx.fillRect(0, 0, W, H);
+    // Feature 13: draw ghost
+    if (this._ghost && this._ghost.length > 1) {
+      const idx = Math.min(Math.floor(this.elapsed / 0.05), this._ghost.length - 1);
+      const gf = this._ghost[idx];
+      if (gf) {
+        const gsx = (gf.x - cx) * S + W / 2;
+        const gsy = H / 2 - (gf.y - cy) * S;
+        const grad = gf.angle * Math.PI / 180;
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.translate(gsx, gsy);
+        ctx.rotate(grad);
+        ctx.strokeStyle = '#88aaff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, S * this.lander.hw, 0, Math.PI * 2);
+        ctx.stroke();
+        // direction line
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -S * this.lander.hh);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Feature 12: crash flash more dramatic
+    if (this.result && this.result.type === 'crash') {
+      if (this.resultDelay < 0.05) {
+        // Intense white flash
+        ctx.fillStyle = `rgba(255,255,255,${0.9 - this.resultDelay * 18})`;
+        ctx.fillRect(0, 0, W, H);
+      } else if (this.resultDelay < 0.3) {
+        // Orange flash
+        ctx.fillStyle = `rgba(255,150,0,${0.5 - (this.resultDelay - 0.05) * 2})`;
+        ctx.fillRect(0, 0, W, H);
+      }
     }
 
     // Hazard flash overlays
@@ -1138,6 +1334,9 @@ class LanderGame {
 
     // Landing pad arrow (when off-screen)
     this._drawPadArrow(ctx, W, H, S, cx, cy);
+
+    // Feature 11: end shake save
+    if (shaking) ctx.restore();
   }
 
   _drawSpeedIndicators(ctx, W, H) {
@@ -1254,9 +1453,22 @@ class LanderGame {
     const base = 1000;
     const timeBonus = Math.max(0, 500 - Math.floor(t * 5));
     const fuelBonus = Math.floor(fuel * 0.3);
-    const total = base + timeBonus + fuelBonus;
+    // Feature 2: precision bonus
+    const dist = Math.abs(this.lander.x - this.terrain.padCenter);
+    const precisionBonus = Math.max(0, Math.floor(300 * (1 - dist / (cfg.padWidth / 2))));
+    const total = base + timeBonus + fuelBonus + precisionBonus;
     const stars = total >= 1400 ? 3 : total >= 1000 ? 2 : 1;
-    return { total, timeBonus, fuelBonus, stars, time: t, fuel };
+    return { total, timeBonus, fuelBonus, precisionBonus, stars, time: t, fuel };
+  }
+
+  // Feature 13: ghost recording helpers
+  getRecording() {
+    // compress: keep 1 out of 3
+    return this._recording.filter((_, i) => i % 3 === 0);
+  }
+
+  setGhost(frames) {
+    this._ghost = frames;
   }
 }
 

@@ -13,7 +13,7 @@ function resizeCanvas() {
 resizeCanvas();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const S = { SOLAR:'solar', FADING:'fading', SELECT:'select', PLAYING:'playing', RESULT:'result' };
+const S = { SOLAR:'solar', FADING:'fading', SELECT:'select', PLAYING:'playing', RESULT:'result', COUNTDOWN:'countdown' };
 let state = S.SOLAR;
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
@@ -44,6 +44,106 @@ const FADE_DUR   = 0.9;       // seconds
 let selectedBody = null;
 let hoveredBody  = null;
 
+// ─── Solar view pan/zoom ──────────────────────────────────────────────────────
+const VIEW_MIN = 0.4;
+const VIEW_MAX = 4.0;
+let viewZoom = 1;       // current solar zoom
+let viewPanX = 0;       // pan offset in canvas pixels (before zoom)
+let viewPanY = 0;
+
+// Convert screen coords → solar canvas coords (inverse of view transform)
+function screenToSolar(sx, sy) {
+  return {
+    x: (sx - canvas.width  / 2 - viewPanX) / viewZoom + canvas.width  / 2,
+    y: (sy - canvas.height / 2 - viewPanY) / viewZoom + canvas.height / 2,
+  };
+}
+
+// Apply or undo view transform before/after drawing solar system
+function applySolarTransform(ctx) {
+  ctx.translate(canvas.width / 2 + viewPanX, canvas.height / 2 + viewPanY);
+  ctx.scale(viewZoom, viewZoom);
+  ctx.translate(-canvas.width / 2, -canvas.height / 2);
+}
+
+// Zoom centred on a screen point
+function zoomViewAt(sx, sy, factor) {
+  const newZoom = Math.max(VIEW_MIN, Math.min(VIEW_MAX, viewZoom * factor));
+  const ratio   = newZoom / viewZoom;
+  // Adjust pan so the point under cursor stays fixed
+  viewPanX = sx - canvas.width  / 2 - (sx - canvas.width  / 2 - viewPanX) * ratio;
+  viewPanY = sy - canvas.height / 2 - (sy - canvas.height / 2 - viewPanY) * ratio;
+  viewZoom  = newZoom;
+  updateTimeCtrlVisibility();
+}
+
+function resetViewZoom() {
+  viewZoom = 1; viewPanX = 0; viewPanY = 0;
+  updateTimeCtrlVisibility();
+}
+
+function updateTimeCtrlVisibility() {
+  // Masquer les contrôles temps quand on est zoomé
+  if (state === S.SOLAR) {
+    elTimeCtrl.style.display = (viewZoom > 1.05 || Math.abs(viewPanX) > 5 || Math.abs(viewPanY) > 5) ? 'none' : '';
+  }
+}
+
+// ─── Mouse wheel zoom ─────────────────────────────────────────────────────────
+canvas.addEventListener('wheel', e => {
+  if (state !== S.SOLAR) return;
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  zoomViewAt(e.clientX, e.clientY, factor);
+}, { passive: false });
+
+// ─── Touch pinch/pan ──────────────────────────────────────────────────────────
+let _touches      = {};
+let _lastPinchDist = null;
+let _lastPanMid   = null;
+
+canvas.addEventListener('touchstart', e => {
+  if (state !== S.SOLAR) return;
+  Array.from(e.changedTouches).forEach(t => { _touches[t.identifier] = { x: t.clientX, y: t.clientY }; });
+  const ids = Object.keys(_touches);
+  if (ids.length === 2) {
+    const a = _touches[ids[0]], b = _touches[ids[1]];
+    _lastPinchDist = Math.hypot(b.x - a.x, b.y - a.y);
+    _lastPanMid    = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchmove', e => {
+  if (state !== S.SOLAR) return;
+  e.preventDefault();
+  Array.from(e.changedTouches).forEach(t => { _touches[t.identifier] = { x: t.clientX, y: t.clientY }; });
+  const ids = Object.keys(_touches);
+  if (ids.length === 2) {
+    const a = _touches[ids[0]], b = _touches[ids[1]];
+    const dist = Math.hypot(b.x - a.x, b.y - a.y);
+    const mid  = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    if (_lastPinchDist) {
+      zoomViewAt(mid.x, mid.y, dist / _lastPinchDist);
+    }
+    if (_lastPanMid) {
+      viewPanX += mid.x - _lastPanMid.x;
+      viewPanY += mid.y - _lastPanMid.y;
+      updateTimeCtrlVisibility();
+    }
+    _lastPinchDist = dist;
+    _lastPanMid    = mid;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  Array.from(e.changedTouches).forEach(t => { delete _touches[t.identifier]; });
+  _lastPinchDist = null;
+  _lastPanMid    = null;
+}, { passive: true });
+
+// ─── Countdown state ─────────────────────────────────────────────────────────
+let countdownTimer = 0;
+
 // ─── Campaign & Leaderboard ───────────────────────────────────────────────────
 const CAMPAIGN_ORDER = ['moon','mercury','mars','titan','earth','venus'];
 
@@ -58,6 +158,39 @@ function loadLeaderboard() {
 }
 function saveLeaderboard(lb) {
   try { localStorage.setItem('sl_lb', JSON.stringify(lb)); } catch {}
+}
+
+// ─── Feature 1: Global Fuel ───────────────────────────────────────────────────
+function loadGlobalFuel() {
+  try { return parseFloat(localStorage.getItem('sl_fuel') || '100'); } catch { return 100; }
+}
+function saveGlobalFuel(v) {
+  try { localStorage.setItem('sl_fuel', String(Math.max(0, Math.min(100, v)))); } catch {}
+}
+
+let globalFuel = loadGlobalFuel();
+
+// Returns fuelInfo object {id: pct} for all landable bodies (same global fuel for simplicity)
+function getFuelInfo() {
+  const info = {};
+  for (const id of LANDABLE) {
+    info[id] = globalFuel;
+  }
+  return info;
+}
+
+// ─── Feature 13: Ghost helpers ────────────────────────────────────────────────
+function saveGhost(id, frames) {
+  try {
+    const limited = frames.slice(0, 2000);
+    localStorage.setItem('sl_ghost_' + id, JSON.stringify(limited));
+  } catch {}
+}
+function loadGhost(id) {
+  try {
+    const raw = localStorage.getItem('sl_ghost_' + id);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
 // Returns Set of locked body IDs
@@ -79,10 +212,12 @@ function unlockBody(id) {
 
 function updateLeaderboard(id, score) {
   const lb = loadLeaderboard();
-  if (!lb[id] || score.total > lb[id].total) {
+  const isNewRecord = !lb[id] || score.total > lb[id].total;
+  if (isNewRecord) {
     lb[id] = { total: score.total, time: score.time, fuel: score.fuel, stars: score.stars };
     saveLeaderboard(lb);
   }
+  return isNewRecord;
 }
 
 // ─── Time scale ───────────────────────────────────────────────────────────────
@@ -107,7 +242,8 @@ const elTooltip   = document.getElementById('tooltip');
 // ─── Canvas interactions ──────────────────────────────────────────────────────
 canvas.addEventListener('click', e => {
   if (state !== S.SOLAR) return;
-  const id = solar.getBodyAt(e.clientX, e.clientY);
+  const sc = screenToSolar(e.clientX, e.clientY);
+  const id = solar.getBodyAt(sc.x, sc.y);
   if (!id) return;
   if (!LANDABLE.has(id)) {
     showTooltip(e.clientX, e.clientY, nonLandableMsg(id));
@@ -123,7 +259,12 @@ canvas.addEventListener('click', e => {
   elTooltip.classList.add('hidden');
   tooltipTimer = 0;
   selectedBody = id;
-  const pos    = solar.getBodyScreenPos(id);
+  // pos en coordonnées solaires → convertir en coordonnées écran
+  const solarPos = solar.getBodyScreenPos(id);
+  const pos = {
+    x: (solarPos.x - canvas.width  / 2) * viewZoom + canvas.width  / 2 + viewPanX,
+    y: (solarPos.y - canvas.height / 2) * viewZoom + canvas.height / 2 + viewPanY,
+  };
   zoomOX       = pos.x;
   zoomOY       = pos.y;
   fadeProgress = 0;
@@ -138,7 +279,8 @@ let _factTimer    = 0;
 canvas.addEventListener('mousemove', e => {
   if (state !== S.SOLAR) return;
   const prev = hoveredBody;
-  hoveredBody = solar.getBodyAt(e.clientX, e.clientY);
+  const hsc  = screenToSolar(e.clientX, e.clientY);
+  hoveredBody = solar.getBodyAt(hsc.x, hsc.y);
   canvas.style.cursor = hoveredBody ? 'pointer' : 'crosshair';
 
   if (hoveredBody !== prev) {
@@ -151,9 +293,14 @@ canvas.addEventListener('mousemove', e => {
     const dist  = solar.getDistFromEarth(hoveredBody);
     const fact  = solar.getFact(hoveredBody, _hoverFactIdx);
     const locked = getLockedIds().has(hoveredBody);
+    const lb = loadLeaderboard();
+    const best = lb[hoveredBody];
     let html = `<b>${BODY_DATA[hoveredBody] ? BODY_DATA[hoveredBody].name : hoveredBody}</b>`;
     if (dist)  html += `<br>📡 Distance Terre : ${dist}`;
     if (fact)  html += `<br>💡 ${fact}`;
+    // Feature 1: show global fuel % in tooltip
+    if (LANDABLE.has(hoveredBody)) html += `<br>⛽ Carburant : ${globalFuel.toFixed(0)}%`;
+    if (best)  html += `<br>🏆 Record : ${best.total} pts`;
     if (locked) html += `<br>🔒 Terminez la planète précédente`;
     showTooltipHTML(e.clientX, e.clientY, html);
   } else {
@@ -189,14 +336,16 @@ elBtnSolar.addEventListener('click', returnToSolar);
 
 // ─── State helpers ────────────────────────────────────────────────────────────
 function showSolarUI() {
-  elTimeCtrl.classList.remove('hidden');
+  elTimeCtrl.style.display = '';
   elBtnSolar.classList.add('hidden');
   elHud.classList.add('hidden');
   elCtrl.classList.add('hidden');
+  updateTimeCtrlVisibility();
 }
 
 function hideSolarUI() {
-  elTimeCtrl.classList.add('hidden');
+  elTimeCtrl.style.display = 'none';
+  resetViewZoom();
 }
 
 function returnToSolar() {
@@ -218,6 +367,10 @@ function startGame() {
 
   game = new LanderGame(selectedBody, canvas.width, canvas.height);
 
+  // Feature 13: load ghost for this body
+  const ghostFrames = loadGhost(selectedBody);
+  if (ghostFrames) game.setGhost(ghostFrames);
+
   const cfg = BODY_DATA[selectedBody];
   document.getElementById('hud-planet-name').textContent = cfg.name.toUpperCase();
   document.getElementById('wind-row').style.display  = cfg.windType !== 'none' ? '' : 'none';
@@ -226,7 +379,10 @@ function startGame() {
   elHud.classList.remove('hidden');
   elCtrl.classList.remove('hidden');
   elBtnSolar.classList.add('hidden');
-  state = S.PLAYING;
+
+  // Feature 4: Countdown
+  countdownTimer = 3;
+  state = S.COUNTDOWN;
 }
 
 // ─── Planet card population ───────────────────────────────────────────────────
@@ -245,8 +401,15 @@ function showPlanetCard(id) {
     starsEl.appendChild(s);
   }
 
-  document.getElementById('card-conditions').innerHTML =
-    cfg.conditions.map(c => `<div class="cond-row"><span class="ci">${c.ci}</span><span>${c.txt}</span></div>`).join('');
+  // Feature 6: personal record in planet card
+  const lb   = loadLeaderboard();
+  const best = lb[id];
+  let condHTML = cfg.conditions.map(c => `<div class="cond-row"><span class="ci">${c.ci}</span><span>${c.txt}</span></div>`).join('');
+  if (best) {
+    const starStr = '★'.repeat(best.stars || 0) + '☆'.repeat(3 - (best.stars || 0));
+    condHTML = `<div class="cond-row" style="border-bottom:1px solid rgba(255,200,0,0.3);padding-bottom:6px;margin-bottom:4px"><span class="ci">🏆</span><span style="color:#fc0">Meilleur score: ${best.total} pts (${starStr})</span></div>` + condHTML;
+  }
+  document.getElementById('card-conditions').innerHTML = condHTML;
 
   elCardPlanet.classList.remove('hidden');
 }
@@ -272,10 +435,16 @@ function showResultCard(success, score, reason) {
     ? `<div class="stat-row"><span class="stat-lbl">🏆 Meilleur</span><span class="stat-val" style="color:#fc0">${best.total} pts</span></div>`
     : '';
 
+  // Feature 2: precision row
+  const precisionRow = (success && score.precisionBonus !== undefined)
+    ? `<div class="stat-row"><span class="stat-lbl">Précision</span><span class="stat-val">+${score.precisionBonus} pts</span></div>`
+    : '';
+
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
     <div class="stat-row"><span class="stat-lbl">Temps</span><span class="stat-val">${mm}:${ss}</span></div>
     <div class="stat-row"><span class="stat-lbl">Carburant restant</span><span class="stat-val">${fpct}%</span></div>
+    ${precisionRow}
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
     ${bestRow}
   `;
@@ -427,6 +596,14 @@ function loop(ts) {
         showPlanetCard(selectedBody);
       }
 
+    } else if (state === S.COUNTDOWN && game) {
+      // Feature 4: countdown — game initialized but no controls
+      game.update(dt);  // update physics (gravity etc) but input stays empty
+      countdownTimer -= dt;
+      if (countdownTimer <= 0) {
+        state = S.PLAYING;
+      }
+
     } else if (state === S.PLAYING && game) {
       game.input = { ...keys };
       game.update(dt);
@@ -437,6 +614,28 @@ function loop(ts) {
         const score = game.getScore();
         if (game.result.type === 'land') {
           unlockBody(selectedBody);
+          // Feature 1: deduct fuel consumed
+          const startFuel = BODY_DATA[selectedBody].startFuel;
+          const fuelUsed  = startFuel - game.lander.fuel;
+          const fuelPct   = (fuelUsed / startFuel) * 100;
+          globalFuel = Math.max(0, globalFuel - fuelPct * 0.5);
+          if (globalFuel < 10) {
+            console.warn('⚠ Carburant global faible: ' + globalFuel.toFixed(0) + '%');
+          }
+          saveGlobalFuel(globalFuel);
+
+          // Feature 13: save ghost if new record
+          const isNewRecord = updateLeaderboard(selectedBody, score);
+          if (isNewRecord) {
+            saveGhost(selectedBody, game.getRecording());
+          }
+        } else {
+          // crash: also deduct some fuel
+          const startFuel = BODY_DATA[selectedBody].startFuel;
+          const fuelUsed  = startFuel - game.lander.fuel;
+          const fuelPct   = (fuelUsed / startFuel) * 100;
+          globalFuel = Math.max(0, globalFuel - fuelPct * 0.3);
+          saveGlobalFuel(globalFuel);
           updateLeaderboard(selectedBody, score);
         }
         showResultCard(game.result.type === 'land', score, game.result.reason);
@@ -451,7 +650,10 @@ function loop(ts) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state === S.SOLAR) {
-      solar.draw(ctx, dt, hoveredBody, getLockedIds());
+      ctx.save();
+      applySolarTransform(ctx);
+      solar.draw(ctx, dt, hoveredBody, getLockedIds(), getFuelInfo(), loadLeaderboard());
+      ctx.restore();
 
     } else if (state === S.FADING) {
       const t  = easeInOut(fadeProgress);
@@ -472,6 +674,21 @@ function loop(ts) {
       solar.draw(ctx, 0, null);
       ctx.fillStyle = 'rgba(0,0,8,0.65)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    } else if (state === S.COUNTDOWN && game) {
+      // Draw game scene + countdown overlay
+      game.draw(ctx);
+      const num = Math.ceil(countdownTimer);
+      ctx.save();
+      ctx.font = 'bold 120px "Orbitron", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur  = 40;
+      ctx.fillStyle   = 'rgba(255,255,255,0.95)';
+      ctx.fillText(String(num), canvas.width / 2, canvas.height / 2);
+      ctx.shadowBlur = 0;
+      ctx.restore();
 
     } else if (state === S.PLAYING || state === S.RESULT) {
       if (game) game.draw(ctx);
