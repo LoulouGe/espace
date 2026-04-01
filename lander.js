@@ -12,8 +12,8 @@ const BODY_DATA = {
     showStars: true, starAlpha: 1.0,
     hasFog: false,
     terrainRoughness: 0.75,
-    padWidth: 65, startAlt: 165, startFuel: 800,
-    maxVSpeed: 3.0, maxHSpeed: 2.0, maxAngle: 15,
+    padWidth: 80, startAlt: 165, startFuel: 800,
+    maxVSpeed: 4.0, maxHSpeed: 3.0, maxAngle: 20,
     hazardType: 'none',
     conditions: [
       { ci: '🌑', txt: "Pas d'atmosphère" },
@@ -32,8 +32,8 @@ const BODY_DATA = {
     showStars: true, starAlpha: 0.9,
     hasFog: false,
     terrainRoughness: 1.0,
-    padWidth: 52, startAlt: 165, startFuel: 900,
-    maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 12,
+    padWidth: 70, startAlt: 165, startFuel: 900,
+    maxVSpeed: 3.8, maxHSpeed: 2.5, maxAngle: 18,
     hazardType: 'flare',
     conditions: [
       { ci: '⚫', txt: "Pas d'atmosphère" },
@@ -47,7 +47,7 @@ const BODY_DATA = {
     name: 'Mars', emoji: '🔴', stars: 3,
     gravity: 3.72,
     drag: 0.004,
-    windType: 'gusty', windBase: 4, windAmp: 16,
+    windType: 'gusty', windBase: 2, windAmp: 8,
     windGustChance: 0.0015,  // per second
     hasDustStorm: true, dustStormChance: 0.0003,
     groundColor: '#8b3a0f', groundAccent: '#5a2808', groundDark: '#3a1805',
@@ -55,11 +55,11 @@ const BODY_DATA = {
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(180,80,30,0.18)',
     terrainRoughness: 0.7,
-    padWidth: 45, startAlt: 155, startFuel: 1000,
-    maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 10,
+    padWidth: 65, startAlt: 155, startFuel: 1000,
+    maxVSpeed: 3.5, maxHSpeed: 2.2, maxAngle: 15,
     hazardType: 'magnetic',
     conditions: [
-      { ci: '💨', txt: 'Vent: 4–20 m/s' },
+      { ci: '💨', txt: 'Vent léger: 2–10 m/s' },
       { ci: '🌪️', txt: 'Tempêtes de poussière' },
       { ci: '🧲', txt: 'Orages magnétiques (gyroscope inversé)' },
       { ci: '🌫️', txt: 'Atmosphère fine (CO₂)' },
@@ -70,17 +70,17 @@ const BODY_DATA = {
     name: 'Titan', emoji: '🟠', stars: 3,
     gravity: 1.35,
     drag: 0.012,
-    windType: 'shear', windBase: 10, windAmp: 22,
+    windType: 'shear', windBase: 3, windAmp: 8,
     groundColor: '#704214', groundAccent: '#4a2a0a', groundDark: '#2a1505',
     skyTop: '#552200', skyBot: '#aa5500',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(200,100,0,0.3)',
     terrainRoughness: 0.55,
-    padWidth: 42, startAlt: 155, startFuel: 1050,
-    maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 10,
+    padWidth: 70, startAlt: 155, startFuel: 1200,
+    maxVSpeed: 3.5, maxHSpeed: 2.2, maxAngle: 15,
     hazardType: 'downburst',
     conditions: [
-      { ci: '💨', txt: 'Vents forts: 10–32 m/s' },
+      { ci: '💨', txt: 'Vents légers: 3–11 m/s' },
       { ci: '🌫️', txt: 'Atmosphère épaisse (azote/méthane)' },
       { ci: '⬇️', txt: 'Rafales verticales soudaines' },
       { ci: '⚖️', txt: 'Faible gravité: 1.35 m/s²' },
@@ -91,18 +91,18 @@ const BODY_DATA = {
     name: 'Terre', emoji: '🌍', stars: 4,
     gravity: 9.81,
     drag: 0.007,
-    windType: 'turbulent', windBase: 7, windAmp: 20,
+    windType: 'turbulent', windBase: 3, windAmp: 8,
     groundColor: '#2d7a2d', groundAccent: '#1a4a1a', groundDark: '#0a2a0a',
     skyTop: '#08204e', skyBot: '#1a5276',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(100,150,255,0.12)',
     hasClouds: true,
     terrainRoughness: 0.45,
-    padWidth: 38, startAlt: 145, startFuel: 1250,
-    maxVSpeed: 2.0, maxHSpeed: 1.0, maxAngle: 8,
+    padWidth: 65, startAlt: 145, startFuel: 1400,
+    maxVSpeed: 3.2, maxHSpeed: 2.0, maxAngle: 15,
     hazardType: 'lightning',
     conditions: [
-      { ci: '🌬️', txt: 'Vent: 7–27 m/s + turbulences' },
+      { ci: '🌬️', txt: 'Vent: 3–11 m/s + turbulences' },
       { ci: '⚖️', txt: 'Forte gravité: 9.81 m/s²' },
       { ci: '⚡', txt: 'Risque de foudre (impulsion latérale)' },
       { ci: '🌊', txt: 'Courants atmosphériques' },
@@ -113,17 +113,17 @@ const BODY_DATA = {
     name: 'Vénus', emoji: '🌕', stars: 5,
     gravity: 8.87,
     drag: 0.03,
-    windType: 'hurricane', windBase: 22, windAmp: 30,
+    windType: 'hurricane', windBase: 6, windAmp: 10,
     groundColor: '#5a2a05', groundAccent: '#3a1502', groundDark: '#1a0800',
     skyTop: '#5a1500', skyBot: '#aa3000',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(255,80,0,0.35)',
     terrainRoughness: 0.85,
-    padWidth: 28, startAlt: 155, startFuel: 1400,
-    maxVSpeed: 1.5, maxHSpeed: 0.8, maxAngle: 5,
+    padWidth: 60, startAlt: 155, startFuel: 2500,
+    maxVSpeed: 3.0, maxHSpeed: 1.8, maxAngle: 12,
     hazardType: 'acidrain',
     conditions: [
-      { ci: '🌪️', txt: 'Vents dévastateurs: 22–52 m/s' },
+      { ci: '🌪️', txt: 'Vents: 6–16 m/s' },
       { ci: '⚖️', txt: 'Gravité: 8.87 m/s²' },
       { ci: '🔥', txt: 'Température: 462°C' },
       { ci: '☠️', txt: 'Pluie d\'acide (carburant 2× plus vite)' },
@@ -791,33 +791,71 @@ class Lander {
     this.hh = 4.5; // half-height
     // Feature 8: rotation inertia
     this.rotVel = 0;
+
+    // --- Ship Class ---
+    try {
+      this.shipType = localStorage.getItem('sl_active_ship') || 'standard';
+    } catch {
+      this.shipType = 'standard';
+    }
+
+    if (this.shipType === 'moustique') {
+      this.fuel = cfg.startFuel * 0.45; // Très peu de fuel
+      this.hw = 1.8; this.hh = 3.2;    // Plus petit
+    } else if (this.shipType === 'tank') {
+      this.fuel = cfg.startFuel * 2.2; // Énorme réserve
+      this.hw = 3.5; this.hh = 4.8;    // Plus large
+    } else if (this.shipType === 'alien') {
+      this.fuel = cfg.startFuel * 1.5;
+      this.hw = 2.8; this.hh = 3.5;
+    }
   }
 
   update(dt, input, windForce, hazard) {
     if (!this.alive) return;
 
     const cfg = this.cfg;
-    const rotMult = hazard ? hazard.rotationMult : 1;
-    const fuelMult = hazard ? hazard.fuelDrainMult : 1;
-    const engineOff = hazard ? hazard.engineCutout : false;
-    const extraVert = hazard ? hazard.vertForce : 0;
+    let rotMult = hazard ? hazard.rotationMult : 1;
+    let fuelMult = hazard ? hazard.fuelDrainMult : 1;
+    let engineOff = hazard ? hazard.engineCutout : false;
+    let extraVert = hazard ? hazard.vertForce : 0;
+    let windF = windForce;
+
+    // Ship Class Effects on Hazards
+    if (this.shipType === 'tank') {
+      windF *= 0.3; // Tank résiste à 70% du vent
+      extraVert *= 0.3; 
+    } else if (this.shipType === 'alien') {
+      fuelMult = 1; // Ignores acid rain
+      engineOff = false; // Ignores solar flares
+      rotMult = 1; // Ignores magnetic storm
+    }
 
     // --- Rotation with inertia (Feature 8) ---
-    const rotAcc = 280; // deg/s²
+    let rotAcc = 280; // deg/s²
+    let rotFriction = 0.08;
+    if (this.shipType === 'moustique') { rotAcc = 600; rotFriction = 0.01; } // Tourne hyper vite
+    else if (this.shipType === 'tank') { rotAcc = 140; rotFriction = 0.2; } // Difficile à tourner
+
     if (input.left) this.rotVel -= rotAcc * dt * rotMult;
     if (input.right) this.rotVel += rotAcc * dt * rotMult;
-    this.rotVel *= Math.pow(0.08, dt); // forte friction — s'arrête vite mais pas instantané
+    this.rotVel *= Math.pow(rotFriction, dt);
     this.angle += this.rotVel * dt;
     this.angle = Math.max(-85, Math.min(85, this.angle));
 
     // angle=0 → nez vers le haut. La poussée va dans le sens du nez.
     const rad = this.angle * Math.PI / 180;
-    let fx = windForce;
+    let fx = windF;
     let fy = -cfg.gravity + extraVert;
 
     // --- Main engine (up) ---
     if (input.up && this.fuel > 0 && !engineOff) {
-      const thrust = cfg.gravity * 3.2;
+      let thrustMult = 3.2;
+      if (this.shipType === 'moustique') thrustMult = 2.8;
+      else if (this.shipType === 'tank') thrustMult = 2.9;
+      else if (this.shipType === 'alien') thrustMult = 4.5; // Surpuissant
+
+      const thrust = cfg.gravity * thrustMult;
       fx += thrust * Math.sin(rad);   // incliné à droite → pousse à droite
       fy += thrust * Math.cos(rad);
       this.fuel -= dt * 14 * fuelMult;
@@ -825,10 +863,12 @@ class Lander {
     }
 
     // --- Retro thrusters (space) ---
-    if (input.space && this.fuel > 0 && !engineOff) {
+    // Uniquement là où il y a de l'atmosphère (les planètes avec drag > 0)
+    if (input.space && this.fuel > 0 && !engineOff && cfg.drag > 0) {
       const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
       if (spd > 0.1) {
-        const retroForce = cfg.gravity * 2.2;
+        let retroForce = cfg.gravity * 2.2;
+        if (this.shipType === 'alien') retroForce = cfg.gravity * 3.5;
         fx -= (this.vx / spd) * retroForce;
         fy -= (this.vy / spd) * retroForce;
       }
@@ -942,9 +982,23 @@ class Lander {
 
     // Body
     const bodyGrad = ctx.createLinearGradient(-pw / 2, -ph / 2, pw / 2, ph / 2);
-    bodyGrad.addColorStop(0, '#dde');
-    bodyGrad.addColorStop(0.5, '#bbc');
-    bodyGrad.addColorStop(1, '#88a');
+    if (this.shipType === 'moustique') {
+      bodyGrad.addColorStop(0, '#fde');
+      bodyGrad.addColorStop(0.5, '#e8a');
+      bodyGrad.addColorStop(1, '#a25');
+    } else if (this.shipType === 'tank') {
+      bodyGrad.addColorStop(0, '#566');
+      bodyGrad.addColorStop(0.5, '#344');
+      bodyGrad.addColorStop(1, '#122');
+    } else if (this.shipType === 'alien') {
+      bodyGrad.addColorStop(0, '#aff');
+      bodyGrad.addColorStop(0.5, '#0fa');
+      bodyGrad.addColorStop(1, '#055');
+    } else {
+      bodyGrad.addColorStop(0, '#dde');
+      bodyGrad.addColorStop(0.5, '#bbc');
+      bodyGrad.addColorStop(1, '#88a');
+    }
     ctx.fillStyle = bodyGrad;
     ctx.beginPath();
     ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
@@ -981,7 +1035,7 @@ class Lander {
     }
 
     // Retro flame indicator
-    if (input && input.space && this.fuel > 0) {
+    if (input && input.space && this.fuel > 0 && this.cfg.drag > 0) {
       ctx.strokeStyle = 'rgba(0,200,255,0.8)';
       ctx.lineWidth = 2;
       const rx = pw * 0.6;
@@ -1140,8 +1194,11 @@ class LanderGame {
     this.hazard.update(dt);
     const impulse = this.hazard.consumeImpulse();
     if (impulse) {
-      this.lander.vx += impulse.vx;
-      this.lander.vy += impulse.vy;
+      let mult = 1;
+      if (this.lander.shipType === 'tank') mult = 0.3; // Tank résiste aux chocs
+      else if (this.lander.shipType === 'alien') mult = 0.5; // Peu impacté
+      this.lander.vx += impulse.vx * mult;
+      this.lander.vy += impulse.vy * mult;
     }
 
     // Feature 11: shake on hazard for titan/venus
@@ -1157,7 +1214,7 @@ class LanderGame {
     if (this.input.up && this.lander.fuel > 0 && this.lander.alive) {
       this.particles.emitThrust(this.lander.nozzleX, this.lander.nozzleY, this.lander.angle, true);
     }
-    if (this.input.space && this.lander.fuel > 0 && this.lander.alive) {
+    if (this.input.space && this.lander.fuel > 0 && this.lander.alive && this.cfg.drag > 0) {
       this.particles.emitRetro(this.lander.x, this.lander.y, this.lander.vx, this.lander.vy);
     }
     if (this.wind.isStorming() && this.bodyId === 'mars') {
@@ -1385,6 +1442,7 @@ class LanderGame {
     let pendingWarn = null;
     if (this.hazard && this.hazard.isWarning) pendingWarn = this.hazard.warning;
     else if (this.wind && this.wind.isWarning()) pendingWarn = '⚠ TEMPÊTE IMMINENTE !';
+    else if (this.input.space && this.cfg.drag === 0 && this.lander.alive && this.lander.fuel > 0) pendingWarn = '❌ PAS D\'ATMOSPHÈRE POUR RÉTRO !';
 
     if (pendingWarn && Math.floor(Date.now() / 200) % 2 === 0) {
       ctx.save();

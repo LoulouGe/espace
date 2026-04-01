@@ -13,7 +13,7 @@ function resizeCanvas() {
 resizeCanvas();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const S = { SOLAR: 'solar', FADING: 'fading', SELECT: 'select', PLAYING: 'playing', RESULT: 'result', COUNTDOWN: 'countdown' };
+const S = { SOLAR: 'solar', FADING: 'fading', SELECT: 'select', PLAYING: 'playing', RESULT: 'result', COUNTDOWN: 'countdown', SHOP: 'shop' };
 let state = S.SOLAR;
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
@@ -162,6 +162,16 @@ const CAMPAIGN_ORDER = ['moon', 'mercury', 'mars', 'titan', 'earth', 'venus'];
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem('sl_progress') || '{}'); } catch { return {}; }
 }
+function loadDiamonds() { try { return parseInt(localStorage.getItem('sl_diamonds')||'0', 10); } catch { return 0; } }
+function saveDiamonds(v) { try { localStorage.setItem('sl_diamonds', String(v)); } catch { } }
+
+function loadShips() { try { return JSON.parse(localStorage.getItem('sl_ships')||'["standard"]'); } catch { return ['standard']; } }
+function saveShips(s) { try { localStorage.setItem('sl_ships', JSON.stringify(s)); } catch { } }
+
+function loadActiveShip() { try { return localStorage.getItem('sl_active_ship')||'standard'; } catch { return 'standard'; } }
+function saveActiveShip(id) { try { localStorage.setItem('sl_active_ship', id); } catch { } }
+
+let globalDiamonds = loadDiamonds();
 function saveProgress(p) {
   try { localStorage.setItem('sl_progress', JSON.stringify(p)); } catch { }
 }
@@ -327,6 +337,147 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   }
 });
 
+// ─── Shop ────────────────────────────────────────────────────────────────────
+const SHOP_CATALOG = {
+  standard: { name: "Module Standard", desc: "Le modèle d'origine. Équilibré et polyvalent.", cost: 0 },
+  moustique: { name: "Le Moustique", desc: "Agile, rotation v.rapide. Très peu de fuel. Parfait pour la précision extrême.", cost: 115 },
+  tank: { name: "Le Tank", desc: "Lourd et blindé. Double réserve de fuel. Impose une réduction aux forces extérieures. Rotation lente.", cost: 315 },
+  alien: { name: "Vaisseau Alien", desc: "Moteurs à antigravité surpuissants ! Immunité TOTALE à l'acide, aux pannes solaires et au magnétisme.", cost: 685 }
+};
+
+const elShopCard = document.getElementById('card-shop');
+document.getElementById('btn-shop').addEventListener('click', () => {
+  state = S.SHOP;
+  hideSolarUI();
+  updateShopUI();
+  elShopCard.classList.remove('hidden');
+});
+document.getElementById('btn-shop-close').addEventListener('click', () => {
+  elShopCard.classList.add('hidden');
+  state = S.SOLAR;
+  showSolarUI();
+});
+
+function updateShopUI() {
+  document.getElementById('shop-solde').textContent = globalDiamonds;
+  const list = document.getElementById('shop-items');
+  list.innerHTML = '';
+  const unlocked = new Set(loadShips());
+  const active = loadActiveShip();
+
+  for (const [id, item] of Object.entries(SHOP_CATALOG)) {
+    const isUnlocked = unlocked.has(id);
+    const isActive = active === id;
+    const canAfford = globalDiamonds >= item.cost;
+
+    const div = document.createElement('div');
+    const cl = isActive ? ' active' : (!isUnlocked ? (canAfford ? ' buyable' : ' locked') : '');
+    div.className = 'shop-item' + cl;
+    
+    let btnHTML = '';
+    if (isActive) {
+      btnHTML = `<button class="btn shop-item-btn" disabled style="opacity:0.6;">ÉQUIPÉ</button>`;
+    } else if (isUnlocked) {
+      btnHTML = `<button class="btn shop-item-btn" onclick="equipShip('${id}')">SÉLECTIONNER</button>`;
+    } else {
+      btnHTML = `<button class="btn shop-item-btn" onclick="buyShip('${id}', ${item.cost})" ${!canAfford ? 'disabled' : ''}>${item.cost} 💎</button>`;
+    }
+
+    div.innerHTML = `
+      <div class="shop-item-icon" style="width:56px; height:56px; flex-shrink:0; background:rgba(0,0,0,0.5); border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,255,255,0.2);">
+        <canvas id="cvs-shop-${id}" width="50" height="50"></canvas>
+      </div>
+      <div class="shop-item-info" style="margin-left:12px; display:flex; flex-direction:column; justify-content:center;">
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-desc">${item.desc}</div>
+      </div>
+      <div>${btnHTML}</div>
+    `;
+    list.appendChild(div);
+
+    // Draw miniature asynchronously
+    setTimeout(() => { drawShopShip(id); }, 0);
+  }
+}
+
+function drawShopShip(id) {
+  const c = document.getElementById('cvs-shop-' + id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0,0,50,50);
+  const S = 3.5; 
+
+  let hw = 2.5, hh = 4.5;
+  if (id === 'moustique') { hw = 1.8; hh = 3.2; }
+  else if (id === 'tank') { hw = 3.5; hh = 4.8; }
+  else if (id === 'alien') { hw = 2.8; hh = 3.5; }
+  
+  const pw = hw * 2 * S;
+  const ph = hh * 2 * S;
+  
+  ctx.save();
+  ctx.translate(25, 25); 
+
+  const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
+  if (id === 'moustique') {
+    bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
+  } else if (id === 'tank') {
+    bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
+  } else if (id === 'alien') {
+    bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
+  } else {
+    bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
+  }
+
+  // Draw hull
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.roundRect(-pw/2, -ph/2, pw, ph * 0.65, 4);
+  ctx.fill();
+
+  // Draw engine
+  ctx.fillStyle = '#445';
+  ctx.beginPath();
+  const ey = ph/2 - 1.5;
+  const wBottom = pw * 0.4;
+  ctx.moveTo(-wBottom, ey);
+  ctx.lineTo(wBottom, ey);
+  ctx.lineTo(pw * 0.5, ey + ph * 0.35);
+  ctx.lineTo(-pw * 0.5, ey + ph * 0.35);
+  ctx.fill();
+
+  // Draw legs
+  ctx.strokeStyle = '#99a'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-pw/2, 0); ctx.lineTo(-pw * 0.9, ph * 0.7); ctx.lineTo(-pw, ph * 0.7);
+  ctx.moveTo(pw/2, 0); ctx.lineTo(pw * 0.9, ph * 0.7); ctx.lineTo(pw, ph * 0.7);
+  ctx.stroke();
+
+  // Draw window
+  const wx = 0, wy = -ph * 0.15, wr = pw * 0.25;
+  ctx.fillStyle = '#112'; ctx.beginPath(); ctx.arc(wx, wy, wr, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#0cf'; ctx.lineWidth = 1; ctx.stroke();
+
+  ctx.restore();
+}
+
+window.equipShip = function(id) {
+  saveActiveShip(id);
+  updateShopUI();
+};
+
+window.buyShip = function(id, cost) {
+  if (globalDiamonds >= cost && !new Set(loadShips()).has(id)) {
+    globalDiamonds -= cost;
+    saveDiamonds(globalDiamonds);
+    const ships = loadShips();
+    ships.push(id);
+    saveShips(ships);
+    equipShip(id);
+    document.getElementById('diamond-count').textContent = globalDiamonds;
+  }
+};
+
 // ─── Planet card ─────────────────────────────────────────────────────────────
 document.getElementById('btn-launch').addEventListener('click', startGame);
 document.getElementById('btn-back').addEventListener('click', () => {
@@ -346,6 +497,8 @@ elBtnSolar.addEventListener('click', returnToSolar);
 // ─── State helpers ────────────────────────────────────────────────────────────
 function showSolarUI() {
   elTimeCtrl.style.display = '';
+  document.getElementById('solar-top-right').style.display = '';
+  document.getElementById('diamond-count').textContent = globalDiamonds;
   elBtnSolar.classList.add('hidden');
   elHud.classList.add('hidden');
   elCtrl.classList.add('hidden');
@@ -354,6 +507,7 @@ function showSolarUI() {
 
 function hideSolarUI() {
   elTimeCtrl.style.display = 'none';
+  document.getElementById('solar-top-right').style.display = 'none';
   resetViewZoom();
 }
 
@@ -449,6 +603,12 @@ function showResultCard(success, score, reason) {
     ? `<div class="stat-row"><span class="stat-lbl">Précision</span><span class="stat-val">+${score.precisionBonus} pts</span></div>`
     : '';
 
+  const baseRewards = [10, 20, 50, 80, 150];
+  const st = BODY_DATA[selectedBody] ? BODY_DATA[selectedBody].stars : 1;
+  let earned = baseRewards[st - 1] || 10;
+  if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
+  const diamRow = success ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}</span></div>` : '';
+
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
     <div class="stat-row"><span class="stat-lbl">Temps</span><span class="stat-val">${mm}:${ss}</span></div>
@@ -456,6 +616,7 @@ function showResultCard(success, score, reason) {
     ${precisionRow}
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
     ${bestRow}
+    ${diamRow}
   `;
 
   const starsEl = document.getElementById('res-stars');
@@ -632,6 +793,14 @@ function loop(ts) {
             console.warn('⚠ Carburant global faible: ' + globalFuel.toFixed(0) + '%');
           }
           saveGlobalFuel(globalFuel);
+
+          const baseRewards = [10, 20, 50, 80, 150];
+          const st = BODY_DATA[selectedBody].stars || 1;
+          let earned = baseRewards[st - 1] || 10;
+          if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
+          globalDiamonds += earned;
+          saveDiamonds(globalDiamonds);
+          document.getElementById('diamond-count').textContent = globalDiamonds;
 
           // Feature 13: save ghost if new record
           const isNewRecord = updateLeaderboard(selectedBody, score);
