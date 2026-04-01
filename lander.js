@@ -14,14 +14,13 @@ const BODY_DATA = {
     terrainRoughness: 0.75,
     padWidth: 65, startAlt: 165, startFuel: 800,
     maxVSpeed: 3.0, maxHSpeed: 2.0, maxAngle: 15,
-    hazardType: 'meteor',
+    hazardType: 'none',
     conditions: [
       {ci:'🌑', txt:"Pas d'atmosphère"},
       {ci:'⚖️', txt:'Faible gravité: 1.62 m/s²'},
       {ci:'🪨', txt:'Surface cratérisée'},
-      {ci:'☄️', txt:'Impacts météoritiques'},
     ],
-    desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère. Des météorites peuvent vous percuter à tout moment.',
+    desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère, conditions prévisibles. Idéal pour débuter.',
   },
   mercury: {
     name: 'Mercure', emoji: '⚫', stars: 2,
@@ -688,8 +687,8 @@ class Lander {
     this.x  = terrain.padCenter + (Math.random() - 0.5) * terrain.width * 0.5;
     this.x  = Math.max(20, Math.min(terrain.width - 20, this.x));
     this.y  = terrain.maxH + cfg.startAlt;
-    this.vx = (Math.random() - 0.5) * 1.5;  // slight initial drift
-    this.vy = -3 - Math.random() * 2;        // falling
+    this.vx = (Math.random() - 0.5) * 2.5;  // slight initial drift
+    this.vy = -7 - Math.random() * 4;        // falling
     this.angle = 0;   // degrees, 0 = upright, + = clockwise
     this.fuel  = cfg.startFuel;
     this.alive = true;
@@ -1009,6 +1008,14 @@ class LanderGame {
     for (let i = this._trail.length - 1; i >= 0; i--) {
       this._trail[i].age += dt;
       if (this._trail[i].age > 0.7) this._trail.splice(i, 1);
+    }
+
+    // Pad shrink for hard levels (3★+)
+    if (this.cfg.stars >= 3 && !this.result) {
+      const shrinkDur = 60; // seconds to reach minimum
+      const minRatio  = 0.45;
+      const ratio     = Math.max(minRatio, 1 - (this.elapsed / shrinkDur) * (1 - minRatio));
+      this.terrain.padWidth = this.cfg.padWidth * ratio;
     }
 
     // Cloud drift

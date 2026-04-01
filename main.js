@@ -120,6 +120,8 @@ canvas.addEventListener('click', e => {
     showTooltip(e.clientX, e.clientY, `🔒 Terminez d'abord ${prevName} pour débloquer cette destination.`);
     return;
   }
+  elTooltip.classList.add('hidden');
+  tooltipTimer = 0;
   selectedBody = id;
   const pos    = solar.getBodyScreenPos(id);
   zoomOX       = pos.x;
