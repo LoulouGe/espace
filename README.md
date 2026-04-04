@@ -34,13 +34,13 @@ Le jeu propose une campagne progressive où chaque corps céleste doit être pos
 | 🟠 **Titan** | ★★★☆☆ | Vents horizontaux forts et cisaillement. **Danger** : Rafales verticales descendantes soudaines. |
 | 🌍 **Terre** | ★★★★☆ | Forte gravité et turbulences continues. **Danger** : Coups de foudre (déséquilibrent violemment le vaisseau). |
 | 🌕 **Vénus** | ★★★★★ | Vents dévastateurs permanents. **Danger** : Boss de la campagne avec pluie d'acide ! |
-| 🌋 **Io** | ★★★★★ | Surface volcanique. **Danger** : Éruptions qui projettent des rochers (Volcans). |
-| 🧊 **Europa** | ★★★★★ | Surface glacée sans friction. **Danger** : Crevasses mortelles et geysers d'eau. |
+| 🌋 **Io** | ★★★★★ | Satellite volcanique de Jupiter. **Danger** : Éruptions qui projettent des rochers (Volcans). |
+| 🧊 **Europa** | ★★★★★ | Lune glacée de Jupiter. **Danger** : Crevasses mortelles et geysers d'eau. |
 | 🌑 **Pluton** | ★★★★★ | Gravité quasi-nulle. **Danger** : Vent solaire constant. |
 
 ## ✨ Dernières Nouveautés & Fonctionnalités
 
-* 🪐 **3 Nouvelles Planètes Extrêmes** : Voyagez au-delà de Vénus vers **Io** (Volcans), **Europa** (Glace), et **Pluton** (Gravité quasi-nulle).
+* 🪐 **3 Nouveaux Mondes Extrêmes** : Voyagez au-delà de Vénus vers **Io** (satellite volcanique de Jupiter), **Europa** (lune glacée de Jupiter), et **Pluton** (gravité quasi-nulle).
 * 🎯 **Missions Secondaires & Récompenses** : Chaque vol vous propose désormais des objectifs tactiques subsidiaires pour récolter bonus et diamants précieux.
 * 🛠️ **Arbre d'Améliorations (Upgrades) & Monnaie** : Utilisez les diamants remportés pour modifier vos vaisseaux (Fuel, Propulseur, Gyroscope...).
 * 📅 **Le Défi du Jour (Daily Challenge)** : Chaque jour, un défi unique généré aléatoirement. Un seul essai par jour !

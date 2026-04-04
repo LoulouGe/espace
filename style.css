@@ -109,26 +109,6 @@ html, body {
 #v-wind { color: #88f; }
 .warn-txt { color: #f60; font-size: 11px; animation: blink 0.5s infinite; }
 
-/* ── Controls bar ── */
-#controls-bar {
-  position: fixed;
-  top: 56px; left: 50%;
-  transform: translateX(-50%);
-  background:
-    radial-gradient(circle at top right, rgba(0, 180, 255, 0.06), transparent 30%),
-    linear-gradient(180deg, rgba(5, 16, 34, 0.7), rgba(2, 8, 20, 0.62));
-  border: 1px solid rgba(92, 176, 255, 0.14);
-  border-radius: 999px;
-  padding: 6px 16px;
-  color: rgba(180,200,255,0.48);
-  font-size: 11px;
-  pointer-events: none;
-  z-index: 10;
-  display: flex; gap: 16px;
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-  backdrop-filter: blur(5px);
-}
-
 /* ── Missions HUD ── */
 #missions-hud {
   position: fixed;
@@ -514,7 +494,7 @@ html, body {
   margin-top: 20px;
   text-align: center;
 }
-.btn, .btn-p, .btn-s, .tbtn, #btn-training, #btn-reset, .shop-item-btn, .upg-btn {
+.btn, .btn-p, .btn-s, .tbtn, #btn-reset, .shop-item-btn, .upg-btn {
   appearance: none;
   background:
     radial-gradient(circle at top right, rgba(0, 180, 255, 0.08), transparent 34%),
@@ -529,12 +509,12 @@ html, body {
   transition: transform 0.12s, box-shadow 0.2s, border-color 0.2s, color 0.2s, background 0.2s;
   box-shadow: var(--glass-shadow), var(--glass-inset);
 }
-.btn:hover, .btn-p:hover, .btn-s:hover, .tbtn:hover, #btn-training:hover, #btn-reset:hover, .shop-item-btn:hover, .upg-btn:hover {
+.btn:hover, .btn-p:hover, .btn-s:hover, .tbtn:hover, #btn-reset:hover, .shop-item-btn:hover, .upg-btn:hover {
   transform: translateY(-1px);
   border-color: rgba(109, 231, 255, 0.3);
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.32), 0 0 16px rgba(0, 210, 255, 0.08);
 }
-.btn:disabled, .btn-p:disabled, .btn-s:disabled, .tbtn:disabled, #btn-training:disabled, #btn-reset:disabled, .shop-item-btn:disabled, .upg-btn:disabled {
+.btn:disabled, .btn-p:disabled, .btn-s:disabled, .tbtn:disabled, #btn-reset:disabled, .shop-item-btn:disabled, .upg-btn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
@@ -603,9 +583,6 @@ html, body {
 }
 .stat-row-reward .stat-lbl,
 .stat-row-reward .stat-val { color: var(--cyan); }
-.stat-row-training .stat-lbl,
-.stat-row-training .stat-val { color: rgba(255, 208, 92, 0.9); }
-
 /* ── Time controls ── */
 #time-ctrl {
   position: fixed;
@@ -750,36 +727,24 @@ html, body {
     inset 0 1px 0 rgba(255,255,255,0.14);
 }
 
-/* ── Training mode ── */
-#btn-training {
-  padding: 8px 14px;
-  font-size: 11px;
-  color: rgba(255, 208, 92, 0.9);
-  border-color: rgba(255, 208, 92, 0.18);
-}
-#btn-training.active {
-  border-color: rgba(255, 208, 92, 0.28);
-  color: rgba(255, 208, 92, 0.96);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 170, 0, 0.1);
-}
-#training-badge {
-  font-family: 'Orbitron', monospace;
-  font-size: 9px;
-  color: #fa0;
-  letter-spacing: 2px;
-  margin-top: 3px;
-  text-shadow: 0 0 8px rgba(255,170,0,0.5);
-}
-
 /* ── Achievements ── */
 .ach-item {
   display: flex; gap: 12px; align-items: center; padding: 12px; background: rgba(7,16,34,0.46); border: 1px solid rgba(160, 176, 196, 0.12); border-radius: 14px; box-shadow: var(--glass-inset);
 }
 .ach-item.done { border-color: rgba(255, 212, 106, 0.18); background: rgba(54, 38, 8, 0.42); }
+.ach-item.locked {
+  background: rgba(18, 20, 24, 0.36);
+  border-color: rgba(178, 186, 198, 0.08);
+  opacity: 0.44;
+  filter: grayscale(0.22);
+}
 .ach-icon { font-size: 24px; width: 32px; text-align: center; }
 .ach-name { font-weight: bold; font-family: 'Orbitron', monospace; font-size: 14px; color: #fff; margin-bottom: 2px; }
 .ach-desc-small { font-size: 11px; color: rgba(172, 206, 235, 0.58); }
 .ach-item.done .ach-name { color: var(--gold); }
+.ach-item.locked .ach-icon { color: rgba(196, 200, 208, 0.54); }
+.ach-item.locked .ach-name { color: rgba(208, 213, 222, 0.58); }
+.ach-item.locked .ach-desc-small { color: rgba(160, 166, 176, 0.34); }
 
 /* ── Upgrades ── */
 .upgrade-item {

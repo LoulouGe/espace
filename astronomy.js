@@ -21,6 +21,9 @@ const ORBITAL_ELEMENTS = [
   { id:'uranus',  name:'Uranus',  L0:313.23, dL:0.01177, color:'#7de8e8', r:11, orbitR:345 },
   { id:'neptune', name:'Neptune', L0:304.88, dL:0.00600, color:'#3f54ba', r:10, orbitR:390 },
 ];
+const EARTH_EL = ORBITAL_ELEMENTS.find(el => el.id === 'earth');
+const JUPITER_EL = ORBITAL_ELEMENTS.find(el => el.id === 'jupiter');
+const SATURN_EL = ORBITAL_ELEMENTS.find(el => el.id === 'saturn');
 
 // Orbit display radii (pixels at base scale 1.0, i.e. canvas 900px min dim)
 const BASE_ORBIT_R = [58, 92, 128, 170, 230, 290, 345, 390];
@@ -322,15 +325,15 @@ class SolarSystem {
       const p = this._pos(el, this.simTime);
       if (Math.hypot(sx - p.x, sy - p.y) <= Math.max(el.r + 6, 14)) return el.id;
     }
-    const earthPos  = this._pos(ORBITAL_ELEMENTS[2], this.simTime);
+    const earthPos  = this._pos(EARTH_EL, this.simTime);
     const moonPos   = this._moonPos(earthPos, MOON_EL, this.simTime);
     if (Math.hypot(sx - moonPos.x, sy - moonPos.y) <= 14) return 'moon';
 
-    const saturnPos = this._pos(ORBITAL_ELEMENTS[5], this.simTime);
+    const saturnPos = this._pos(SATURN_EL, this.simTime);
     const titanPos  = this._moonPos(saturnPos, TITAN_EL, this.simTime);
     if (Math.hypot(sx - titanPos.x, sy - titanPos.y) <= 14) return 'titan';
 
-    const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+    const jupiterPos = this._pos(JUPITER_EL, this.simTime);
     const ioPos      = this._moonPos(jupiterPos, IO_EL, this.simTime);
     if (Math.hypot(sx - ioPos.x, sy - ioPos.y) <= 14) return 'io';
 
@@ -343,19 +346,19 @@ class SolarSystem {
   // Screen position of a body (for zoom target)
   getBodyScreenPos(id) {
     if (id === 'moon') {
-      const earthPos = this._pos(ORBITAL_ELEMENTS[2], this.simTime);
+      const earthPos = this._pos(EARTH_EL, this.simTime);
       return this._moonPos(earthPos, MOON_EL, this.simTime);
     }
     if (id === 'titan') {
-      const saturnPos = this._pos(ORBITAL_ELEMENTS[5], this.simTime);
+      const saturnPos = this._pos(SATURN_EL, this.simTime);
       return this._moonPos(saturnPos, TITAN_EL, this.simTime);
     }
     if (id === 'io') {
-      const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+      const jupiterPos = this._pos(JUPITER_EL, this.simTime);
       return this._moonPos(jupiterPos, IO_EL, this.simTime);
     }
     if (id === 'europa') {
-      const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+      const jupiterPos = this._pos(JUPITER_EL, this.simTime);
       return this._moonPos(jupiterPos, EUROPA_EL, this.simTime);
     }
     if (id === 'pluto') return this._pos(PLUTO_EL, this.simTime);
@@ -416,21 +419,21 @@ class SolarSystem {
     }
 
     // Moon orbit (near Earth)
-    const earthPos = this._pos(ORBITAL_ELEMENTS[2], t);
+    const earthPos = this._pos(EARTH_EL, t);
     ctx.strokeStyle = 'rgba(150,180,255,0.1)';
     ctx.beginPath();
     ctx.arc(earthPos.x, earthPos.y, MOON_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
     // Titan orbit (near Saturn)
-    const saturnPos = this._pos(ORBITAL_ELEMENTS[5], t);
+    const saturnPos = this._pos(SATURN_EL, t);
     ctx.strokeStyle = 'rgba(200,150,50,0.1)';
     ctx.beginPath();
     ctx.arc(saturnPos.x, saturnPos.y, TITAN_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
     // Io + Europa orbits (near Jupiter)
-    const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], t);
+    const jupiterPos = this._pos(JUPITER_EL, t);
     ctx.strokeStyle = 'rgba(200,160,30,0.1)';
     ctx.beginPath(); ctx.arc(jupiterPos.x, jupiterPos.y, IO_EL.orbitR,     0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = 'rgba(100,160,220,0.1)';
@@ -458,7 +461,7 @@ class SolarSystem {
     // Moon trail
     for (let k = 1; k <= 35; k++) {
       const pastT = t - k * 0.7 * 86400000;
-      const ep    = this._pos(ORBITAL_ELEMENTS[2], pastT);
+      const ep    = this._pos(EARTH_EL, pastT);
       const mp    = this._moonPos(ep, MOON_EL, pastT);
       ctx.fillStyle = `rgba(184,184,184,${((1 - k/35) * 0.4).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(mp.x, mp.y, 1, 0, Math.PI * 2); ctx.fill();
@@ -466,7 +469,7 @@ class SolarSystem {
     // Titan trail
     for (let k = 1; k <= 35; k++) {
       const pastT = t - k * 0.5 * 86400000;
-      const sp    = this._pos(ORBITAL_ELEMENTS[5], pastT);
+      const sp    = this._pos(SATURN_EL, pastT);
       const tp2   = this._moonPos(sp, TITAN_EL, pastT);
       ctx.fillStyle = `rgba(204,136,51,${((1 - k/35) * 0.4).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(tp2.x, tp2.y, 1, 0, Math.PI * 2); ctx.fill();
@@ -474,7 +477,7 @@ class SolarSystem {
     // Io trail
     for (let k = 1; k <= 20; k++) {
       const pastT = t - k * 0.06 * 86400000;
-      const jp2   = this._pos(ORBITAL_ELEMENTS[3], pastT);
+      const jp2   = this._pos(JUPITER_EL, pastT);
       const ip    = this._moonPos(jp2, IO_EL, pastT);
       ctx.fillStyle = `rgba(212,168,32,${((1 - k/20) * 0.35).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(ip.x, ip.y, 1, 0, Math.PI * 2); ctx.fill();
@@ -482,7 +485,7 @@ class SolarSystem {
     // Europa trail
     for (let k = 1; k <= 20; k++) {
       const pastT = t - k * 0.12 * 86400000;
-      const jp3   = this._pos(ORBITAL_ELEMENTS[3], pastT);
+      const jp3   = this._pos(JUPITER_EL, pastT);
       const ep    = this._moonPos(jp3, EUROPA_EL, pastT);
       ctx.fillStyle = `rgba(122,173,224,${((1 - k/20) * 0.35).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(ep.x, ep.y, 1, 0, Math.PI * 2); ctx.fill();
@@ -574,7 +577,7 @@ class SolarSystem {
     if (id === 'europa') id = 'jupiter';
     const au = PLANET_AU[id];
     if (!au) return null;
-    const earthEl  = ORBITAL_ELEMENTS[2];
+    const earthEl  = EARTH_EL;
     const targetEl = ORBITAL_ELEMENTS.find(e => e.id === id);
     if (!targetEl) return null;
     const eA = this._angle(earthEl,  this.simTime) * Math.PI / 180;

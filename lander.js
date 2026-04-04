@@ -27,15 +27,17 @@ const BODY_DATA = {
   mercury: {
     name: 'Mercure', emoji: '⚫', stars: 2,
     gravity: 3.70,
+    hazardRate: 1.05,
+    hazardPower: 1.0,
     drag: 0,
     windType: 'none', windBase: 0, windAmp: 0,
     groundColor: '#707070', groundAccent: '#505050', groundDark: '#303030',
     skyTop: '#000000', skyBot: '#050508',
     showStars: true, starAlpha: 0.9,
     hasFog: false,
-    terrainRoughness: 1.0,
-    padWidth: 70, startAlt: 165, startFuel: 900,
-    maxVSpeed: 3.8, maxHSpeed: 2.5, maxAngle: 18,
+    terrainRoughness: 1.05,
+    padWidth: 66, startAlt: 170, startFuel: 900,
+    maxVSpeed: 3.5, maxHSpeed: 2.3, maxAngle: 16,
     hazardType: 'flare',
     conditions: [
       { ci: '⚫', txt: "Pas d'atmosphère" },
@@ -48,20 +50,22 @@ const BODY_DATA = {
   mars: {
     name: 'Mars', emoji: '🔴', stars: 3,
     gravity: 3.72,
+    hazardRate: 1.12,
+    hazardPower: 1.06,
     drag: 0.004,
-    windType: 'gusty', windBase: 2, windAmp: 8,
+    windType: 'gusty', windBase: 3, windAmp: 10,
     windGustChance: 0.0015,  // per second
     hasDustStorm: true, dustStormChance: 0.0003,
     groundColor: '#8b3a0f', groundAccent: '#5a2808', groundDark: '#3a1805',
     skyTop: '#7a2010', skyBot: '#c04520',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(180,80,30,0.18)',
-    terrainRoughness: 0.7,
-    padWidth: 65, startAlt: 155, startFuel: 1000,
-    maxVSpeed: 3.5, maxHSpeed: 2.2, maxAngle: 15,
+    terrainRoughness: 0.8,
+    padWidth: 60, startAlt: 165, startFuel: 1000,
+    maxVSpeed: 3.2, maxHSpeed: 2.0, maxAngle: 13,
     hazardType: 'magnetic',
     conditions: [
-      { ci: '💨', txt: 'Vent léger: 2–10 m/s' },
+      { ci: '💨', txt: 'Vent soutenu: 3–13 m/s' },
       { ci: '🌪️', txt: 'Tempêtes de poussière' },
       { ci: '🧲', txt: 'Orages magnétiques (gyroscope inversé)' },
       { ci: '🌫️', txt: 'Atmosphère fine (CO₂)' },
@@ -69,20 +73,22 @@ const BODY_DATA = {
     desc: 'La planète rouge. Tempêtes de poussière et orages magnétiques qui inversent vos commandes de rotation.',
   },
   titan: {
-    name: 'Titan', emoji: '🟠', stars: 3,
+    name: 'Titan', emoji: '🟠', stars: 4,
     gravity: 1.35,
-    drag: 0.012,
-    windType: 'shear', windBase: 3, windAmp: 6,
+    hazardRate: 1.2,
+    hazardPower: 1.12,
+    drag: 0.014,
+    windType: 'shear', windBase: 4.5, windAmp: 8,
     groundColor: '#704214', groundAccent: '#4a2a0a', groundDark: '#2a1505',
     skyTop: '#552200', skyBot: '#aa5500',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(200,100,0,0.3)',
-    terrainRoughness: 0.55,
-    padWidth: 82, startAlt: 155, startFuel: 1200,
-    maxVSpeed: 4.2, maxHSpeed: 2.8, maxAngle: 20,
+    terrainRoughness: 0.64,
+    padWidth: 58, startAlt: 165, startFuel: 1200,
+    maxVSpeed: 3.7, maxHSpeed: 2.3, maxAngle: 16,
     hazardType: 'downburst',
     conditions: [
-      { ci: '💨', txt: 'Vents légers: 3–11 m/s' },
+      { ci: '💨', txt: 'Vents denses: 4–16 m/s' },
       { ci: '🌫️', txt: 'Atmosphère épaisse (azote/méthane)' },
       { ci: '⬇️', txt: 'Rafales verticales soudaines' },
       { ci: '⚖️', txt: 'Faible gravité: 1.35 m/s²' },
@@ -92,19 +98,21 @@ const BODY_DATA = {
   earth: {
     name: 'Terre', emoji: '🌍', stars: 4,
     gravity: 9.81,
+    hazardRate: 1.26,
+    hazardPower: 1.16,
     drag: 0.007,
-    windType: 'turbulent', windBase: 2, windAmp: 6,
+    windType: 'turbulent', windBase: 3.2, windAmp: 8,
     groundColor: '#2d7a2d', groundAccent: '#1a4a1a', groundDark: '#0a2a0a',
     skyTop: '#08204e', skyBot: '#1a5276',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(100,150,255,0.12)',
     hasClouds: true,
-    terrainRoughness: 0.45,
-    padWidth: 75, startAlt: 145, startFuel: 1600,
-    maxVSpeed: 4.0, maxHSpeed: 2.5, maxAngle: 20,
+    terrainRoughness: 0.52,
+    padWidth: 56, startAlt: 155, startFuel: 1600,
+    maxVSpeed: 3.4, maxHSpeed: 2.0, maxAngle: 15,
     hazardType: 'lightning',
     conditions: [
-      { ci: '🌬️', txt: 'Vent: 3–11 m/s + turbulences' },
+      { ci: '🌬️', txt: 'Vent: 4–14 m/s + turbulences' },
       { ci: '⚖️', txt: 'Forte gravité: 9.81 m/s²' },
       { ci: '⚡', txt: 'Risque de foudre (impulsion latérale)' },
       { ci: '🌊', txt: 'Courants atmosphériques' },
@@ -114,18 +122,20 @@ const BODY_DATA = {
   venus: {
     name: 'Vénus', emoji: '🌕', stars: 5,
     gravity: 8.87,
+    hazardRate: 1.38,
+    hazardPower: 1.24,
     drag: 0.03,
-    windType: 'hurricane', windBase: 4, windAmp: 8,
+    windType: 'hurricane', windBase: 6, windAmp: 12,
     groundColor: '#5a2a05', groundAccent: '#3a1502', groundDark: '#1a0800',
     skyTop: '#5a1500', skyBot: '#aa3000',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(255,80,0,0.35)',
-    terrainRoughness: 0.85,
-    padWidth: 72, startAlt: 155, startFuel: 2500,
-    maxVSpeed: 3.8, maxHSpeed: 2.2, maxAngle: 16,
+    terrainRoughness: 0.95,
+    padWidth: 48, startAlt: 165, startFuel: 2500,
+    maxVSpeed: 3.1, maxHSpeed: 1.7, maxAngle: 12,
     hazardType: 'acidrain',
     conditions: [
-      { ci: '🌪️', txt: 'Vents: 6–16 m/s' },
+      { ci: '🌪️', txt: 'Vents: 9–24 m/s' },
       { ci: '⚖️', txt: 'Gravité: 8.87 m/s²' },
       { ci: '🔥', txt: 'Température: 462°C' },
       { ci: '☠️', txt: 'Pluie d\'acide (carburant 2× plus vite)' },
@@ -134,43 +144,47 @@ const BODY_DATA = {
     desc: 'ENFER. Vents dévastateurs et pluies d\'acide qui rongent votre carburant deux fois plus vite. Réservé aux meilleurs.',
   },
   io: {
-    name: 'Io', emoji: '🟡', stars: 4,
+    name: 'Io', emoji: '🟡', stars: 5,
     gravity: 1.79,
+    hazardRate: 1.5,
+    hazardPower: 1.34,
     drag: 0.002,
-    windType: 'gusty', windBase: 1, windAmp: 3, windGustChance: 0.001,
+    windType: 'gusty', windBase: 2, windAmp: 5, windGustChance: 0.0013,
     groundColor: '#d4a820', groundAccent: '#a07810', groundDark: '#5a3800',
     skyTop: '#1a0800', skyBot: '#3a1200',
     showStars: true, starAlpha: 0.65,
     hasFog: true, fogColor: 'rgba(255,160,20,0.18)',
-    terrainRoughness: 0.92,
-    padWidth: 72, startAlt: 160, startFuel: 1300,
-    maxVSpeed: 3.8, maxHSpeed: 2.4, maxAngle: 18,
+    terrainRoughness: 1.02,
+    padWidth: 44, startAlt: 172, startFuel: 1300,
+    maxVSpeed: 3.0, maxHSpeed: 1.8, maxAngle: 12,
     hazardType: 'volcano',
     conditions: [
       { ci: '🌋', txt: 'Éruptions volcaniques actives' },
       { ci: '🪨', txt: 'Rochers éjectés sans prévenir' },
       { ci: '☢️', txt: 'Radiation de Jupiter' },
-      { ci: '⚖️', txt: 'Gravité: 1.79 m/s²' },
+      { ci: '⚖️', txt: 'Gravité: 1.79 m/s², pad minuscule' },
     ],
     desc: 'La lune la plus volcanique du système solaire. Des éruptions projettent des rochers géants qui déstabilisent violemment votre vaisseau.',
   },
   europa: {
-    name: 'Europa', emoji: '🔵', stars: 4,
+    name: 'Europa', emoji: '🔵', stars: 5,
     gravity: 1.31,
+    hazardRate: 1.62,
+    hazardPower: 1.42,
     drag: 0.005,
-    windType: 'shear', windBase: 1, windAmp: 3.5,
+    windType: 'shear', windBase: 2.4, windAmp: 5.2,
     groundColor: '#b8d4f8', groundAccent: '#7aaae0', groundDark: '#305898',
     skyTop: '#000818', skyBot: '#001838',
     showStars: true, starAlpha: 0.88,
     hasFog: true, fogColor: 'rgba(130,185,255,0.10)',
-    terrainRoughness: 0.30,
-    padWidth: 78, startAlt: 160, startFuel: 1100,
-    maxVSpeed: 4.2, maxHSpeed: 2.8, maxAngle: 22,
+    terrainRoughness: 0.42,
+    padWidth: 40, startAlt: 172, startFuel: 1100,
+    maxVSpeed: 2.8, maxHSpeed: 1.7, maxAngle: 11,
     hazardType: 'geyser',
     conditions: [
       { ci: '🧊', txt: 'Surface de glace fracturée' },
       { ci: '💦', txt: 'Geysers d\'eau sous pression' },
-      { ci: '⚖️', txt: 'Gravité: 1.31 m/s²' },
+      { ci: '⚖️', txt: 'Gravité: 1.31 m/s², fenêtre très serrée' },
       { ci: '🌊', txt: 'Océan souterrain instable' },
     ],
     desc: 'Lune glacée de Jupiter. Des geysers d\'eau bouillante surgissent du sol et vous propulsent brutalement vers le haut.',
@@ -178,18 +192,20 @@ const BODY_DATA = {
   pluto: {
     name: 'Pluton', emoji: '⚪', stars: 5,
     gravity: 0.62,
+    hazardRate: 1.78,
+    hazardPower: 1.52,
     drag: 0.001,
-    windType: 'shear', windBase: 0.8, windAmp: 2.5,
+    windType: 'shear', windBase: 1.8, windAmp: 4.2,
     groundColor: '#c0aa88', groundAccent: '#907858', groundDark: '#503828',
     skyTop: '#000004', skyBot: '#040010',
     showStars: true, starAlpha: 1.0,
     hasFog: false,
-    terrainRoughness: 0.68,
-    padWidth: 68, startAlt: 170, startFuel: 800,
-    maxVSpeed: 5.0, maxHSpeed: 3.5, maxAngle: 25,
+    terrainRoughness: 0.8,
+    padWidth: 36, startAlt: 185, startFuel: 800,
+    maxVSpeed: 2.5, maxHSpeed: 1.5, maxAngle: 10,
     hazardType: 'solarwind',
     conditions: [
-      { ci: '🌬️', txt: 'Vent solaire permanent (dérive)' },
+      { ci: '🌬️', txt: 'Vent solaire violent et quasi constant' },
       { ci: '🥶', txt: 'Température: −233°C' },
       { ci: '⚖️', txt: 'Quasi-apesanteur: 0.62 m/s²' },
       { ci: '💨', txt: 'Poussée ionique imprévisible' },
@@ -779,6 +795,7 @@ class WindSystem {
 class HazardSystem {
   constructor(bodyId) {
     this.bodyId = bodyId;
+    this.cfg = BODY_DATA[bodyId] || {};
     this._t = 0;
     this._state = 0; // 0: idle, 1: warning, 2: active
     this._timer = 0;
@@ -787,12 +804,17 @@ class HazardSystem {
     this._fuelDrainMult = 1;
     this._vertForce = 0;
     this._impulse = null;
+    this._torqueImpulse = 0;
     this._warning = null;
   }
+
+  get _hazardRate() { return this.cfg.hazardRate || 1; }
+  get _hazardPower() { return this.cfg.hazardPower || 1; }
 
   update(dt) {
     this._t += dt;
     this._impulse = null;
+    this._torqueImpulse = 0;
     switch (this.bodyId) {
       case 'moon':    this._updateMeteor(dt);    break;
       case 'mercury': this._updateFlare(dt);     break;
@@ -808,7 +830,7 @@ class HazardSystem {
 
   _updateMeteor(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0005 * dt * 60) {
+      if (Math.random() < 0.0005 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 2.5;
         this._warning = '☄ IMPACT MÉTÉORITE IMMINENT !';
@@ -818,9 +840,9 @@ class HazardSystem {
       if (this._timer <= 0) {
         this._state = 2;
         this._timer = 0.12;
-        const mag = 7 + Math.random() * 10;
+        const mag = (7 + Math.random() * 10) * this._hazardPower;
         const sign = Math.random() < 0.5 ? 1 : -1;
-        this._impulse = { vx: mag * sign, vy: 2 + Math.random() * 4 };
+        this._impulse = { vx: mag * sign, vy: (2 + Math.random() * 4) * this._hazardPower };
         this._warning = '☄ IMPACT MÉTÉORITE !';
       }
     } else if (this._state === 2) {
@@ -831,7 +853,7 @@ class HazardSystem {
 
   _updateFlare(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0003 * dt * 60) {
+      if (Math.random() < 0.0003 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 2.5;
         this._warning = '☀ ÉRUPTION SOLAIRE IMMINENTE !';
@@ -840,7 +862,7 @@ class HazardSystem {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 1.5 + Math.random();
+        this._timer = (1.5 + Math.random()) * (0.95 + this._hazardPower * 0.18);
         this._engineCutout = true;
         this._warning = '☀ ÉRUPTION SOLAIRE — Moteur hors ligne !';
       }
@@ -856,7 +878,7 @@ class HazardSystem {
 
   _updateMagnetic(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0003 * dt * 60) {
+      if (Math.random() < 0.0003 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 2.5;
         this._warning = '🧲 ORAGE MAGNÉTIQUE IMMINENT !';
@@ -865,7 +887,7 @@ class HazardSystem {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 2 + Math.random() * 2;
+        this._timer = (2 + Math.random() * 2) * (0.95 + this._hazardPower * 0.16);
         this._rotationMult = -1;
         this._warning = '🧲 ORAGE MAGNÉTIQUE — Gyroscope inversé !';
       }
@@ -881,7 +903,7 @@ class HazardSystem {
 
   _updateDownburst(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0004 * dt * 60) {
+      if (Math.random() < 0.0004 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 3.0;
         this._warning = '⬇ RAFALE VERTICALE IMMINENTE !';
@@ -890,8 +912,8 @@ class HazardSystem {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 0.8 + Math.random() * 1.0;
-        this._vertForce = -(10 + Math.random() * 8);
+        this._timer = (0.8 + Math.random() * 1.0) * (0.95 + this._hazardPower * 0.22);
+        this._vertForce = -(10 + Math.random() * 8) * this._hazardPower;
         this._warning = '⬇ RAFALE VERTICALE !';
       }
     } else if (this._state === 2) {
@@ -906,24 +928,30 @@ class HazardSystem {
 
   _updateLightning(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0003 * dt * 60) {
+      if (Math.random() < 0.0009 * this._hazardRate * dt * 60) {
         this._state = 1;
-        this._timer = 2.5;
+        this._timer = 1.8;
         this._warning = '⚡ FOUDRE IMMINENTE !';
       }
     } else if (this._state === 1) {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 0.08;
-        const mag = 7 + Math.random() * 8;
+        this._timer = 0.35 * (0.95 + this._hazardPower * 0.18);
+        this._engineCutout = true;
+        const mag = (14 + Math.random() * 10) * this._hazardPower;
         const sign = Math.random() < 0.5 ? 1 : -1;
-        this._impulse = { vx: mag * sign, vy: 2 + Math.random() * 3 };
-        this._warning = '⚡ FOUDRE !';
+        this._impulse = { vx: mag * sign, vy: (5 + Math.random() * 5) * this._hazardPower };
+        this._torqueImpulse = sign * (40 + Math.random() * 35) * this._hazardPower;
+        this._warning = '⚡ FOUDRE — Décharge violente !';
       }
     } else if (this._state === 2) {
       this._timer -= dt;
-      if (this._timer <= 0) { this._state = 0; this._warning = null; }
+      if (this._timer <= 0) {
+        this._state = 0;
+        this._engineCutout = false;
+        this._warning = null;
+      }
     }
   }
 
@@ -950,7 +978,7 @@ class HazardSystem {
   _updateVolcano(dt) {
     // Io: éruption périodique projette des rochers = impulsion forte + aléatoire
     if (this._state === 0) {
-      if (Math.random() < 0.0005 * dt * 60) {
+      if (Math.random() < 0.0005 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 2.8;
         this._warning = '🌋 ÉRUPTION VOLCANIQUE IMMINENTE !';
@@ -960,9 +988,9 @@ class HazardSystem {
       if (this._timer <= 0) {
         this._state = 2;
         this._timer = 0.15;
-        const mag = 10 + Math.random() * 12;
+        const mag = (10 + Math.random() * 12) * this._hazardPower;
         const sign = Math.random() < 0.5 ? 1 : -1;
-        this._impulse = { vx: mag * sign * 0.8, vy: 4 + Math.random() * 8 };
+        this._impulse = { vx: mag * sign * 0.8, vy: (4 + Math.random() * 8) * this._hazardPower };
         this._warning = '🌋 IMPACT DE ROCHE VOLCANIQUE !';
       }
     } else if (this._state === 2) {
@@ -974,7 +1002,7 @@ class HazardSystem {
   _updateGeyser(dt) {
     // Europa: geysers d'eau qui poussent vers le haut
     if (this._state === 0) {
-      if (Math.random() < 0.0006 * dt * 60) {
+      if (Math.random() < 0.0006 * this._hazardRate * dt * 60) {
         this._state = 1;
         this._timer = 2.5;
         this._warning = '💦 GEYSER IMMINENT !';
@@ -983,8 +1011,8 @@ class HazardSystem {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 1.2 + Math.random() * 1.0;
-        this._vertForce = 18 + Math.random() * 12; // pousse vers le HAUT
+        this._timer = (1.2 + Math.random() * 1.0) * (0.95 + this._hazardPower * 0.22);
+        this._vertForce = (18 + Math.random() * 12) * this._hazardPower; // pousse vers le HAUT
         this._warning = '💦 GEYSER — Poussée ascendante !';
       }
     } else if (this._state === 2) {
@@ -999,7 +1027,7 @@ class HazardSystem {
 
   _updateSolarWind(dt) {
     // Pluton: vent solaire constant avec oscillation = dérive latérale progressive
-    const period = 18;
+    const period = 18 / Math.max(1, this._hazardRate * 0.92);
     const phase = (this._t % period) / period;
     if (phase < 0.1) {
       this._state = 1;
@@ -1007,7 +1035,7 @@ class HazardSystem {
     } else if (phase < 0.45) {
       this._state = 2;
       const dir = Math.floor(this._t / period) % 2 === 0 ? 1 : -1;
-      this._impulse = { vx: dir * 3.5 * dt, vy: 0 }; // continu, petit par dt
+      this._impulse = { vx: dir * 3.5 * dt * this._hazardPower, vy: 0 }; // continu, petit par dt
       this._warning = '☀ VENT SOLAIRE — Dérive latérale !';
     } else {
       this._state = 0;
@@ -1023,6 +1051,7 @@ class HazardSystem {
   get isActive() { return this._state === 2; }
   get isWarning() { return this._state === 1; }
   consumeImpulse() { const i = this._impulse; this._impulse = null; return i; }
+  consumeTorqueImpulse() { const t = this._torqueImpulse; this._torqueImpulse = 0; return t; }
 }
 
 // ─── Lander ───────────────────────────────────────────────────────────────────
@@ -1590,7 +1619,6 @@ class LanderGame {
 
     // Weather visuals
     this._dustStormProgress = 0;
-    this.trainingMode = false;
 
     // Missions secondaires
     this.missions = [];  // set from outside after construction
@@ -1633,6 +1661,15 @@ class LanderGame {
       else if (this.lander.shipType === 'alien') mult = 0.5; // Peu impacté
       this.lander.vx += impulse.vx * mult;
       this.lander.vy += impulse.vy * mult;
+      if (this.bodyId === 'earth') this._shakeAmt = Math.max(this._shakeAmt, 6);
+    }
+    const torqueImpulse = this.hazard.consumeTorqueImpulse();
+    if (torqueImpulse) {
+      let torqueMult = 1;
+      if (this.lander.shipType === 'tank') torqueMult = 0.45;
+      else if (this.lander.shipType === 'alien') torqueMult = 0.65;
+      this.lander.rotVel += torqueImpulse * torqueMult;
+      this._shakeAmt = Math.max(this._shakeAmt, 6);
     }
 
     // Feature 11: shake on hazard for titan/venus
@@ -1701,11 +1738,6 @@ class LanderGame {
         x: this.lander.x, y: this.lander.y, angle: this.lander.angle,
         up: this.input.up, space: this.input.space,
       });
-    }
-
-    // Training mode: infinite fuel
-    if (this.trainingMode) {
-      this.lander.fuel = this.lander.fuelMax;
     }
 
     // Dust storm visual progress (Mars)
@@ -1890,48 +1922,6 @@ class LanderGame {
 
     if (this.result && this.result.type === 'land') {
       this._drawChicken(ctx, cx, cy, S, W, H);
-    }
-
-    // Ghost: full translucent ship from best run (synchronized to current elapsed time)
-    if (this._ghost && this._ghost.length > 1) {
-      const idx = Math.min(Math.floor(this.elapsed / 0.15), this._ghost.length - 1);
-      const gf = this._ghost[idx];
-      if (gf) {
-        const gsx = (gf.x - cx) * S + W / 2;
-        const gsy = H / 2 - (gf.y - cy) * S;
-        const gRad = gf.angle * Math.PI / 180;
-        const ghw = this.lander.hw * 2 * S;
-        const ghh = this.lander.hh * 2 * S;
-        ctx.save();
-        ctx.globalAlpha = 0.28;
-        ctx.translate(gsx, gsy);
-        ctx.rotate(gRad);
-        ctx.strokeStyle = '#6688ff';
-        ctx.lineWidth = 1.5;
-        // Hull
-        ctx.beginPath();
-        ctx.roundRect(-ghw / 2, -ghh / 2, ghw, ghh * 0.65, 4);
-        ctx.stroke();
-        // Window
-        ctx.beginPath();
-        ctx.arc(0, -ghh * 0.15, ghw * 0.18, 0, Math.PI * 2);
-        ctx.stroke();
-        // Engine bell
-        ctx.beginPath();
-        ctx.moveTo(-ghw * 0.35, ghh * 0.1);
-        ctx.lineTo( ghw * 0.35, ghh * 0.1);
-        ctx.lineTo( ghw * 0.25, ghh * 0.43);
-        ctx.lineTo(-ghw * 0.25, ghh * 0.43);
-        ctx.closePath();
-        ctx.stroke();
-        // Legs
-        const glw = ghw * 0.55;
-        ctx.beginPath();
-        ctx.moveTo(-ghw * 0.4, ghh * 0.1); ctx.lineTo(-glw / 2, ghh * 0.5);
-        ctx.moveTo( ghw * 0.4, ghh * 0.1); ctx.lineTo( glw / 2, ghh * 0.5);
-        ctx.stroke();
-        ctx.restore();
-      }
     }
 
     // Feature 12: crash flash more dramatic
@@ -2450,18 +2440,6 @@ class LanderGame {
     ctx.font = '8px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('▼', padMX, padMY - 3);
-
-    // Ghost position
-    if (this._ghost && this._ghost.length > 0) {
-      const gIdx = Math.min(Math.floor(this.elapsed / 0.15), this._ghost.length - 1);
-      const gf = this._ghost[gIdx];
-      if (gf) {
-        const gmx = toMX(gf.x);
-        const gmy = Math.min(mapY + mapH - 4, Math.max(mapY + 4, toMY(gf.y)));
-        ctx.fillStyle = 'rgba(120,160,255,0.75)';
-        ctx.beginPath(); ctx.arc(gmx, gmy, 3, 0, Math.PI * 2); ctx.fill();
-      }
-    }
 
     // Lander dot
     const lmx = toMX(this.lander.x);

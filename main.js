@@ -38,13 +38,6 @@ document.addEventListener('keyup', e => {
 // ─── Touch device detection ───────────────────────────────────────────────────
 const IS_TOUCH = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
 
-// ─── Training mode ────────────────────────────────────────────────────────────
-let trainingMode = false;
-document.getElementById('btn-training').addEventListener('click', () => {
-  trainingMode = !trainingMode;
-  document.getElementById('btn-training').classList.toggle('active', trainingMode);
-});
-
 // ─── Touch controls ───────────────────────────────────────────────────────────
 const TC_MAP = { 'tc-left': 'left', 'tc-right': 'right', 'tc-thrust': 'up', 'tc-retro': 'space' };
 for (const [btnId, key] of Object.entries(TC_MAP)) {
@@ -262,7 +255,6 @@ let tooltipTimer = 0;
 
 // ─── UI refs ─────────────────────────────────────────────────────────────────
 const elHud = document.getElementById('hud');
-const elCtrl = document.getElementById('controls-bar');
 const elBtnSolar = document.getElementById('btn-solar');
 const elTimeCtrl = document.getElementById('time-ctrl');
 const elSimDate = document.getElementById('sim-date');
@@ -280,7 +272,7 @@ canvas.addEventListener('click', e => {
     showTooltip(e.clientX, e.clientY, nonLandableMsg(id));
     return;
   }
-  if (getLockedIds().has(id) && !trainingMode) {
+  if (getLockedIds().has(id)) {
     const idx = CAMPAIGN_ORDER.indexOf(id);
     const prev = CAMPAIGN_ORDER[idx - 1];
     const prevName = prev ? (BODY_DATA[prev] ? BODY_DATA[prev].name : prev) : '?';
@@ -349,9 +341,9 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 // ─── Shop ────────────────────────────────────────────────────────────────────
 const SHOP_CATALOG = {
   standard: { name: "Module Standard", desc: "Le modèle d'origine. Équilibré et polyvalent.", cost: 0 },
-  moustique: { name: "Le Moustique", desc: "Agile, rotation v.rapide. Très peu de fuel. Parfait pour la précision extrême.", cost: 1 },
-  tank: { name: "Le Tank", desc: "Lourd et blindé. Double réserve de fuel. Impose une réduction aux forces extérieures. Rotation lente.", cost: 1 },
-  alien: { name: "Vaisseau Alien", desc: "Moteurs à antigravité surpuissants ! Immunité TOTALE à l'acide, aux pannes solaires et au magnétisme.", cost: 1 }
+  moustique: { name: "Le Moustique", desc: "Agile, rotation v.rapide. Très peu de fuel. Parfait pour la précision extrême.", cost: 240 },
+  tank: { name: "Le Tank", desc: "Lourd et blindé. Double réserve de fuel. Impose une réduction aux forces extérieures. Rotation lente.", cost: 950 },
+  alien: { name: "Vaisseau Alien", desc: "Moteurs à antigravité surpuissants ! Immunité TOTALE à l'acide, aux pannes solaires et au magnétisme.", cost: 4800 }
 };
 
 const elShopCard = document.getElementById('card-shop');
@@ -643,7 +635,7 @@ function updateMissionsHUD(missions, game) {
 }
 
 function evaluateMissions(missions, game, score) {
-  if (!missions || trainingMode || !game || !game.result || game.result.type !== 'land') return 0;
+  if (!missions || !game || !game.result || game.result.type !== 'land') return 0;
   let bonus = 0;
   missions.forEach(m => {
     if (m.check(score, game)) bonus += m.reward;
@@ -675,7 +667,7 @@ function showSolarUI() {
   document.getElementById('diamond-count').textContent = globalDiamonds;
   elBtnSolar.classList.add('hidden');
   elHud.classList.add('hidden');
-  elCtrl.classList.add('hidden');
+  
   updateTimeCtrlVisibility();
 }
 
@@ -690,7 +682,7 @@ function returnToSolar() {
   elCardResult.classList.add('hidden');
   elCardPlanet.classList.add('hidden');
   elHud.classList.add('hidden');
-  elCtrl.classList.add('hidden');
+  
   elBtnSolar.classList.add('hidden');
   document.getElementById('touch-controls').classList.add('hidden');
   document.getElementById('missions-hud').classList.add('hidden');
@@ -719,14 +711,9 @@ function startGame() {
   document.getElementById('storm-warn').style.display = 'none';
 
   elHud.classList.remove('hidden');
-  elCtrl.classList.remove('hidden');
+  
   elBtnSolar.classList.add('hidden');
   if (IS_TOUCH) document.getElementById('touch-controls').classList.remove('hidden');
-
-  // Training mode setup
-  game.trainingMode = trainingMode;
-  const tBadge = document.getElementById('training-badge');
-  if (tBadge) tBadge.classList.toggle('hidden', !trainingMode);
 
   // Assign 2 random secondary missions for this run
   const missionSeed = Date.now() ^ (selectedBody.split('').reduce((a,c) => a + c.charCodeAt(0), 0));
@@ -767,9 +754,6 @@ function showPlanetCard(id) {
   }
   document.getElementById('card-conditions').innerHTML = condHTML;
 
-  const launchBtn = document.getElementById('btn-launch');
-  if (launchBtn) launchBtn.textContent = trainingMode ? '🏋 Lancer (Entraînement)' : '🚀 Lancer la Mission';
-
   elCardPlanet.classList.remove('hidden');
 }
 
@@ -805,15 +789,13 @@ function showResultCard(success, score, reason) {
   const st = BODY_DATA[selectedBody] ? BODY_DATA[selectedBody].stars : 1;
   let earned = baseRewards[st - 1] || 10;
   if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
-  const isTraining = game && game.trainingMode;
   const missionBonus = score._missionBonus || 0;
-  const missionRows = (success && !isTraining && game && game.missions && game.missions.length) ?
+  const missionRows = (success && game && game.missions && game.missions.length) ?
     game.missions.map(m => {
       const done = m.check(score, game);
       return `<div class="stat-row stat-row-mission ${done ? 'is-done' : ''}"><span class="stat-lbl">${done?'✔':'○'} ${m.label.replace(/^[^\s]+\s/,'')}</span><span class="stat-val">${done?'+'+m.reward+'💎':'—'}</span></div>`;
     }).join('') : '';
-  const diamRow = (success && !isTraining) ? `<div class="stat-row stat-row-reward"><span class="stat-lbl">💎 Récompense</span><span class="stat-val">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
-  const trainingRow = isTraining ? `<div class="stat-row stat-row-training"><span class="stat-lbl">Mode</span><span class="stat-val">🏋 Entraînement — non enregistré</span></div>` : '';
+  const diamRow = success ? `<div class="stat-row stat-row-reward"><span class="stat-lbl">💎 Récompense</span><span class="stat-val">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
 
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
@@ -824,7 +806,6 @@ function showResultCard(success, score, reason) {
     ${bestRow}
     ${missionRows}
     ${diamRow}
-    ${trainingRow}
   `;
 
   const starsEl = document.getElementById('res-stars');
@@ -842,7 +823,7 @@ function showResultCard(success, score, reason) {
   elCardResult.classList.remove('hidden');
   elBtnSolar.classList.remove('hidden');
   elHud.classList.add('hidden');
-  elCtrl.classList.add('hidden');
+  
   document.getElementById('missions-hud').classList.add('hidden');
 }
 
@@ -1014,7 +995,7 @@ function loop(ts) {
       if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 4.5)) {
         resultShown = true;
         const score = game.getScore();
-        if (game.result.type === 'land' && !game.trainingMode) {
+        if (game.result.type === 'land') {
           unlockBody(selectedBody);
 
           const baseRewards = [10, 20, 50, 80, 150];
@@ -1035,9 +1016,9 @@ function loop(ts) {
             saveGhost(selectedBody, game.getRecording());
           }
         }
-        // Crashes and training runs never update the leaderboard
+        // Les crashes ne mettent jamais le leaderboard à jour
         showResultCard(game.result.type === 'land', score, game.result.reason);
-        if (game.result.type === 'land' && !game.trainingMode) {
+        if (game.result.type === 'land') {
           checkVenusBoss(score);
           checkAchievements(score, game);
           const ghost = loadGhost(selectedBody);
@@ -1376,52 +1357,7 @@ function startReplay(frames, game) {
   window._replayGame = game;
 }
 
-function drawReplayOverlay(ctx, W, H) {
-  if (!replayFrames || !window._replayGame) return;
-  const rg = window._replayGame;
-  if (replayIdx >= replayFrames.length) {
-    // Loop replay
-    replayIdx = 0;
-    replayTimer = 0;
-  }
-  replayTimer += 1/60;
-  while (replayTimer >= REPLAY_FRAME_DT && replayIdx < replayFrames.length) {
-    replayTimer -= REPLAY_FRAME_DT;
-    replayIdx++;
-  }
-  const f = replayFrames[Math.min(replayIdx, replayFrames.length - 1)];
-  if (!f) return;
-  const S = rg.SCALE;
-  const cx = rg.camX, cy = rg.camY;
-  const sx = (f.x - cx) * S + W / 2;
-  const sy = H / 2 - (f.y - cy) * S;
-  // Draw a full ghost ship at replay position
-  const ghw = rg.lander.hw * 2 * S;
-  const ghh = rg.lander.hh * 2 * S;
-  const gRad = f.angle * Math.PI / 180;
-  ctx.save();
-  ctx.globalAlpha = 0.55;
-  ctx.translate(sx, sy);
-  ctx.rotate(gRad);
-  ctx.fillStyle = '#4488ff';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(-ghw/2, -ghh/2, ghw, ghh*0.65, 3);
-  else ctx.rect(-ghw/2, -ghh/2, ghw, ghh*0.65);
-  ctx.fill();
-  ctx.fillStyle = '#aaccff';
-  ctx.beginPath(); ctx.arc(0, -ghh*0.15, ghw*0.18, 0, Math.PI*2); ctx.fill();
-  // Flame if thrusting
-  if (f.up) {
-    const fl = ghh * 0.45;
-    ctx.fillStyle = 'rgba(255,160,0,0.7)';
-    ctx.beginPath();
-    ctx.moveTo(-ghw*0.2, ghh*0.1);
-    ctx.lineTo(ghw*0.2, ghh*0.1);
-    ctx.lineTo(0, ghh*0.1 + fl);
-    ctx.fill();
-  }
-  ctx.restore();
-}
+function drawReplayOverlay(_ctx, _W, _H) {}
 
 // ─── Daily / Achievements / Upgrades buttons ──────────────────────────────────
 document.getElementById('btn-daily').addEventListener('click', startDailyChallenge);
