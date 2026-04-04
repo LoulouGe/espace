@@ -27,6 +27,7 @@
     <div id="hud-center">
       <div id="hud-planet-name"></div>
       <div id="hud-timer">00:00</div>
+      <div id="training-badge" class="hidden">✦ ENTRAÎNEMENT ✦</div>
       <div id="landing-arrow" class="hidden">▼ PAD</div>
     </div>
     <div id="hud-right">
@@ -36,6 +37,7 @@
       </div>
       <div class="hrow" id="wind-row"><span class="hlbl">VENT</span><span id="v-wind" class="hval">0.0 m/s</span></div>
       <div class="hrow" id="storm-warn" style="display:none"><span class="warn-txt">⚠ TEMPÊTE</span></div>
+      <div class="hrow" id="best-row" style="display:none"><span class="hlbl">RECORD</span><span id="v-best" class="hval" style="color:#fc0">—</span></div>
     </div>
   </div>
 
@@ -55,6 +57,7 @@
       💎 <span id="diamond-count">0</span>
     </div>
     <button id="btn-shop" class="btn" style="background:linear-gradient(135deg,rgba(0,200,255,0.2),rgba(0,100,255,0.4)); border:1px solid #0cf; border-radius:6px; padding:10px 20px; font-weight:bold; cursor:pointer; color:#fff; font-family:'Orbitron', monospace;">🛒 HANGAR</button>
+    <button id="btn-training">🏋 TRAINING</button>
   </div>
 
   <!-- Shop Card -->
@@ -63,7 +66,7 @@
     <div style="font-size:15px; margin-bottom:15px; color:#ddd; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(0,255,255,0.2);">
       Fonds disponibles: <b style="color:#0ff; font-size:18px;">💎 <span id="shop-solde">0</span></b>
     </div>
-    <div id="shop-items" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:8px;"></div>
+    <div id="shop-items" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:24px; padding-right:8px;"></div>
     <div class="card-actions" style="margin-top:20px; text-align:center;">
       <button id="btn-shop-close" class="btn-s" style="padding:10px 24px; font-size:16px;">FERMER</button>
     </div>
@@ -106,6 +109,18 @@
 
   <!-- Tooltip non atterrissable -->
   <div id="tooltip" class="hidden"></div>
+
+  <!-- Touch Controls (mobile + keyboard fallback visible during play) -->
+  <div id="touch-controls" class="hidden">
+    <div id="tc-rotate">
+      <button id="tc-left" class="tc-btn">◄</button>
+      <button id="tc-right" class="tc-btn">►</button>
+    </div>
+    <div id="tc-thrust-group">
+      <button id="tc-thrust" class="tc-btn">▲</button>
+      <button id="tc-retro" class="tc-btn">RETRO</button>
+    </div>
+  </div>
 
   <script src="astronomy.js"></script>
   <script src="lander.js"></script>

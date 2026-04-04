@@ -13,7 +13,7 @@ function resizeCanvas() {
 resizeCanvas();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const S = { SOLAR: 'solar', FADING: 'fading', SELECT: 'select', PLAYING: 'playing', RESULT: 'result', COUNTDOWN: 'countdown', SHOP: 'shop' };
+const S = { SOLAR: 'solar', FADING: 'fading', SELECT: 'select', PLAYING: 'playing', RESULT: 'result', COUNTDOWN: 'countdown', SURVEY: 'survey', SHOP: 'shop' };
 let state = S.SOLAR;
 
 // ─── Singletons ───────────────────────────────────────────────────────────────
@@ -34,6 +34,31 @@ document.addEventListener('keyup', e => {
   if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
   if (e.code === 'Space') keys.space = false;
 });
+
+// ─── Touch device detection ───────────────────────────────────────────────────
+const IS_TOUCH = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+
+// ─── Training mode ────────────────────────────────────────────────────────────
+let trainingMode = false;
+document.getElementById('btn-training').addEventListener('click', () => {
+  trainingMode = !trainingMode;
+  document.getElementById('btn-training').classList.toggle('active', trainingMode);
+});
+
+// ─── Touch controls ───────────────────────────────────────────────────────────
+const TC_MAP = { 'tc-left': 'left', 'tc-right': 'right', 'tc-thrust': 'up', 'tc-retro': 'space' };
+for (const [btnId, key] of Object.entries(TC_MAP)) {
+  const el = document.getElementById(btnId);
+  if (!el) continue;
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); keys[key] = true; el.classList.add('active');
+  }, { passive: false });
+  el.addEventListener('pointerup', e => {
+    e.preventDefault(); keys[key] = false; el.classList.remove('active');
+  });
+  el.addEventListener('pointercancel', () => { keys[key] = false; el.classList.remove('active'); });
+  el.addEventListener('pointerleave',  () => { keys[key] = false; el.classList.remove('active'); });
+}
 
 // ─── Fade + zoom state ────────────────────────────────────────────────────────
 let fadeProgress = 0;         // 0→1
@@ -153,8 +178,10 @@ canvas.addEventListener('touchend', e => {
   _lastPanMid = null;
 }, { passive: true });
 
-// ─── Countdown state ─────────────────────────────────────────────────────────
+// ─── Countdown / Survey state ────────────────────────────────────────────────
 let countdownTimer = 0;
+let surveyTimer = 0;
+const SURVEY_DUR = 2.0;
 
 // ─── Campaign & Leaderboard ───────────────────────────────────────────────────
 const CAMPAIGN_ORDER = ['moon', 'mercury', 'mars', 'titan', 'earth', 'venus'];
@@ -182,24 +209,6 @@ function saveLeaderboard(lb) {
   try { localStorage.setItem('sl_lb', JSON.stringify(lb)); } catch { }
 }
 
-// ─── Feature 1: Global Fuel ───────────────────────────────────────────────────
-function loadGlobalFuel() {
-  try { return parseFloat(localStorage.getItem('sl_fuel') || '100'); } catch { return 100; }
-}
-function saveGlobalFuel(v) {
-  try { localStorage.setItem('sl_fuel', String(Math.max(0, Math.min(100, v)))); } catch { }
-}
-
-let globalFuel = loadGlobalFuel();
-
-// Returns fuelInfo object {id: pct} for all landable bodies (same global fuel for simplicity)
-function getFuelInfo() {
-  const info = {};
-  for (const id of LANDABLE) {
-    info[id] = globalFuel;
-  }
-  return info;
-}
 
 // ─── Feature 13: Ghost helpers ────────────────────────────────────────────────
 function saveGhost(id, frames) {
@@ -271,7 +280,7 @@ canvas.addEventListener('click', e => {
     showTooltip(e.clientX, e.clientY, nonLandableMsg(id));
     return;
   }
-  if (getLockedIds().has(id)) {
+  if (getLockedIds().has(id) && !trainingMode) {
     const idx = CAMPAIGN_ORDER.indexOf(id);
     const prev = CAMPAIGN_ORDER[idx - 1];
     const prevName = prev ? (BODY_DATA[prev] ? BODY_DATA[prev].name : prev) : '?';
@@ -340,9 +349,9 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 // ─── Shop ────────────────────────────────────────────────────────────────────
 const SHOP_CATALOG = {
   standard: { name: "Module Standard", desc: "Le modèle d'origine. Équilibré et polyvalent.", cost: 0 },
-  moustique: { name: "Le Moustique", desc: "Agile, rotation v.rapide. Très peu de fuel. Parfait pour la précision extrême.", cost: 115 },
-  tank: { name: "Le Tank", desc: "Lourd et blindé. Double réserve de fuel. Impose une réduction aux forces extérieures. Rotation lente.", cost: 315 },
-  alien: { name: "Vaisseau Alien", desc: "Moteurs à antigravité surpuissants ! Immunité TOTALE à l'acide, aux pannes solaires et au magnétisme.", cost: 685 }
+  moustique: { name: "Le Moustique", desc: "Agile, rotation v.rapide. Très peu de fuel. Parfait pour la précision extrême.", cost: 1 },
+  tank: { name: "Le Tank", desc: "Lourd et blindé. Double réserve de fuel. Impose une réduction aux forces extérieures. Rotation lente.", cost: 1 },
+  alien: { name: "Vaisseau Alien", desc: "Moteurs à antigravité surpuissants ! Immunité TOTALE à l'acide, aux pannes solaires et au magnétisme.", cost: 1 }
 };
 
 const elShopCard = document.getElementById('card-shop');
@@ -418,45 +427,105 @@ function drawShopShip(id) {
   ctx.save();
   ctx.translate(25, 25); 
 
-  const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
-  if (id === 'moustique') {
-    bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
-  } else if (id === 'tank') {
-    bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
-  } else if (id === 'alien') {
-    bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
-  } else {
-    bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
-  }
+    const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
+    if (id === 'moustique') {
+      bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
+    } else if (id === 'tank') {
+      bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
+    } else if (id === 'alien') {
+      bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
+    } else {
+      bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
+    }
 
-  // Draw hull
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.roundRect(-pw/2, -ph/2, pw, ph * 0.65, 4);
-  ctx.fill();
+    if (id === 'moustique') {
+      // Small needle shape
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.fill();
+      // Wings
+      ctx.fillStyle = '#623';
+      ctx.beginPath(); ctx.moveTo(pw*0.3, ph*0.1); ctx.lineTo(pw*0.9, ph*0.3); ctx.lineTo(pw*0.2, ph*0.3); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.1); ctx.lineTo(-pw*0.9, ph*0.3); ctx.lineTo(-pw*0.2, ph*0.3); ctx.fill();
+      // Engine
+      ctx.fillStyle = '#445'; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
+      // Legs
+      ctx.strokeStyle = '#99a'; ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.moveTo(-pw/2, ph*0.1); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw-3, ph*0.6); ctx.lineTo(-pw*0.6, ph*0.6);
+      ctx.moveTo(pw/2, ph*0.1); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.6, ph*0.6); ctx.lineTo(pw+3, ph*0.6);
+      ctx.stroke();
+      // Window
+      ctx.fillStyle='#0af'; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
+      
+    } else if (id === 'tank') {
+      // Big blocky hexagon
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.moveTo(-pw/2, -ph*0.4); ctx.lineTo(pw/2, -ph*0.4);
+      ctx.lineTo(pw*0.6, 0); ctx.lineTo(pw/2, ph*0.4);
+      ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0);
+      ctx.fill();
+      // Armor plates
+      ctx.fillStyle = '#222'; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
+      // Engine (double)
+      ctx.fillStyle = '#445';
+      ctx.fillRect(-pw*0.3, ph*0.4, pw*0.2, ph*0.15);
+      ctx.fillRect(pw*0.1, ph*0.4, pw*0.2, ph*0.15);
+      // Brutal Legs
+      ctx.strokeStyle = '#555'; ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.moveTo(-pw/2, ph*0.2); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw*1.1, ph*0.6); ctx.lineTo(-pw*0.5, ph*0.6);
+      ctx.moveTo(pw/2, ph*0.2); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.5, ph*0.6); ctx.lineTo(pw*1.1, ph*0.6);
+      ctx.stroke();
+      // Window (slit)
+      ctx.fillStyle='#0af'; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
 
-  // Draw engine
-  ctx.fillStyle = '#445';
-  ctx.beginPath();
-  const ey = ph/2 - 1.5;
-  const wBottom = pw * 0.4;
-  ctx.moveTo(-wBottom, ey);
-  ctx.lineTo(wBottom, ey);
-  ctx.lineTo(pw * 0.5, ey + ph * 0.35);
-  ctx.lineTo(-pw * 0.5, ey + ph * 0.35);
-  ctx.fill();
+    } else if (id === 'alien') {
+      // Saucer
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.ellipse(0, ph*0.1, pw*0.8, ph*0.25, 0, 0, Math.PI*2); ctx.fill();
+      // Glass Dome
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.beginPath(); ctx.arc(0, ph*0.1, pw*0.4, Math.PI, 0); ctx.fill();
+      // Tractor beam instead of legs
+      ctx.fillStyle = 'rgba(0, 255, 200, 0.2)';
+      ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.2); ctx.lineTo(pw*0.3, ph*0.2);
+      ctx.lineTo(pw*0.6, ph*0.8); ctx.lineTo(-pw*0.6, ph*0.8); ctx.fill();
+      // Alien pilot silhouette
+      ctx.fillStyle = '#050'; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
+      
+    } else {
+      // Standard
+      ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5;
+      const legW = pw * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.4, ph * 0.1); ctx.lineTo(-legW / 2, ph * 0.5);
+      ctx.moveTo(pw * 0.4, ph * 0.1); ctx.lineTo(legW / 2, ph * 0.5);
+      ctx.stroke();
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-legW / 2 - 3, ph * 0.5); ctx.lineTo(-legW / 2 + 3, ph * 0.5);
+      ctx.moveTo(legW / 2 - 3, ph * 0.5); ctx.lineTo(legW / 2 + 3, ph * 0.5);
+      ctx.stroke();
 
-  // Draw legs
-  ctx.strokeStyle = '#99a'; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(-pw/2, 0); ctx.lineTo(-pw * 0.9, ph * 0.7); ctx.lineTo(-pw, ph * 0.7);
-  ctx.moveTo(pw/2, 0); ctx.lineTo(pw * 0.9, ph * 0.7); ctx.lineTo(pw, ph * 0.7);
-  ctx.stroke();
+      ctx.fillStyle = '#777';
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.35, ph * 0.1); ctx.lineTo(pw * 0.35, ph * 0.1);
+      ctx.lineTo(pw * 0.25, ph * 0.45); ctx.lineTo(-pw * 0.25, ph * 0.45);
+      ctx.closePath(); ctx.fill();
 
-  // Draw window
-  const wx = 0, wy = -ph * 0.15, wr = pw * 0.25;
-  ctx.fillStyle = '#112'; ctx.beginPath(); ctx.arc(wx, wy, wr, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle = '#0cf'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#0af';
+      ctx.beginPath();
+      ctx.arc(0, -ph * 0.15, pw * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(180,240,255,0.7)';
+      ctx.beginPath();
+      ctx.arc(-pw * 0.06, -ph * 0.18, pw * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
   ctx.restore();
 }
@@ -517,6 +586,7 @@ function returnToSolar() {
   elHud.classList.add('hidden');
   elCtrl.classList.add('hidden');
   elBtnSolar.classList.add('hidden');
+  document.getElementById('touch-controls').classList.add('hidden');
   game = null;
   state = S.SOLAR;
   showSolarUI();
@@ -542,10 +612,18 @@ function startGame() {
   elHud.classList.remove('hidden');
   elCtrl.classList.remove('hidden');
   elBtnSolar.classList.add('hidden');
+  if (IS_TOUCH) document.getElementById('touch-controls').classList.remove('hidden');
 
-  // Feature 4: Countdown
-  countdownTimer = 3;
-  state = S.COUNTDOWN;
+  // Training mode setup
+  game.trainingMode = trainingMode;
+  const tBadge = document.getElementById('training-badge');
+  if (tBadge) tBadge.classList.toggle('hidden', !trainingMode);
+
+  // Survey phase: camera pans to show pad before countdown
+  surveyTimer = 0;
+  game.camX = game.lander.x;
+  game.camY = game.lander.y - (game.canvasH / game.SCALE) * 0.33;
+  state = S.SURVEY;
 }
 
 // ─── Planet card population ───────────────────────────────────────────────────
@@ -574,6 +652,9 @@ function showPlanetCard(id) {
   }
   document.getElementById('card-conditions').innerHTML = condHTML;
 
+  const launchBtn = document.getElementById('btn-launch');
+  if (launchBtn) launchBtn.textContent = trainingMode ? '🏋 Lancer (Entraînement)' : '🚀 Lancer la Mission';
+
   elCardPlanet.classList.remove('hidden');
 }
 
@@ -586,7 +667,8 @@ function showResultCard(success, score, reason) {
 
   const mm = String(Math.floor(score.time / 60)).padStart(2, '0');
   const ss = String(Math.floor(score.time % 60)).padStart(2, '0');
-  const fpct = ((score.fuel / BODY_DATA[selectedBody].startFuel) * 100).toFixed(0);
+  const fuelMax = game && game.lander ? (game.lander.fuelMax || BODY_DATA[selectedBody].startFuel) : BODY_DATA[selectedBody].startFuel;
+  const fpct = ((score.fuel / fuelMax) * 100).toFixed(0);
 
   const reasonRow = (!success && reason)
     ? `<div class="stat-row" style="color:#f88"><span class="stat-lbl">Cause</span><span class="stat-val" style="color:#faa;font-size:11px">${reason}</span></div>`
@@ -607,7 +689,9 @@ function showResultCard(success, score, reason) {
   const st = BODY_DATA[selectedBody] ? BODY_DATA[selectedBody].stars : 1;
   let earned = baseRewards[st - 1] || 10;
   if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
-  const diamRow = success ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}</span></div>` : '';
+  const isTraining = game && game.trainingMode;
+  const diamRow = (success && !isTraining) ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}</span></div>` : '';
+  const trainingRow = isTraining ? `<div class="stat-row"><span class="stat-lbl" style="color:#fa0">Mode</span><span class="stat-val" style="color:#fa0;font-size:11px">🏋 Entraînement — non enregistré</span></div>` : '';
 
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
@@ -617,6 +701,7 @@ function showResultCard(success, score, reason) {
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
     ${bestRow}
     ${diamRow}
+    ${trainingRow}
   `;
 
   const starsEl = document.getElementById('res-stars');
@@ -696,7 +781,7 @@ function updateHUD() {
   if (angEl) { angEl.textContent = ang.toFixed(1); angEl.className = 'hval ' + color(ang, cfg.maxAngle); }
 
   // Fuel
-  const fpct = Math.max(0, Math.min(100, l.fuel / cfg.startFuel * 100));
+  const fpct = Math.max(0, Math.min(100, l.fuel / (l.fuelMax || cfg.startFuel) * 100));
   const fuelBarEl = document.getElementById('fuel-bar');
   const fuelTxtEl = document.getElementById('v-fuel');
   if (fuelBarEl) fuelBarEl.style.setProperty('--fuel-pct', fpct.toFixed(1) + '%');
@@ -711,6 +796,20 @@ function updateHUD() {
     windEl.textContent = wdir + ' ' + ws.toFixed(1) + ' m/s';
   }
   if (stormEl) stormEl.style.display = game.wind.isStorming() ? '' : 'none';
+
+  // Personal best
+  const bestEl = document.getElementById('v-best');
+  const bestRow = document.getElementById('best-row');
+  if (bestEl && bestRow && selectedBody) {
+    const lb = loadLeaderboard();
+    const best = lb[selectedBody];
+    if (best) {
+      bestEl.textContent = best.total + ' pts';
+      bestRow.style.display = '';
+    } else {
+      bestRow.style.display = 'none';
+    }
+  }
 }
 
 // ─── Error overlay ───────────────────────────────────────────────────────────
@@ -766,6 +865,14 @@ function loop(ts) {
         showPlanetCard(selectedBody);
       }
 
+    } else if (state === S.SURVEY && game) {
+      // Survey: physics frozen, camera pans to show the landing pad
+      surveyTimer += dt;
+      if (surveyTimer >= SURVEY_DUR) {
+        countdownTimer = 3;
+        state = S.COUNTDOWN;
+      }
+
     } else if (state === S.COUNTDOWN && game) {
       // Feature 4: countdown — game initialized but no controls
       game.update(dt);  // update physics (gravity etc) but input stays empty
@@ -782,17 +889,8 @@ function loop(ts) {
       if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 4.5)) {
         resultShown = true;
         const score = game.getScore();
-        if (game.result.type === 'land') {
+        if (game.result.type === 'land' && !game.trainingMode) {
           unlockBody(selectedBody);
-          // Feature 1: deduct fuel consumed
-          const startFuel = BODY_DATA[selectedBody].startFuel;
-          const fuelUsed = startFuel - game.lander.fuel;
-          const fuelPct = (fuelUsed / startFuel) * 100;
-          globalFuel = Math.max(0, globalFuel - fuelPct * 0.5);
-          if (globalFuel < 10) {
-            console.warn('⚠ Carburant global faible: ' + globalFuel.toFixed(0) + '%');
-          }
-          saveGlobalFuel(globalFuel);
 
           const baseRewards = [10, 20, 50, 80, 150];
           const st = BODY_DATA[selectedBody].stars || 1;
@@ -802,20 +900,13 @@ function loop(ts) {
           saveDiamonds(globalDiamonds);
           document.getElementById('diamond-count').textContent = globalDiamonds;
 
-          // Feature 13: save ghost if new record
+          // Save ghost only on successful landings with new best score
           const isNewRecord = updateLeaderboard(selectedBody, score);
           if (isNewRecord) {
             saveGhost(selectedBody, game.getRecording());
           }
-        } else {
-          // crash: also deduct some fuel
-          const startFuel = BODY_DATA[selectedBody].startFuel;
-          const fuelUsed = startFuel - game.lander.fuel;
-          const fuelPct = (fuelUsed / startFuel) * 100;
-          globalFuel = Math.max(0, globalFuel - fuelPct * 0.3);
-          saveGlobalFuel(globalFuel);
-          updateLeaderboard(selectedBody, score);
         }
+        // Crashes and training runs never update the leaderboard
         showResultCard(game.result.type === 'land', score, game.result.reason);
         state = S.RESULT;
       }
@@ -830,7 +921,7 @@ function loop(ts) {
     if (state === S.SOLAR) {
       ctx.save();
       applySolarTransform(ctx);
-      solar.draw(ctx, dt, hoveredBody, getLockedIds(), getFuelInfo(), loadLeaderboard());
+      solar.draw(ctx, dt, hoveredBody, getLockedIds(), null, loadLeaderboard());
       ctx.restore();
 
     } else if (state === S.FADING) {
@@ -852,6 +943,32 @@ function loop(ts) {
       solar.draw(ctx, 0, null);
       ctx.fillStyle = 'rgba(0,0,8,0.65)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    } else if (state === S.SURVEY && game) {
+      // Camera pans from lander spawn → pad → back
+      const st = Math.min(1, surveyTimer / SURVEY_DUR);
+      let u = st < 0.35 ? st / 0.35 : st < 0.65 ? 1 : (1 - st) / 0.35;
+      u = u * u * (3 - 2 * u); // smoothstep
+      const lx = game.lander.x;
+      const ly = game.lander.y - (game.canvasH / game.SCALE) * 0.33;
+      const px = game.terrain.padCenter;
+      const py = game.terrain.padHeight + (game.canvasH / game.SCALE) * 0.28;
+      game.camX = lx + (px - lx) * u;
+      game.camY = ly + (py - ly) * u;
+      game.draw(ctx);
+      // Overlay text
+      const fadeA = st < 0.15 ? st / 0.15 : st > 0.82 ? (1 - st) / 0.18 : 1;
+      ctx.save();
+      ctx.globalAlpha = fadeA * 0.92;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(0,210,255,0.95)';
+      ctx.font = '15px "Share Tech Mono", monospace';
+      ctx.fillText('◉  RECONNAISSANCE DE ZONE  ◉', canvas.width / 2, canvas.height / 2 - 14);
+      ctx.fillStyle = 'rgba(0,255,136,0.75)';
+      ctx.font = '11px "Share Tech Mono", monospace';
+      ctx.fillText('Zone d\'atterrissage repérée — atterrissage imminent', canvas.width / 2, canvas.height / 2 + 10);
+      ctx.restore();
 
     } else if (state === S.COUNTDOWN && game) {
       // Draw game scene + countdown overlay

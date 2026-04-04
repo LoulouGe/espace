@@ -93,17 +93,17 @@ html, body {
 /* ── Controls bar ── */
 #controls-bar {
   position: fixed;
-  bottom: 12px; left: 50%;
+  top: 56px; left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.7);
-  border: 1px solid rgba(100,150,255,0.3);
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(100,150,255,0.2);
   border-radius: 20px;
-  padding: 6px 20px;
-  color: rgba(180,200,255,0.8);
-  font-size: 12px;
+  padding: 4px 16px;
+  color: rgba(180,200,255,0.55);
+  font-size: 11px;
   pointer-events: none;
   z-index: 10;
-  display: flex; gap: 20px;
+  display: flex; gap: 16px;
 }
 
 /* ── Solar system button ── */
@@ -201,7 +201,7 @@ html, body {
   margin: 14px 0;
 }
 .card-btns {
-  display: flex; gap: 12px; justify-content: center;
+  display: flex; gap: 24px; justify-content: center;
   margin-top: 20px;
 }
 .btn-p, .btn-s {
@@ -295,3 +295,126 @@ html, body {
 /* ── Scrollbar (if needed) ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #336; border-radius: 2px; }
+
+/* ── Touch Controls (mobile only) ── */
+#touch-controls {
+  position: fixed;
+  bottom: 0; left: 0; right: 0; height: 120px;
+  z-index: 20;
+  pointer-events: none;
+}
+#tc-rotate {
+  position: fixed;
+  bottom: 22px; left: 16px;
+  display: flex;
+  gap: 36px;
+  align-items: center;
+  pointer-events: all;
+}
+#tc-thrust-group {
+  position: fixed;
+  bottom: 22px; right: 16px;
+  display: flex;
+  flex-direction: row;
+  gap: 28px;
+  align-items: flex-end;
+  pointer-events: all;
+}
+.tc-btn {
+  width: 72px; height: 72px;
+  background: rgba(4, 10, 30, 0.75);
+  border: 2px solid rgba(80, 140, 255, 0.45);
+  border-radius: 50%;
+  color: rgba(150, 205, 255, 0.88);
+  font-size: 26px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(80,140,255,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  transition: box-shadow 0.07s, background 0.07s, border-color 0.07s;
+}
+.tc-btn.active {
+  background: rgba(0, 65, 175, 0.9);
+  border-color: #5af;
+  color: #fff;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.55),
+    0 0 26px rgba(60,160,255,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+#tc-thrust {
+  width: 84px; height: 84px;
+  font-size: 32px;
+  border-color: rgba(0, 200, 100, 0.55);
+  color: rgba(80, 255, 145, 0.92);
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.5),
+    0 0 14px rgba(0,180,80,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+#tc-thrust.active {
+  background: rgba(0, 100, 45, 0.9);
+  border-color: #0fa;
+  color: #0fa;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.55),
+    0 0 38px rgba(0,255,140,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+#tc-retro {
+  width: 66px; height: 66px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  line-height: 1.25;
+  text-align: center;
+  border-color: rgba(0, 195, 255, 0.45);
+  color: rgba(80, 215, 255, 0.85);
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.5),
+    0 0 10px rgba(0,155,255,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+#tc-retro.active {
+  background: rgba(0, 65, 110, 0.9);
+  border-color: #0cf;
+  color: #0cf;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.55),
+    0 0 26px rgba(0,200,255,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+/* ── Training mode ── */
+#btn-training {
+  background: rgba(10, 10, 30, 0.82);
+  border: 1px solid rgba(200, 155, 50, 0.4);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: rgba(200, 170, 80, 0.75);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+#btn-training:hover { border-color: rgba(255,185,60,0.7); color: #faa020; }
+#btn-training.active {
+  background: rgba(55, 35, 0, 0.92);
+  border-color: #fa0;
+  color: #fa0;
+  box-shadow: 0 0 14px rgba(255,170,0,0.35);
+}
+#training-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  color: #fa0;
+  letter-spacing: 2px;
+  margin-top: 3px;
+  text-shadow: 0 0 8px rgba(255,170,0,0.5);
+}

@@ -351,6 +351,36 @@ class ParticleSystem {
     }
   }
 
+  emitSideThrust(wx, wy, angle, side) {
+    for (let i = 0; i < 2; i++) {
+      // angle = rotation du vaisseau
+      const rad = angle * Math.PI / 180;
+      
+      // On place l'émission sur le côté haut du vaisseau
+      let offsetX = side === 'left' ? 2.5 : -2.5; 
+      let offsetY = -2; 
+      
+      // Rotation de l'offset pour suivre le vaisseau
+      const rX = offsetX * Math.cos(rad) - offsetY * Math.sin(rad);
+      const rY = offsetX * Math.sin(rad) + offsetY * Math.cos(rad);
+      
+      // La direction de la flamme est perpendiculaire au vaisseau
+      const thrustAngle = side === 'left' ? angle + 90 : angle - 90;
+      const tRad = thrustAngle * Math.PI / 180;
+      
+      const speed = 4 + Math.random() * 6;
+      this.particles.push({
+        x: wx + rX, y: wy + rY,
+        vx: Math.sin(tRad) * speed,
+        vy: Math.cos(tRad) * speed,
+        life: 1, maxLife: 0.15 + Math.random() * 0.15,
+        size: 1 + Math.random() * 1.5,
+        type: 'thrust',
+        hue: 45 + Math.random() * 20,
+      });
+    }
+  }
+
   emitRetro(wx, wy, vx, vy) {
     for (let i = 0; i < 4; i++) {
       const spd = Math.sqrt(vx * vx + vy * vy);
@@ -809,6 +839,7 @@ class Lander {
       this.fuel = cfg.startFuel * 1.5;
       this.hw = 2.8; this.hh = 3.5;
     }
+    this.fuelMax = this.fuel; // toujours 100% au départ
   }
 
   update(dt, input, windForce, hazard) {
@@ -950,72 +981,107 @@ class Lander {
     ctx.translate(sx, sy);
     ctx.rotate(rad);
 
-    // Legs
-    ctx.strokeStyle = '#aaa';
-    ctx.lineWidth = Math.max(1, scale * 0.5);
-    const legW = pw * 0.55, legH = ph * 0.35;
-    ctx.beginPath();
-    ctx.moveTo(-pw * 0.4, ph * 0.1);
-    ctx.lineTo(-legW / 2, ph * 0.5);
-    ctx.moveTo(pw * 0.4, ph * 0.1);
-    ctx.lineTo(legW / 2, ph * 0.5);
-    ctx.stroke();
-    // Foot pads
-    ctx.strokeStyle = '#888';
-    ctx.lineWidth = Math.max(1.5, scale * 0.6);
-    ctx.beginPath();
-    ctx.moveTo(-legW / 2 - 3, ph * 0.5);
-    ctx.lineTo(-legW / 2 + 3, ph * 0.5);
-    ctx.moveTo(legW / 2 - 3, ph * 0.5);
-    ctx.lineTo(legW / 2 + 3, ph * 0.5);
-    ctx.stroke();
-
-    // Engine bell
-    ctx.fillStyle = '#777';
-    ctx.beginPath();
-    ctx.moveTo(-pw * 0.35, ph * 0.1);
-    ctx.lineTo(pw * 0.35, ph * 0.1);
-    ctx.lineTo(pw * 0.25, ph * 0.45);
-    ctx.lineTo(-pw * 0.25, ph * 0.45);
-    ctx.closePath();
-    ctx.fill();
-
-    // Body
-    const bodyGrad = ctx.createLinearGradient(-pw / 2, -ph / 2, pw / 2, ph / 2);
+    const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
     if (this.shipType === 'moustique') {
-      bodyGrad.addColorStop(0, '#fde');
-      bodyGrad.addColorStop(0.5, '#e8a');
-      bodyGrad.addColorStop(1, '#a25');
+      bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
     } else if (this.shipType === 'tank') {
-      bodyGrad.addColorStop(0, '#566');
-      bodyGrad.addColorStop(0.5, '#344');
-      bodyGrad.addColorStop(1, '#122');
+      bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
     } else if (this.shipType === 'alien') {
-      bodyGrad.addColorStop(0, '#aff');
-      bodyGrad.addColorStop(0.5, '#0fa');
-      bodyGrad.addColorStop(1, '#055');
+      bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
     } else {
-      bodyGrad.addColorStop(0, '#dde');
-      bodyGrad.addColorStop(0.5, '#bbc');
-      bodyGrad.addColorStop(1, '#88a');
+      bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
     }
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
-    ctx.fill();
-    ctx.strokeStyle = '#aab';
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
-    // Window
-    ctx.fillStyle = '#0af';
-    ctx.beginPath();
-    ctx.arc(0, -ph * 0.15, pw * 0.18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(180,240,255,0.7)';
-    ctx.beginPath();
-    ctx.arc(-pw * 0.06, -ph * 0.18, pw * 0.07, 0, Math.PI * 2);
-    ctx.fill();
+    if (this.shipType === 'moustique') {
+      // Small needle shape
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.fill();
+      // Wings
+      ctx.fillStyle = '#623';
+      ctx.beginPath(); ctx.moveTo(pw*0.3, ph*0.1); ctx.lineTo(pw*0.9, ph*0.3); ctx.lineTo(pw*0.2, ph*0.3); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.1); ctx.lineTo(-pw*0.9, ph*0.3); ctx.lineTo(-pw*0.2, ph*0.3); ctx.fill();
+      // Engine
+      ctx.fillStyle = '#445'; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
+      // Legs
+      ctx.strokeStyle = '#99a'; ctx.lineWidth = Math.max(1, scale * 0.5); ctx.beginPath();
+      ctx.moveTo(-pw/2, ph*0.1); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw-2, ph*0.6); ctx.lineTo(-pw*0.6, ph*0.6);
+      ctx.moveTo(pw/2, ph*0.1); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.6, ph*0.6); ctx.lineTo(pw+2, ph*0.6);
+      ctx.stroke();
+      // Window
+      ctx.fillStyle='#0af'; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
+      
+    } else if (this.shipType === 'tank') {
+      // Big blocky hexagon
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.moveTo(-pw/2, -ph*0.4); ctx.lineTo(pw/2, -ph*0.4);
+      ctx.lineTo(pw*0.6, 0); ctx.lineTo(pw/2, ph*0.4);
+      ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0);
+      ctx.fill();
+      // Armor plates
+      ctx.fillStyle = '#222'; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
+      // Engine (double)
+      ctx.fillStyle = '#445';
+      ctx.fillRect(-pw*0.3, ph*0.4, pw*0.2, ph*0.15);
+      ctx.fillRect(pw*0.1, ph*0.4, pw*0.2, ph*0.15);
+      // Brutal Legs
+      ctx.strokeStyle = '#555'; ctx.lineWidth = Math.max(2, scale * 0.8); ctx.beginPath();
+      ctx.moveTo(-pw/2, ph*0.2); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw*1.1, ph*0.6); ctx.lineTo(-pw*0.5, ph*0.6);
+      ctx.moveTo(pw/2, ph*0.2); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.5, ph*0.6); ctx.lineTo(pw*1.1, ph*0.6);
+      ctx.stroke();
+      // Window (slit)
+      ctx.fillStyle='#0af'; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
+
+    } else if (this.shipType === 'alien') {
+      // Saucer
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.ellipse(0, ph*0.1, pw*0.8, ph*0.25, 0, 0, Math.PI*2); ctx.fill();
+      // Glass Dome
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.beginPath(); ctx.arc(0, ph*0.1, pw*0.4, Math.PI, 0); ctx.fill();
+      // Tractor beam instead of legs
+      ctx.fillStyle = 'rgba(0, 255, 200, 0.2)';
+      ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.2); ctx.lineTo(pw*0.3, ph*0.2);
+      ctx.lineTo(pw*0.6, ph*0.8); ctx.lineTo(-pw*0.6, ph*0.8); ctx.fill();
+      // Alien pilot silhouette
+      ctx.fillStyle = '#050'; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
+      
+    } else {
+      // Standard
+      ctx.strokeStyle = '#aaa';
+      ctx.lineWidth = Math.max(1, scale * 0.5);
+      const legW = pw * 0.55, legH = ph * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.4, ph * 0.1); ctx.lineTo(-legW / 2, ph * 0.5);
+      ctx.moveTo(pw * 0.4, ph * 0.1); ctx.lineTo(legW / 2, ph * 0.5);
+      ctx.stroke();
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = Math.max(1.5, scale * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(-legW / 2 - 3, ph * 0.5); ctx.lineTo(-legW / 2 + 3, ph * 0.5);
+      ctx.moveTo(legW / 2 - 3, ph * 0.5); ctx.lineTo(legW / 2 + 3, ph * 0.5);
+      ctx.stroke();
+
+      ctx.fillStyle = '#777';
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.35, ph * 0.1); ctx.lineTo(pw * 0.35, ph * 0.1);
+      ctx.lineTo(pw * 0.25, ph * 0.45); ctx.lineTo(-pw * 0.25, ph * 0.45);
+      ctx.closePath(); ctx.fill();
+
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#0af';
+      ctx.beginPath();
+      ctx.arc(0, -ph * 0.15, pw * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(180,240,255,0.7)';
+      ctx.beginPath();
+      ctx.arc(-pw * 0.06, -ph * 0.18, pw * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Thrust flame (main)
     if (input && input.up && this.fuel > 0) {
@@ -1155,6 +1221,10 @@ class LanderGame {
     // Post-explosion delay
     this.resultDelay = 0;
 
+    // Chicken victory animation
+    this._chickenTimer = 0;
+    this._chickenActive = false;
+
     // Lander trail
     this._trail = [];
     this._trailTimer = 0;
@@ -1169,6 +1239,14 @@ class LanderGame {
     this._recording = [];
     this._recTimer = 0;
     this._ghost = null;
+
+    // Wind particles (visual streaks in sky)
+    this._windParticles = [];
+    this._windParticleTimer = 0;
+
+    // Weather visuals
+    this._dustStormProgress = 0;
+    this.trainingMode = false;
   }
 
   update(dt) {
@@ -1217,6 +1295,12 @@ class LanderGame {
     if (this.input.space && this.lander.fuel > 0 && this.lander.alive && this.cfg.drag > 0) {
       this.particles.emitRetro(this.lander.x, this.lander.y, this.lander.vx, this.lander.vy);
     }
+    if (this.input.left && this.lander.alive) {
+      this.particles.emitSideThrust(this.lander.x, this.lander.y, this.lander.angle, 'left');
+    }
+    if (this.input.right && this.lander.alive) {
+      this.particles.emitSideThrust(this.lander.x, this.lander.y, this.lander.angle, 'right');
+    }
     if (this.wind.isStorming() && this.bodyId === 'mars') {
       this.particles.emitDust(this.lander.x, this.terrain.heightAt(this.lander.x), windF);
     }
@@ -1245,6 +1329,43 @@ class LanderGame {
     // Cloud drift
     for (const c of this.clouds) {
       c.x = (c.x + c.speed * dt) % 1;
+    }
+
+    // Training mode: infinite fuel
+    if (this.trainingMode) {
+      this.lander.fuel = this.lander.fuelMax;
+    }
+
+    // Dust storm visual progress (Mars)
+    if (this.bodyId === 'mars') {
+      const target = this.wind.isStorming() ? 1 : this.wind.isWarning() ? 0.28 : 0;
+      this._dustStormProgress += (target - this._dustStormProgress) * Math.min(1, 2.5 * dt);
+    }
+
+    // Wind particles
+    if (this.cfg.windType !== 'none') {
+      const windSpd = Math.abs(this.wind.current);
+      this._windParticleTimer += dt;
+      if (this._windParticleTimer > 0.08 && windSpd > 0.8) {
+        this._windParticleTimer = 0;
+        const side = this.wind.current > 0 ? -1 : 1; // spawn on windward edge
+        this._windParticles.push({
+          x: this.camX + side * (this.canvasW / this.SCALE) * 0.55,
+          y: this.camY + (Math.random() * 2 - 0.6) * (this.canvasH / this.SCALE) * 0.35,
+          vx: this.wind.current * 1.8,
+          vy: (Math.random() - 0.5) * 1.5,
+          life: 1,
+          maxLife: 1.2 + Math.random() * 0.8,
+          len: 4 + windSpd * 1.2,
+        });
+      }
+      for (let i = this._windParticles.length - 1; i >= 0; i--) {
+        const wp = this._windParticles[i];
+        wp.life -= dt / wp.maxLife;
+        wp.x += wp.vx * dt;
+        wp.y += wp.vy * dt;
+        if (wp.life <= 0) this._windParticles.splice(i, 1);
+      }
     }
 
     // Feature 13: record ghost frames every ~0.05s
@@ -1307,6 +1428,9 @@ class LanderGame {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
 
+    // Planet-specific background elements
+    this._drawPlanetBackground(ctx, W, H);
+
     // Stars
     if (cfg.showStars || cfg.starAlpha > 0) {
       for (const s of this.stars) {
@@ -1321,18 +1445,35 @@ class LanderGame {
     this.meteors.update(1 / 60, W, H);
     this.meteors.draw(ctx, W, H);
 
-    // Clouds (Earth)
+    // Clouds (Earth) — améliorés avec état orageux
     for (const c of this.clouds) {
       const cx2 = c.x * W;
       const cy2 = c.y * H;
       const cw = c.w * W;
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      const storm = this.hazard.isActive || this.hazard.isWarning;
+      const base = storm ? 0.36 : 0.20;
+      ctx.save();
+      // Base layer
+      ctx.fillStyle = storm ? `rgba(140,140,160,${base})` : `rgba(255,255,255,${base})`;
+      ctx.beginPath();
+      ctx.ellipse(cx2, cy2 + cw * 0.06, cw * 0.66, cw * 0.19, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Top puffs
+      ctx.fillStyle = storm ? `rgba(170,170,185,${base * 0.7})` : `rgba(255,255,255,${base * 0.75})`;
       for (let k = 0; k < 4; k++) {
+        const pR = cw * (k === 1 || k === 2 ? 0.22 : 0.15);
         ctx.beginPath();
-        ctx.ellipse(cx2 + k * cw * 0.3, cy2 + (k % 2) * 8, cw * (0.4 + k * 0.1), cw * 0.18, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx2 + (k - 1.5) * cw * 0.26, cy2 - cw * 0.02, pR, pR * 0.80, 0, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
     }
+
+    // Dynamic weather effects (dust storm, rain)
+    this._drawWeather(ctx, W, H);
+
+    // Wind particles (drifting streaks in sky, behind terrain)
+    this._drawWindParticles(ctx, cx, cy, S, W, H);
 
     // Terrain
     this.terrain.draw(ctx, cx, cy, S, W, H);
@@ -1377,27 +1518,43 @@ class LanderGame {
       this._drawChicken(ctx, cx, cy, S, W, H);
     }
 
-    // Feature 13: draw ghost
+    // Ghost: full translucent ship from best run (synchronized to current elapsed time)
     if (this._ghost && this._ghost.length > 1) {
-      const idx = Math.min(Math.floor(this.elapsed / 0.05), this._ghost.length - 1);
+      const idx = Math.min(Math.floor(this.elapsed / 0.15), this._ghost.length - 1);
       const gf = this._ghost[idx];
       if (gf) {
         const gsx = (gf.x - cx) * S + W / 2;
         const gsy = H / 2 - (gf.y - cy) * S;
-        const grad = gf.angle * Math.PI / 180;
+        const gRad = gf.angle * Math.PI / 180;
+        const ghw = this.lander.hw * 2 * S;
+        const ghh = this.lander.hh * 2 * S;
         ctx.save();
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.28;
         ctx.translate(gsx, gsy);
-        ctx.rotate(grad);
-        ctx.strokeStyle = '#88aaff';
+        ctx.rotate(gRad);
+        ctx.strokeStyle = '#6688ff';
         ctx.lineWidth = 1.5;
+        // Hull
         ctx.beginPath();
-        ctx.arc(0, 0, S * this.lander.hw, 0, Math.PI * 2);
+        ctx.roundRect(-ghw / 2, -ghh / 2, ghw, ghh * 0.65, 4);
         ctx.stroke();
-        // direction line
+        // Window
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, -S * this.lander.hh);
+        ctx.arc(0, -ghh * 0.15, ghw * 0.18, 0, Math.PI * 2);
+        ctx.stroke();
+        // Engine bell
+        ctx.beginPath();
+        ctx.moveTo(-ghw * 0.35, ghh * 0.1);
+        ctx.lineTo( ghw * 0.35, ghh * 0.1);
+        ctx.lineTo( ghw * 0.25, ghh * 0.43);
+        ctx.lineTo(-ghw * 0.25, ghh * 0.43);
+        ctx.closePath();
+        ctx.stroke();
+        // Legs
+        const glw = ghw * 0.55;
+        ctx.beginPath();
+        ctx.moveTo(-ghw * 0.4, ghh * 0.1); ctx.lineTo(-glw / 2, ghh * 0.5);
+        ctx.moveTo( ghw * 0.4, ghh * 0.1); ctx.lineTo( glw / 2, ghh * 0.5);
         ctx.stroke();
         ctx.restore();
       }
@@ -1464,6 +1621,9 @@ class LanderGame {
 
     // Feature 11: end shake save
     if (shaking) ctx.restore();
+
+    // Mini-map (drawn after shake so it stays stable)
+    this._drawMiniMap(ctx, W, H);
   }
 
   _drawSpeedIndicators(ctx, W, H) {
@@ -1495,7 +1655,7 @@ class LanderGame {
 
     const fuelEl = document.getElementById('v-fuel');
     const fuelBar = document.getElementById('fuel-bar');
-    const fuelPct = Math.max(0, Math.min(100, (l.fuel / cfg.startFuel * 100)));
+    const fuelPct = Math.max(0, Math.min(100, (l.fuel / (l.fuelMax || cfg.startFuel) * 100)));
     if (fuelEl) fuelEl.textContent = fuelPct.toFixed(0) + '%';
     if (fuelBar) fuelBar.style.setProperty('--fuel-pct', fuelPct + '%');
 
@@ -1570,6 +1730,281 @@ class LanderGame {
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(dist + 'm', 0, 18);
+    ctx.restore();
+  }
+
+  _drawPlanetBackground(ctx, W, H) {
+    const id = this.bodyId;
+
+    if (id === 'moon' || id === 'mercury') {
+      // Large sun corona top-right
+      const sunX = W * 0.82, sunY = H * 0.10;
+      const r = id === 'mercury' ? 50 : 36;
+      const sg = ctx.createRadialGradient(sunX, sunY, r * 0.15, sunX, sunY, r * 3.5);
+      sg.addColorStop(0,    'rgba(255,255,220,1)');
+      sg.addColorStop(0.12, 'rgba(255,240,160,0.75)');
+      sg.addColorStop(0.4,  'rgba(255,200,60,0.22)');
+      sg.addColorStop(1,    'rgba(255,150,0,0)');
+      ctx.fillStyle = sg;
+      ctx.beginPath(); ctx.arc(sunX, sunY, r * 3.5, 0, Math.PI * 2); ctx.fill();
+      // Disc
+      ctx.fillStyle = 'rgba(255,255,200,1)';
+      ctx.beginPath(); ctx.arc(sunX, sunY, r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    if (id === 'mars') {
+      const t = this.elapsed;
+      // Phobos (faster inner moon)
+      const phX = W * 0.18 + Math.cos(t * 0.35) * 10;
+      const phY = H * 0.10 + Math.sin(t * 0.35) * 3;
+      const phG = ctx.createRadialGradient(phX, phY, 0, phX, phY, 7);
+      phG.addColorStop(0, 'rgba(200,175,155,0.9)');
+      phG.addColorStop(1, 'rgba(200,175,155,0)');
+      ctx.fillStyle = phG;
+      ctx.beginPath(); ctx.arc(phX, phY, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(185,165,145,0.85)';
+      ctx.beginPath(); ctx.arc(phX, phY, 4, 0, Math.PI * 2); ctx.fill();
+      // Deimos (slower outer moon)
+      const deX = W * 0.70 + Math.cos(t * 0.14 + 2.1) * 6;
+      const deY = H * 0.07 + Math.sin(t * 0.14 + 2.1) * 2;
+      ctx.fillStyle = 'rgba(185,178,165,0.6)';
+      ctx.beginPath(); ctx.arc(deX, deY, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    if (id === 'titan') {
+      // Saturn with rings visible through orange haze
+      ctx.save();
+      ctx.globalAlpha = 0.30;
+      const sx = W * 0.13, sy = H * 0.12, sr = 36;
+      // Rings behind planet
+      ctx.strokeStyle = '#a07838'; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.ellipse(sx, sy, sr * 2.4, sr * 0.4, 0, Math.PI, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#806020'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(sx, sy, sr * 2.9, sr * 0.5, 0, Math.PI, Math.PI * 2); ctx.stroke();
+      // Planet body
+      const satG = ctx.createRadialGradient(sx - sr * 0.3, sy - sr * 0.3, 0, sx, sy, sr);
+      satG.addColorStop(0, '#e8c878'); satG.addColorStop(0.7, '#c09040'); satG.addColorStop(1, '#7a5010');
+      ctx.fillStyle = satG;
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+      // Rings front
+      ctx.strokeStyle = '#a07838'; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.ellipse(sx, sy, sr * 2.4, sr * 0.4, 0, 0, Math.PI); ctx.stroke();
+      ctx.strokeStyle = '#806020'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(sx, sy, sr * 2.9, sr * 0.5, 0, 0, Math.PI); ctx.stroke();
+      ctx.restore();
+    }
+
+    if (id === 'earth') {
+      // Rare background lightning bolts behind clouds
+      const slot = Math.floor(this.elapsed * 1.8) % 13;
+      if (slot < 2) {
+        const lxFrac = ((Math.floor(this.elapsed * 1.8) * 7919 + 3) % 100) / 100;
+        const lx = W * (0.18 + lxFrac * 0.64);
+        ctx.save();
+        ctx.globalAlpha = slot === 0 ? 0.22 : 0.09;
+        ctx.strokeStyle = '#d0e8ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(lx,      H * 0.04);
+        ctx.lineTo(lx - 10, H * 0.16);
+        ctx.lineTo(lx + 8,  H * 0.22);
+        ctx.lineTo(lx - 6,  H * 0.34);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    if (id === 'venus') {
+      // Dense sulfuric cloud bands drifting across upper sky
+      for (let i = 0; i < 4; i++) {
+        const bandY = H * (0.04 + i * 0.065);
+        const cg = ctx.createLinearGradient(0, bandY - 14, 0, bandY + 14);
+        cg.addColorStop(0, 'rgba(160,60,0,0)');
+        cg.addColorStop(0.5, 'rgba(175,72,5,1)');
+        cg.addColorStop(1, 'rgba(160,60,0,0)');
+        ctx.save();
+        ctx.globalAlpha = 0.20 - i * 0.03;
+        ctx.fillStyle = cg;
+        ctx.fillRect(0, bandY - 14, W, 28);
+        ctx.restore();
+      }
+    }
+  }
+
+  _drawWeather(ctx, W, H) {
+    const id = this.bodyId;
+
+    // Mars: mur de poussière qui avance depuis le côté sous le vent
+    if (id === 'mars' && this._dustStormProgress > 0.02) {
+      const p = this._dustStormProgress;
+      const wDir = this.wind.current >= 0 ? 1 : -1;
+      const wallEdge = wDir > 0 ? 0 : W;
+      const wallFront = wDir > 0
+        ? W * Math.min(1.05, p * 1.5)
+        : W * Math.max(-0.05, 1 - p * 1.5);
+      const g = ctx.createLinearGradient(wallEdge, 0, wallFront, 0);
+      g.addColorStop(0,   `rgba(200,90,25,${Math.min(0.80, p * 0.88)})`);
+      g.addColorStop(0.55, `rgba(190,75,18,${Math.min(0.52, p * 0.62)})`);
+      g.addColorStop(1,   'rgba(185,70,15,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Titan: pluie de méthane pendant downburst
+    if (id === 'titan' && this.hazard.isActive) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(175,128,65,0.38)';
+      ctx.lineWidth = 1;
+      const rng = seededRand(Math.floor(this.elapsed * 26) * 9973);
+      const slant = this.wind.current * 0.014;
+      for (let i = 0; i < 60; i++) {
+        const rx = rng() * W, ry = rng() * H;
+        const len = 9 + rng() * 14;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx + slant * len, ry + len);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Venus: pluie d'acide pendant le hazard
+    if (id === 'venus' && this.hazard.isActive) {
+      ctx.save();
+      ctx.lineWidth = 1;
+      const rng = seededRand(Math.floor(this.elapsed * 19) * 8831);
+      const slant = this.wind.current * 0.011;
+      for (let i = 0; i < 75; i++) {
+        const rx = rng() * W, ry = rng() * H;
+        const len = 11 + rng() * 16;
+        const a = 0.22 + rng() * 0.18;
+        ctx.strokeStyle = `rgba(115,210,35,${a})`;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx + slant * len, ry + len);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Earth: ciel qui s'assombrit pendant l'orage
+    if (id === 'earth' && (this.hazard.isActive || this.hazard.isWarning)) {
+      ctx.fillStyle = `rgba(12,12,32,${this.hazard.isActive ? 0.20 : 0.09})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  _drawWindParticles(ctx, cx, cy, S, W, H) {
+    if (!this._windParticles.length) return;
+    const color = this.bodyId === 'mars'  ? [220, 150,  80] :
+                  this.bodyId === 'titan' ? [255, 210, 130] :
+                  this.bodyId === 'venus' ? [255, 180,  80] :
+                  [200, 225, 255];
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (const p of this._windParticles) {
+      const sx = (p.x - cx) * S + W / 2;
+      const sy = H / 2 - (p.y - cy) * S;
+      if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) continue;
+      const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      if (spd < 0.1) continue;
+      const len = p.len * Math.min(2, spd / 3) * S * 0.1;
+      if (len < 0.5) continue;
+      const nx = p.vx / spd;
+      const ny = -p.vy / spd; // canvas y is inverted
+      ctx.strokeStyle = `rgba(${color[0]},${color[1]},${color[2]},${(p.life * 0.4).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.moveTo(sx - nx * len, sy - ny * len);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  _drawMiniMap(ctx, W, H) {
+    const mapW = Math.min(W - 40, 460);
+    const mapH = 44;
+    const mapX = (W - mapW) / 2;
+    const mapY = H - mapH - 14;
+    const tw = this.terrain.width;
+    const pts = this.terrain.points;
+    const step = this.terrain.step;
+    const minH = this.terrain.minH;
+    const maxH = this.terrain.maxH;
+    const hRange = Math.max(1, maxH - minH);
+    const toMX = wx => mapX + Math.max(0, Math.min(1, wx / tw)) * mapW;
+    const toMY = wy => mapY + mapH - 6 - ((wy - minH) / hRange) * (mapH - 14);
+
+    ctx.save();
+
+    // Panel background
+    ctx.fillStyle = 'rgba(0,4,18,0.88)';
+    ctx.beginPath(); ctx.roundRect(mapX, mapY, mapW, mapH, 6); ctx.fill();
+    ctx.strokeStyle = 'rgba(80,120,220,0.35)';
+    ctx.lineWidth = 1; ctx.stroke();
+
+    // Clip to panel
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(mapX + 1, mapY + 1, mapW - 2, mapH - 2, 5); ctx.clip();
+
+    // Current viewport highlight
+    const visW = this.canvasW / this.SCALE;
+    const vL = toMX(this.camX - visW / 2);
+    const vR = toMX(this.camX + visW / 2);
+    ctx.fillStyle = 'rgba(200,220,255,0.06)';
+    ctx.fillRect(vL, mapY, vR - vL, mapH);
+
+    // Terrain fill
+    ctx.beginPath();
+    ctx.moveTo(mapX, mapY + mapH);
+    for (let i = 0; i < pts.length; i++) ctx.lineTo(toMX(i * step), toMY(pts[i]));
+    ctx.lineTo(mapX + mapW, mapY + mapH);
+    ctx.closePath();
+    ctx.fillStyle = this.cfg.groundColor + '55';
+    ctx.fill();
+
+    // Terrain top line
+    ctx.strokeStyle = lighten(this.cfg.groundColor, 20) + 'aa';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const mx = toMX(i * step), my = toMY(pts[i]);
+      i === 0 ? ctx.moveTo(mx, my) : ctx.lineTo(mx, my);
+    }
+    ctx.stroke();
+
+    // Landing pad
+    const padMX = toMX(this.terrain.padCenter);
+    const padMY = toMY(this.terrain.padHeight);
+    const padPxW = Math.max(4, (this.terrain.padWidth / tw) * mapW);
+    ctx.fillStyle = '#00ff88';
+    ctx.fillRect(padMX - padPxW / 2, padMY - 2, padPxW, 3);
+    ctx.fillStyle = 'rgba(0,255,136,0.7)';
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('▼', padMX, padMY - 3);
+
+    // Ghost position
+    if (this._ghost && this._ghost.length > 0) {
+      const gIdx = Math.min(Math.floor(this.elapsed / 0.15), this._ghost.length - 1);
+      const gf = this._ghost[gIdx];
+      if (gf) {
+        const gmx = toMX(gf.x);
+        const gmy = Math.min(mapY + mapH - 4, Math.max(mapY + 4, toMY(gf.y)));
+        ctx.fillStyle = 'rgba(120,160,255,0.75)';
+        ctx.beginPath(); ctx.arc(gmx, gmy, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Lander dot
+    const lmx = toMX(this.lander.x);
+    const lmy = Math.min(mapY + mapH - 4, Math.max(mapY + 4, toMY(this.lander.y)));
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#aabbff';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(lmx, lmy, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    ctx.restore(); // end clip
     ctx.restore();
   }
 
