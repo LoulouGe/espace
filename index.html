@@ -36,18 +36,98 @@
       </div>
       <div class="hrow" id="wind-row"><span class="hlbl">VENT</span><span id="v-wind" class="hval">0.0 m/s</span></div>
       <div class="hrow" id="storm-warn" style="display:none"><span class="warn-txt">⚠ TEMPÊTE</span></div>
+      <div class="hrow" id="best-row" style="display:none"><span class="hlbl">RECORD</span><span id="v-best" class="hval" style="color:#fc0">—</span></div>
     </div>
   </div>
 
-  <!-- Barre de contrôles -->
-  <div id="controls-bar" class="hidden">
-    <span>↑ Propulseur</span>
-    <span>←→ Rotation</span>
-    <span>ESPACE Rétrofusée</span>
+  <!-- Secondary missions HUD (bottom-left during play) -->
+  <div id="missions-hud" class="hidden">
+    <div class="missions-shell">
+      <div class="missions-header">
+        <div>
+          <div class="missions-kicker">OBJECTIFS DE MISSION</div>
+          <div class="missions-title">Bonus tactiques</div>
+        </div>
+        <div class="missions-lock">Déblocage à l'atterrissage</div>
+      </div>
+      <div class="missions-subtitle">Remplissez les conditions en vol, les récompenses ne sont validées qu'après un atterrissage réussi.</div>
+      <div id="missions-list"></div>
+    </div>
   </div>
 
   <!-- Bouton système solaire -->
   <button id="btn-solar" class="hidden" title="Système Solaire">🌌</button>
+
+  <!-- Top Left: Navigation -->
+  <div id="solar-top-left" class="top-stack top-stack-left">
+    <button id="btn-daily" class="btn-s nav-btn nav-gold">📅 DÉFI DU JOUR</button>
+    <button id="btn-achievements" class="btn-s nav-btn nav-yellow">🏆 SUCCÈS</button>
+    <button id="btn-upgrades" class="btn-s nav-btn nav-magenta">🛠 AMÉLIORATIONS</button>
+  </div>
+
+  <!-- Top Right: Diamonds & Shop -->
+  <div id="solar-top-right" class="top-stack top-stack-right">
+    <div id="diamond-counter">
+      💎 <span id="diamond-count">0</span>
+    </div>
+    <button id="btn-shop" class="btn btn-cyan nav-btn">🛒 HANGAR</button>
+  </div>
+
+  <!-- Shop Card -->
+  <div id="card-shop" class="card card-modal card-cyan hidden">
+    <div class="card-title">HANGAR SPATIAL</div>
+    <div class="card-summary">
+      Fonds disponibles: <b class="currency-value">💎 <span id="shop-solde">0</span></b>
+    </div>
+    <div id="shop-items" class="card-list card-list-loose"></div>
+    <div class="card-actions">
+      <button id="btn-shop-close" class="btn-s btn-wide">FERMER</button>
+    </div>
+  </div>
+
+  <!-- Achievements Card -->
+  <div id="card-achievements" class="card card-modal card-gold hidden">
+    <div class="card-title">SUCCÈS</div>
+    <div id="ach-list" class="card-list card-list-tight"></div>
+    <div class="card-actions">
+      <button id="btn-ach-close" class="btn-s btn-wide">FERMER</button>
+    </div>
+  </div>
+
+  <!-- Upgrades Card -->
+  <div id="card-upgrades" class="card card-modal card-magenta hidden">
+    <div class="card-title">AMÉLIORATIONS</div>
+    <div class="card-summary">
+      Vaisseau: <span id="upgrade-ship-name" class="summary-strong"></span><br>
+      Fonds: <b class="currency-value">💎 <span id="upgrade-diamonds">0</span></b>
+    </div>
+    <div id="upgrade-list" class="card-list"></div>
+    <div class="card-actions">
+      <button id="btn-upgrades-close" class="btn-s btn-wide">FERMER</button>
+    </div>
+  </div>
+
+  <!-- Boss Overlay Venus -->
+  <div id="boss-overlay" class="overlay-screen hidden">
+    <div class="overlay-card overlay-orange">
+      <h1 class="overlay-title">VÉNUS VAINCUE</h1>
+      <p class="overlay-text">
+        Vous avez survécu aux conditions extrêmes et avez dompté l'atmosphère infernale de Vénus. Un exploit digne des plus grands pilotes de l'Histoire !
+      </p>
+      <div id="boss-reward" class="reward-badge"></div>
+      <button id="btn-boss-close" class="btn btn-warm btn-wide">ACCEPTER LA RÉCOMPENSE</button>
+    </div>
+  </div>
+
+  <!-- Achievement Popup Alert -->
+  <div id="ach-popup" class="toast toast-gold hidden">
+    <div class="toast-icon">🏆</div>
+    <div>
+      <div class="toast-kicker">SUCCÈS DÉVERROUILLÉ</div>
+      <div id="ach-label" class="toast-title"></div>
+      <div id="ach-desc" class="toast-desc"></div>
+    </div>
+  </div>
 
   <!-- Carte planète -->
   <div id="card-planet" class="card hidden">
@@ -80,12 +160,23 @@
     <button class="tbtn" data-speed="1" style="display:none">×1</button>
     <button class="tbtn" data-speed="1000" style="display:none">×1000</button>
     <button class="tbtn active" data-speed="100000" style="display:none">×100K</button>
-    <button id="btn-reset"
-      style="margin-left:15px; background:rgba(200,50,50,0.3); color:#f55; border:1px solid #f55; border-radius:4px; padding:2px 8px; cursor:pointer; font-family:'Share Tech Mono', monospace; font-size:12px;">RESET</button>
+    <button id="btn-reset" class="tbtn tbtn-reset">RESET</button>
   </div>
 
   <!-- Tooltip non atterrissable -->
   <div id="tooltip" class="hidden"></div>
+
+  <!-- Touch Controls (mobile + keyboard fallback visible during play) -->
+  <div id="touch-controls" class="hidden">
+    <div id="tc-rotate">
+      <button id="tc-left" class="tc-btn">◄</button>
+      <button id="tc-right" class="tc-btn">►</button>
+    </div>
+    <div id="tc-thrust-group">
+      <button id="tc-thrust" class="tc-btn">▲</button>
+      <button id="tc-retro" class="tc-btn">RETRO</button>
+    </div>
+  </div>
 
   <script src="astronomy.js"></script>
   <script src="lander.js"></script>

@@ -1,0 +1,286 @@
+k donne moi des idees
+Gameplay
+
+Atterrissage en deux temps — d'abord orbiter autour de la planète (mini-jeu de mise en orbite), puis descendre. Donne un contexte réaliste
+Dommages progressifs — le vaisseau prend des dégâts si tu touches le terrain de côté, si la vitesse dépasse le seuil de 20% etc. Barre de vie visible sur le vaisseau
+Carburant bonus à collecter — bidons flottants à frôler en vol (gameplay actif pendant la descente)
+Pad mobile — sur Terre/Vénus la zone de pose glisse lentement, te forçant à anticiper
+Contenu
+
+3 nouvelles planètes — Europa (surface glacée avec crevasses mortelles + geyser d'eau), Pluton (gravité quasi-nulle + vent solaire constant), Io (volcans actifs qui projettent des rochers)
+Missions secondaires — objectifs optionnels affichés au lancement : "atterrir en moins de 30s", "utiliser moins de 20% de carburant", "ne pas dépasser 5° d'inclinaison". Donnent des diamants bonus
+Boss de fin — Vénus devient un vrai défi final avec une cutscene et une récompense spéciale
+Progression / méta
+
+Achievements — badges débloquables persistants ("Première planète", "Parfait 3★", "Survécu à 3 hazards", "100 atterrissages") avec popup ingame
+Arbre de compétences — dépenser des diamants pour améliorer le vaisseau standard (meilleure poussée, réservoir +20%, meilleur gyroscope)
+Challenge du jour — seed fixe chaque jour, classement séparé, icône 📅 sur la planète, efface après minuit
+Visuel / ambiance
+
+Sons — vrombissement moteur, vent, impact, alarme hazard. Le plus grand gain de ressenti possible
+Cinématique d'intro — 5s de fondu depuis le vide spatial vers le système solaire au premier lancement
+Replay automatique — après un atterrissage réussi, possibilité de rejouer la vidéo du trajet complet depuis le spawn
+Tu veux que j'implémente une sélection ?
+
+fais: 3 nouvelles planètes; Missions secondaires; Boss de fin; Achievements; Arbre de compétences (mais on peux ameliorer tous les vaisseau et a chaque fois il faut que ca se "voit" (ressente) quand on joue et que ce soit bien expliquer ce que ca change); Challenge du jour; Replay automatique (fais absolument tout tu peux le faire petit a petit en faisant une todo si tu veux mais tu dois tout faire)
+Read astronomy.js (lines 2-81)
+Read main.js (lines 2-31)
+Read astronomy.js (lines 81-430)
+Read astronomy.js (lines 431-510)
+Énorme scope — je vais tout faire méthodiquement. D'abord la todo list, puis j'implémente tout.
+
+Update Todos
+
+3 nouvelles planètes dans lander.js (Europa, Io, Pluton) + hazards
+
+Nouvelles planètes dans astronomy.js (positions orbitales, faits, rendu)
+
+Missions secondaires (définition, suivi, affichage)
+
+Boss Vénus (overlay spécial + récompense)
+
+Achievements (badges, popup ingame)
+
+Arbre de compétences (upgrades par vaisseau, visuels, effets)
+
+Challenge du jour (seed quotidien, classement séparé)
+
+Replay automatique (rejouer l'atterrissage après succès)
+Read lander.js (lines 597-626)
+Read lander.js (lines 626-655)
+Read lander.js (lines 821-840)
+Read lander.js (lines 839-868)
+Read lander.js (lines 866-920)
+J'ai toute la vue. C'est énorme — je lance un agent dédié en parallèle pour faire tout le travail d'implémentation pendant qu'on reste en contact.
+
+J'ai tout ce qu'il me faut. Je lance l'implémentation complète, fichier par fichier.
+
+Étape 1 : lander.js — nouvelles planètes
+
+Edit lander.js
+Added 63 lines
+Je continue l'implémentation. Hints pré-existants ignorés.
+
+Edit lander.js
+Added 3 lines
+Read lander.js (lines 821-835)
+Read lander.js (lines 836-880)
+Edit lander.js
+Added 68 lines
+Maintenant ajouter le rendu météo pour les nouvelles planètes dans _drawWeather et _drawPlanetBackground :
+
+Edit lander.js
+Added 50 lines
+Ajouter Io/Europa/Pluton dans _drawPlanetBackground :
+
+Edit lander.js
+Added 43 lines
+Update Todos
+
+3 nouvelles planètes dans lander.js (Europa, Io, Pluton) + hazards
+
+Nouvelles planètes dans astronomy.js (positions orbitales, faits, rendu)
+
+Missions secondaires (définition, suivi, affichage HUD)
+
+Boss Vénus + récompense spéciale
+
+Achievements (badges, popup ingame, persistance)
+
+Arbre de compétences (upgrades visuels + effets gameplay)
+
+Challenge du jour (seed quotidien, classement séparé)
+
+Replay automatique après atterrissage réussi
+Étape 2 : astronomy.js — nouvelles planètes
+
+Edit astronomy.js
+Modified
+Edit astronomy.js
+Modified
+Edit astronomy.js
+Added 3 lines
+Edit astronomy.js
+Added 7 lines
+Edit astronomy.js
+Added 3 lines
+Edit astronomy.js
+Added 20 lines
+Maintenant ajouter le rendu de Io, Europa, Pluto dans draw() — après le bloc Titan :
+
+Edit astronomy.js
+Added 12 lines
+Add trails for Io, Europa, Pluto, then render the bodies. I'll add trails right after the Titan trail block:
+
+Edit astronomy.js
+Added 23 lines
+Now render the bodies (Io, Europa, Pluto) in draw(). I'll add them after the Titan body rendering block:
+
+Edit astronomy.js
+Added 81 lines
+Now update the campaign order in main.js and add getDistFromEarth for new bodies:
+
+Edit astronomy.js
+Added 3 lines
+Edit astronomy.js
+Modified
+Edit astronomy.js
+Modified
+Now update main.js — campaign order and unlock logic:
+
+Edit main.js
+Modified
+Update Todos
+
+3 nouvelles planètes dans lander.js (Europa, Io, Pluton) + hazards
+
+Nouvelles planètes dans astronomy.js (positions orbitales, faits, rendu)
+
+Missions secondaires (définition, suivi, affichage HUD)
+
+Boss Vénus + récompense spéciale
+
+Achievements (badges, popup ingame, persistance)
+
+Arbre de compétences (upgrades visuels + effets gameplay)
+
+Challenge du jour (seed quotidien, classement séparé)
+
+Replay automatique après atterrissage réussi
+Étape 3 : Missions secondaires — définitions dans lander.js, suivi dans LanderGame, affichage dans main.js :
+
+Edit lander.js
+Added 24 lines
+Hints seulement, je continue.
+
+Edit lander.js
+Added 12 lines
+Now wire tracking into update():
+
+Edit lander.js
+Added 16 lines
+Now capture landing VS and angle right at collision:
+
+Edit lander.js
+Added 2 lines
+Now capture the impact VS in checkCollision:
+
+Edit lander.js
+Modified
+Edit lander.js
+Modified
+Je continue. Maintenant les missions dans main.js — affichage HUD et évaluation au résultat :
+
+Read main.js (lines 544-568)
+Read main.js (lines 601-630)
+Edit main.js
+Added 5 lines
+Add mission HUD elements to index.html:
+
+Edit index.html
+Added 6 lines
+Read index.html (lines 41-55)
+Good — the closing </div> for hud is missing. Let me check:
+
+Read index.html (lines 16-50)
+HTML looks correct — </div> on line 42 closes #hud. Now add the missions JS logic in main.js:
+
+Edit main.js
+Added 37 lines
+Wire updateMissionsHUD into the game loop and award diamonds at result:
+
+Edit main.js
+Added 1 line
+Edit main.js
+Added 4 lines
+Show mission bonus in result card and hide mission HUD on return:
+
+Edit main.js
+Added 6 lines
+Read main.js (lines 746-765)
+Edit main.js
+Added 1 line
+Hide mission HUD on return to solar:
+
+Edit main.js
+Added 1 line
+Update Todos
+
+3 nouvelles planètes dans lander.js (Europa, Io, Pluton) + hazards
+
+Nouvelles planètes dans astronomy.js (positions orbitales, faits, rendu)
+
+Missions secondaires (définition, suivi, affichage HUD)
+
+Boss Vénus + récompense spéciale
+
+Achievements (badges, popup ingame, persistance)
+
+Arbre de compétences (upgrades visuels + effets gameplay)
+
+Challenge du jour (seed quotidien, classement séparé)
+
+Replay automatique après atterrissage réussi
+Étape 4 : Boss Vénus + Achievements + Upgrades + Challenge du jour + Replay
+
+C'est un très gros bloc — je vais tout faire en main.js d'un seul tenant. D'abord je lis la fin du fichier :
+
+Read main.js (lines 761-860)
+Read main.js (lines 861-960)
+Read main.js (lines 959-1058)
+Read main.js (lines 1058-1072)
+Maintenant j'insère le gros bloc : Boss Vénus, Achievements, Upgrades, Challenge du jour, Replay — tout avant le boot:
+
+Edit main.js
+Added 283 lines
+Hint ignoré. Je continue — wiring des upgrades dans lander.js puis tout le HTML/CSS restant.
+
+Upgrades → lander physics:
+
+Edit lander.js
+Added 3 lines
+Hints pré-existants, je continue. Thrust + retro bonuses dans lander.js :
+
+Edit lander.js
+Added 1 line
+Read main.js (lines 2-101)
+Read lander.js (lines 2-101)
+Read main.js (lines 101-300)
+Read lander.js (lines 101-300)
+Let me read the end of main.js to see what's already implemented and what's missing.
+
+Bash Count lines in main.js and lander.js
+IN
+wc -l /Users/loulouge/Git/espace/main.js /Users/loulouge/Git/espace/lander.js
+
+OUT
+    1345 /Users/loulouge/Git/espace/main.js
+    2497 /Users/loulouge/Git/espace/lander.js
+    3842 total
+Read main.js (lines 701-900)
+Read main.js (lines 901-1100)
+Read main.js (lines 1101-1350)
+continue juste loa tache que tu etais en train de faire et apres mets a jour le readme
+Read main.js (lines 301-700)
+Now I have a complete picture. Let me wire everything and add the missing HTML/CSS. I'll do it all in parallel across the files.
+
+Update Todos
+
+Wire applyUpgrades, checkAchievements, checkVenusBoss, replay in main.js
+
+Add missing HTML elements (boss overlay, ach popup, modals, buttons)
+
+Add missing CSS (missions, upgrades, achievements, animations)
+
+Update README
+Edit main.js
+Added 1 line
+Edit main.js
+Added 6 lines
+Edit main.js
+Added 3 lines
+Edit main.js
+Added 1 line
+Edit main.js
+Added 17 lines
+You've hit your limit · resets 8pm (Europe/Paris)
