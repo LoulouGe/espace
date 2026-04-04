@@ -107,6 +107,149 @@ class SolarMeteorSystem {
   }
 }
 
+function mixHex(a, b, t) {
+  const ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16), ab = parseInt(a.slice(5, 7), 16);
+  const br = parseInt(b.slice(1, 3), 16), bg = parseInt(b.slice(3, 5), 16), bb = parseInt(b.slice(5, 7), 16);
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const b2 = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${b2})`;
+}
+
+function drawInfoChip(ctx, x, y, title, accent, subtitle) {
+  ctx.save();
+  ctx.font = '10px "Share Tech Mono", monospace';
+  const titleW = ctx.measureText(title).width;
+  ctx.font = subtitle ? '7px monospace' : '10px "Share Tech Mono", monospace';
+  const subW = subtitle ? ctx.measureText(subtitle).width : 0;
+  const w = Math.max(titleW, subW) + 18;
+  const h = subtitle ? 24 : 16;
+  const px = x - w / 2;
+  const py = y;
+  ctx.fillStyle = 'rgba(5, 16, 34, 0.64)';
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(px, py, w, h, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(235,245,255,0.92)';
+  ctx.font = '10px "Share Tech Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(title, x, py + 11);
+  if (subtitle) {
+    ctx.fillStyle = '#fc0';
+    ctx.font = '7px monospace';
+    ctx.fillText(subtitle, x, py + 20);
+  }
+  ctx.restore();
+}
+
+function drawOrbitalBody(ctx, body, pos, options = {}) {
+  const { hovered = false, locked = false, subtitle = '', accent = 'rgba(109, 231, 255, 0.22)' } = options;
+  const base = body.color;
+  const r = body.r;
+  const glowR = r * (hovered ? 5.2 : 3.3);
+  const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowR);
+  glow.addColorStop(0, hexAlpha(base, hovered ? 0.96 : 0.62));
+  glow.addColorStop(0.35, hexAlpha(base, hovered ? 0.30 : 0.16));
+  glow.addColorStop(1, hexAlpha(base, 0));
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, glowR, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (body.id === 'saturn') {
+    ctx.strokeStyle = 'rgba(240,224,170,0.26)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y, r * 2.8, r * 0.84, 0.42, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,244,210,0.34)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y, r * 2.2, r * 0.58, 0.42, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  const disc = ctx.createRadialGradient(pos.x - r * 0.34, pos.y - r * 0.38, r * 0.12, pos.x, pos.y, r);
+  disc.addColorStop(0, mixHex(base, '#ffffff', 0.42));
+  disc.addColorStop(0.55, hovered ? lightenColor(base, 26) : base);
+  disc.addColorStop(1, mixHex(base, '#050814', 0.56));
+  ctx.fillStyle = disc;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (body.id === 'jupiter' || body.id === 'saturn') {
+    ctx.save();
+    const bands = body.id === 'jupiter'
+      ? ['#8d4c1d', '#f0d5ab', '#aa6229', '#f7deb3']
+      : ['#f5dfaf', '#a97834', '#f0c873'];
+    bands.forEach((c, i) => {
+      ctx.strokeStyle = hexAlpha(c, 0.22);
+      ctx.lineWidth = r * (body.id === 'jupiter' ? 0.16 : 0.12);
+      ctx.beginPath();
+      ctx.ellipse(pos.x, pos.y + r * (-0.42 + i * 0.28), r * 0.96, r * 0.12, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  if (body.id === 'earth') {
+    ctx.fillStyle = 'rgba(76, 214, 110, 0.22)';
+    ctx.beginPath(); ctx.ellipse(pos.x - r * 0.06, pos.y - r * 0.08, r * 0.34, r * 0.18, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(pos.x + r * 0.18, pos.y + r * 0.12, r * 0.20, r * 0.10, 0.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  if (body.id === 'europa' || body.id === 'uranus' || body.id === 'neptune') {
+    ctx.strokeStyle = hexAlpha('#ffffff', 0.18);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pos.x - r * 0.65, pos.y - r * 0.18);
+    ctx.lineTo(pos.x + r * 0.58, pos.y + r * 0.05);
+    ctx.moveTo(pos.x - r * 0.30, pos.y + r * 0.40);
+    ctx.lineTo(pos.x + r * 0.18, pos.y - r * 0.34);
+    ctx.stroke();
+  }
+
+  const spec = ctx.createRadialGradient(pos.x - r * 0.45, pos.y - r * 0.48, 0, pos.x - r * 0.45, pos.y - r * 0.48, r * 0.6);
+  spec.addColorStop(0, 'rgba(255,255,255,0.34)');
+  spec.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = spec;
+  ctx.beginPath();
+  ctx.arc(pos.x - r * 0.12, pos.y - r * 0.12, r * 0.68, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = hexAlpha(mixHex(base, '#ffffff', 0.35), 0.28);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  if (body.id === 'saturn') {
+    ctx.strokeStyle = 'rgba(240,224,170,0.42)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y, r * 2.8, r * 0.84, 0.42, 0, Math.PI);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,244,210,0.48)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y, r * 2.2, r * 0.58, 0.42, 0, Math.PI);
+    ctx.stroke();
+  }
+
+  if (locked) {
+    ctx.fillStyle = 'rgba(255,220,140,0.96)';
+    ctx.font = `${Math.max(10, r)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('🔒', pos.x, pos.y + r * 0.38);
+  }
+
+  drawInfoChip(ctx, pos.x, pos.y + r + 8, body.name, accent, subtitle);
+}
+
 class SolarSystem {
   constructor(w, h) {
     this.w = w; this.h = h;
@@ -229,14 +372,31 @@ class SolarSystem {
     const t = this.simTime;
 
     // Background
-    ctx.fillStyle = '#000008';
+    const bg = ctx.createLinearGradient(0, 0, 0, this.h);
+    bg.addColorStop(0, '#061120');
+    bg.addColorStop(0.45, '#040a18');
+    bg.addColorStop(1, '#02050d');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, this.w, this.h);
+
+    const nebulaA = ctx.createRadialGradient(this.w * 0.18, this.h * 0.14, 0, this.w * 0.18, this.h * 0.14, this.w * 0.52);
+    nebulaA.addColorStop(0, 'rgba(60, 170, 255, 0.10)');
+    nebulaA.addColorStop(1, 'rgba(60, 170, 255, 0)');
+    ctx.fillStyle = nebulaA;
+    ctx.fillRect(0, 0, this.w, this.h);
+
+    const nebulaB = ctx.createRadialGradient(this.w * 0.84, this.h * 0.22, 0, this.w * 0.84, this.h * 0.22, this.w * 0.40);
+    nebulaB.addColorStop(0, 'rgba(255, 180, 80, 0.08)');
+    nebulaB.addColorStop(1, 'rgba(255, 180, 80, 0)');
+    ctx.fillStyle = nebulaB;
     ctx.fillRect(0, 0, this.w, this.h);
 
     // Stars with twinkle
     for (const s of this.stars) {
       if (dtSec) s.tw += s.tws * dtSec;
       const alpha = s.b * (0.7 + 0.3 * Math.sin(s.tw));
-      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+      const color = s.s > 1.2 ? `rgba(160,220,255,${alpha.toFixed(2)})` : `rgba(255,245,225,${alpha.toFixed(2)})`;
+      ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(s.x * this.w, s.y * this.h, s.s, 0, Math.PI * 2);
       ctx.fill();
@@ -247,7 +407,7 @@ class SolarSystem {
     this.meteors.draw(ctx);
 
     // Orbit rings
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(170,210,255,0.08)';
     ctx.lineWidth = 1;
     for (const el of ORBITAL_ELEMENTS) {
       ctx.beginPath();
@@ -336,24 +496,24 @@ class SolarSystem {
     }
 
     // Sun corona
-    const sg = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, 70);
-    sg.addColorStop(0,   'rgba(255,240,150,0.9)');
-    sg.addColorStop(0.25,'rgba(255,200,60,0.6)');
-    sg.addColorStop(0.6, 'rgba(255,120,0,0.2)');
+    const sg = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, 84);
+    sg.addColorStop(0,   'rgba(255,246,190,0.95)');
+    sg.addColorStop(0.25,'rgba(255,210,86,0.64)');
+    sg.addColorStop(0.6, 'rgba(255,120,0,0.22)');
     sg.addColorStop(1,   'rgba(255,60,0,0)');
     ctx.fillStyle = sg;
     ctx.beginPath();
-    ctx.arc(this.cx, this.cy, 70, 0, Math.PI * 2);
+    ctx.arc(this.cx, this.cy, 84, 0, Math.PI * 2);
     ctx.fill();
 
     // Sun
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = '#ffe07a';
     ctx.beginPath();
-    ctx.arc(this.cx, this.cy, 16, 0, Math.PI * 2);
+    ctx.arc(this.cx, this.cy, 18, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#ffe88a';
+    ctx.fillStyle = '#fff5c2';
     ctx.beginPath();
-    ctx.arc(this.cx, this.cy, 10, 0, Math.PI * 2);
+    ctx.arc(this.cx - 3, this.cy - 3, 8, 0, Math.PI * 2);
     ctx.fill();
 
     // Planets
@@ -361,246 +521,50 @@ class SolarSystem {
       const el = ORBITAL_ELEMENTS[i];
       const pos = this._pos(el, t);
       const isLocked = lockedIds && lockedIds.has(el.id);
-
-      ctx.save();
-      if (isLocked) ctx.globalAlpha = 0.35;
-
-      // Hover glow
       const isHovered = hoveredId === el.id;
-      const glowR = isHovered ? el.r * 5 : el.r * 2.5;
-      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowR);
-      grad.addColorStop(0,   hexAlpha(el.color, isHovered ? 1.0 : 0.8));
-      grad.addColorStop(0.4, hexAlpha(el.color, isHovered ? 0.5 : 0.27));
-      grad.addColorStop(1,   hexAlpha(el.color, 0));
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, glowR, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Planet body
-      ctx.fillStyle = isHovered ? lightenColor(el.color, 40) : el.color;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, el.r, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Saturn rings
-      if (el.id === 'saturn') {
-        ctx.strokeStyle = 'rgba(228,209,145,0.55)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(pos.x, pos.y, el.r * 2.2, el.r * 0.7, 0.4, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(200,180,100,0.25)';
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.ellipse(pos.x, pos.y, el.r * 2.7, el.r * 0.85, 0.4, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Lock icon
-      if (isLocked) {
-        ctx.fillStyle = 'rgba(255,200,100,0.9)';
-        ctx.font = `${Math.max(10, el.r)}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('🔒', pos.x, pos.y + el.r * 0.4);
-      }
-
-      // Label
-      ctx.fillStyle = 'rgba(190,210,255,0.85)';
-      ctx.font = '11px "Share Tech Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(el.name, pos.x, pos.y + el.r + 13);
-
-      // Feature 5: leaderboard stars under label for landable planets
-      if (LANDABLE.has(el.id)) {
-        if (leaderboard && leaderboard[el.id]) {
-          const lbStars = leaderboard[el.id].stars || 0;
-          ctx.fillStyle = '#fc0';
-          ctx.font = '6px monospace';
-          ctx.fillText(
-            '★'.repeat(lbStars) + '☆'.repeat(3 - lbStars),
-            pos.x, pos.y + el.r + 24
-          );
-        } else {
-          ctx.fillStyle = isLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
-          ctx.font = '8px monospace';
-          ctx.fillText('★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]), pos.x, pos.y + el.r + 24);
-        }
-        // Feature 1: fuel bar under stars for landable planets removed
-      } else {
-        ctx.fillStyle = 'rgba(150,150,180,0.5)';
-        ctx.font = '8px monospace';
-        ctx.fillText('⛔ gaz', pos.x, pos.y + el.r + 24);
-      }
+      const subtitle = LANDABLE.has(el.id)
+        ? (leaderboard && leaderboard[el.id]
+            ? '★'.repeat(leaderboard[el.id].stars || 0) + '☆'.repeat(3 - (leaderboard[el.id].stars || 0))
+            : '★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]))
+        : '⛔ gaz';
+      ctx.save();
+      if (isLocked) ctx.globalAlpha = 0.38;
+      drawOrbitalBody(ctx, el, pos, {
+        hovered: isHovered,
+        locked: isLocked,
+        subtitle,
+        accent: isLocked ? 'rgba(255, 214, 118, 0.16)' : 'rgba(109, 231, 255, 0.18)',
+      });
       ctx.restore();
     }
 
-    // Moon
-    const moonPos = this._moonPos(earthPos, MOON_EL, t);
-    const moonHov = hoveredId === 'moon';
-    const moonLocked = lockedIds && lockedIds.has('moon');
-    if (moonLocked) ctx.globalAlpha = 0.35;
-    if (moonHov) {
-      const mg = ctx.createRadialGradient(moonPos.x, moonPos.y, 0, moonPos.x, moonPos.y, MOON_EL.r * 5);
-      mg.addColorStop(0, hexAlpha(MOON_EL.color, 1.0));
-      mg.addColorStop(0.4, hexAlpha(MOON_EL.color, 0.5));
-      mg.addColorStop(1, hexAlpha(MOON_EL.color, 0));
-      ctx.fillStyle = mg;
-      ctx.beginPath(); ctx.arc(moonPos.x, moonPos.y, MOON_EL.r * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = moonHov ? lightenColor(MOON_EL.color, 40) : MOON_EL.color;
-    ctx.beginPath();
-    ctx.arc(moonPos.x, moonPos.y, MOON_EL.r, 0, Math.PI * 2);
-    ctx.fill();
-    if (moonLocked) {
-      ctx.font = '10px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('🔒', moonPos.x, moonPos.y + MOON_EL.r * 0.4);
-    }
-    ctx.globalAlpha = 1;
+    const moonBodies = [
+      { body: MOON_EL, pos: this._moonPos(earthPos, MOON_EL, t), key: 'moon', accent: 'rgba(210,210,220,0.18)' },
+      { body: TITAN_EL, pos: this._moonPos(saturnPos, TITAN_EL, t), key: 'titan', accent: 'rgba(228,180,90,0.18)' },
+      { body: IO_EL, pos: this._moonPos(jupiterPos, IO_EL, t), key: 'io', accent: 'rgba(240,200,90,0.18)' },
+      { body: EUROPA_EL, pos: this._moonPos(jupiterPos, EUROPA_EL, t), key: 'europa', accent: 'rgba(130,190,240,0.18)' },
+      { body: PLUTO_EL, pos: this._pos(PLUTO_EL, t), key: 'pluto', accent: 'rgba(212,196,166,0.18)' },
+    ];
 
-    // Moon label + Feature 5 leaderboard stars
-    ctx.fillStyle = 'rgba(190,190,190,0.75)';
-    ctx.font = '9px "Share Tech Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('Lune', moonPos.x, moonPos.y + MOON_EL.r + 12);
-    if (leaderboard && leaderboard['moon']) {
-      const lbStars = leaderboard['moon'].stars || 0;
-      ctx.fillStyle = '#fc0';
-      ctx.font = '6px monospace';
-      ctx.fillText('★'.repeat(lbStars) + '☆'.repeat(3 - lbStars), moonPos.x, moonPos.y + MOON_EL.r + 20);
-    } else {
-      ctx.fillStyle = moonLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
-      ctx.font = '7px monospace';
-      ctx.fillText('★☆☆☆☆', moonPos.x, moonPos.y + MOON_EL.r + 20);
+    for (const item of moonBodies) {
+      const isLocked = lockedIds && lockedIds.has(item.key);
+      const isHovered = hoveredId === item.key;
+      const subtitle = leaderboard && leaderboard[item.key]
+        ? '★'.repeat(leaderboard[item.key].stars || 0) + '☆'.repeat(3 - (leaderboard[item.key].stars || 0))
+        : '★'.repeat(LANDABLE_STARS[item.key]) + '☆'.repeat(5 - LANDABLE_STARS[item.key]);
+      ctx.save();
+      if (isLocked) ctx.globalAlpha = 0.38;
+      drawOrbitalBody(ctx, item.body, item.pos, {
+        hovered: isHovered,
+        locked: isLocked,
+        subtitle,
+        accent: item.accent,
+      });
+      ctx.restore();
     }
-    // Feature 1: Moon fuel bar removed
-
-    // Titan
-    const titanPos = this._moonPos(saturnPos, TITAN_EL, t);
-    const titanHov = hoveredId === 'titan';
-    const titanLocked = lockedIds && lockedIds.has('titan');
-    if (titanLocked) ctx.globalAlpha = 0.35;
-    if (titanHov) {
-      const tg = ctx.createRadialGradient(titanPos.x, titanPos.y, 0, titanPos.x, titanPos.y, TITAN_EL.r * 5);
-      tg.addColorStop(0, hexAlpha(TITAN_EL.color, 1.0));
-      tg.addColorStop(0.4, hexAlpha(TITAN_EL.color, 0.5));
-      tg.addColorStop(1, hexAlpha(TITAN_EL.color, 0));
-      ctx.fillStyle = tg;
-      ctx.beginPath(); ctx.arc(titanPos.x, titanPos.y, TITAN_EL.r * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = titanHov ? lightenColor(TITAN_EL.color, 40) : TITAN_EL.color;
-    ctx.beginPath();
-    ctx.arc(titanPos.x, titanPos.y, TITAN_EL.r, 0, Math.PI * 2);
-    ctx.fill();
-    if (titanLocked) {
-      ctx.font = '10px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('🔒', titanPos.x, titanPos.y + TITAN_EL.r * 0.4);
-    }
-    ctx.globalAlpha = 1;
-
-    // Titan label + Feature 5 leaderboard stars
-    ctx.fillStyle = 'rgba(200,150,60,0.75)';
-    ctx.font = '9px "Share Tech Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('Titan', titanPos.x, titanPos.y + TITAN_EL.r + 12);
-    if (leaderboard && leaderboard['titan']) {
-      const lbStars = leaderboard['titan'].stars || 0;
-      ctx.fillStyle = '#fc0';
-      ctx.font = '6px monospace';
-      ctx.fillText('★'.repeat(lbStars) + '☆'.repeat(3 - lbStars), titanPos.x, titanPos.y + TITAN_EL.r + 20);
-    } else {
-      ctx.fillStyle = titanLocked ? 'rgba(180,180,100,0.5)' : '#fc0';
-      ctx.font = '7px monospace';
-      ctx.fillText('★★★☆☆', titanPos.x, titanPos.y + TITAN_EL.r + 20);
-    }
-    // Feature 1: Titan fuel bar removed
-
-    // ── Io ──
-    const ioPos = this._moonPos(jupiterPos, IO_EL, t);
-    const ioHov = hoveredId === 'io';
-    const ioLocked = lockedIds && lockedIds.has('io');
-    ctx.save();
-    if (ioLocked) ctx.globalAlpha = 0.35;
-    if (ioHov) {
-      const ig = ctx.createRadialGradient(ioPos.x, ioPos.y, 0, ioPos.x, ioPos.y, IO_EL.r * 5);
-      ig.addColorStop(0, hexAlpha(IO_EL.color, 1)); ig.addColorStop(1, hexAlpha(IO_EL.color, 0));
-      ctx.fillStyle = ig;
-      ctx.beginPath(); ctx.arc(ioPos.x, ioPos.y, IO_EL.r * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = ioHov ? lightenColor(IO_EL.color, 40) : IO_EL.color;
-    ctx.beginPath(); ctx.arc(ioPos.x, ioPos.y, IO_EL.r, 0, Math.PI * 2); ctx.fill();
-    if (ioLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', ioPos.x, ioPos.y + IO_EL.r * 0.4); }
-    ctx.fillStyle = 'rgba(212,180,50,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Io', ioPos.x, ioPos.y + IO_EL.r + 12);
-    if (leaderboard && leaderboard['io']) {
-      const s = leaderboard['io'].stars || 0;
-      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
-      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), ioPos.x, ioPos.y + IO_EL.r + 20);
-    } else {
-      ctx.fillStyle = ioLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
-      ctx.fillText('★★★★☆', ioPos.x, ioPos.y + IO_EL.r + 20);
-    }
-    ctx.restore();
-
-    // ── Europa ──
-    const europaPos = this._moonPos(jupiterPos, EUROPA_EL, t);
-    const europaHov = hoveredId === 'europa';
-    const europaLocked = lockedIds && lockedIds.has('europa');
-    ctx.save();
-    if (europaLocked) ctx.globalAlpha = 0.35;
-    if (europaHov) {
-      const eg2 = ctx.createRadialGradient(europaPos.x, europaPos.y, 0, europaPos.x, europaPos.y, EUROPA_EL.r * 5);
-      eg2.addColorStop(0, hexAlpha(EUROPA_EL.color, 1)); eg2.addColorStop(1, hexAlpha(EUROPA_EL.color, 0));
-      ctx.fillStyle = eg2;
-      ctx.beginPath(); ctx.arc(europaPos.x, europaPos.y, EUROPA_EL.r * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = europaHov ? lightenColor(EUROPA_EL.color, 40) : EUROPA_EL.color;
-    ctx.beginPath(); ctx.arc(europaPos.x, europaPos.y, EUROPA_EL.r, 0, Math.PI * 2); ctx.fill();
-    if (europaLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', europaPos.x, europaPos.y + EUROPA_EL.r * 0.4); }
-    ctx.fillStyle = 'rgba(122,180,230,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Europa', europaPos.x, europaPos.y + EUROPA_EL.r + 12);
-    if (leaderboard && leaderboard['europa']) {
-      const s = leaderboard['europa'].stars || 0;
-      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
-      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), europaPos.x, europaPos.y + EUROPA_EL.r + 20);
-    } else {
-      ctx.fillStyle = europaLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
-      ctx.fillText('★★★★☆', europaPos.x, europaPos.y + EUROPA_EL.r + 20);
-    }
-    ctx.restore();
-
-    // ── Pluto ──
-    const plutoPos2 = this._pos(PLUTO_EL, t);
-    const plutoHov = hoveredId === 'pluto';
-    const plutoLocked = lockedIds && lockedIds.has('pluto');
-    ctx.save();
-    if (plutoLocked) ctx.globalAlpha = 0.35;
-    if (plutoHov) {
-      const pg = ctx.createRadialGradient(plutoPos2.x, plutoPos2.y, 0, plutoPos2.x, plutoPos2.y, PLUTO_EL.r * 5);
-      pg.addColorStop(0, hexAlpha(PLUTO_EL.color, 1)); pg.addColorStop(1, hexAlpha(PLUTO_EL.color, 0));
-      ctx.fillStyle = pg;
-      ctx.beginPath(); ctx.arc(plutoPos2.x, plutoPos2.y, PLUTO_EL.r * 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = plutoHov ? lightenColor(PLUTO_EL.color, 40) : PLUTO_EL.color;
-    ctx.beginPath(); ctx.arc(plutoPos2.x, plutoPos2.y, PLUTO_EL.r, 0, Math.PI * 2); ctx.fill();
-    if (plutoLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', plutoPos2.x, plutoPos2.y + PLUTO_EL.r * 0.4); }
-    ctx.fillStyle = 'rgba(192,180,150,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
-    ctx.fillText('Pluton', plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 12);
-    if (leaderboard && leaderboard['pluto']) {
-      const s = leaderboard['pluto'].stars || 0;
-      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
-      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 20);
-    } else {
-      ctx.fillStyle = plutoLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
-      ctx.fillText('★★★★★', plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 20);
-    }
-    ctx.restore();
 
     // Title
-    ctx.fillStyle = 'rgba(150,180,255,0.5)';
-    ctx.font = '12px "Share Tech Mono", monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('Cliquez sur une planète pour atterrir', 14, this.h - 14);
+    drawInfoChip(ctx, Math.max(150, this.w * 0.18), this.h - 30, 'Cliquez sur une planète pour atterrir', 'rgba(109, 231, 255, 0.18)', null);
   }
 
   getDistFromEarth(id) {

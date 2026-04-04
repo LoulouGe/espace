@@ -4,7 +4,9 @@
 const BODY_DATA = {
   moon: {
     name: 'Lune', emoji: '🌕', stars: 1,
-    gravity: 1.62,
+    gravity: 1.24,
+    thrustAssist: 1.14,
+    retroAssist: 1.08,
     drag: 0,
     windType: 'none', windBase: 0, windAmp: 0,
     groundColor: '#8a8a8a', groundAccent: '#606060', groundDark: '#404040',
@@ -17,7 +19,7 @@ const BODY_DATA = {
     hazardType: 'none',
     conditions: [
       { ci: '🌑', txt: "Pas d'atmosphère" },
-      { ci: '⚖️', txt: 'Faible gravité: 1.62 m/s²' },
+      { ci: '⚖️', txt: 'Faible gravité: 1.24 m/s²' },
       { ci: '🪨', txt: 'Surface cratérisée' },
     ],
     desc: 'Notre satellite naturel. Faible gravité, aucune atmosphère, conditions prévisibles. Idéal pour débuter.',
@@ -198,14 +200,14 @@ const BODY_DATA = {
 
 // ─── Mission secondaire definitions ──────────────────────────────────────────
 const SECONDARY_MISSIONS = [
-  { id:'fast',      label:'⏱ Atterrir en moins de 35s',         check: s => s.time <= 35,                      reward: 25 },
-  { id:'fuel',      label:'⛽ Atterrir avec >70% de carburant',  check: (s,g) => s.fuel / g.lander.fuelMax > 0.70, reward: 30 },
-  { id:'precise',   label:'🎯 Atterrissage de précision (>250)', check: s => s.precisionBonus >= 250,           reward: 20 },
-  { id:'smooth',    label:'🪶 Vitesse ↓ < 1.5 m/s à l\'impact', check: (s,g) => g._landVS !== undefined && g._landVS < 1.5, reward: 25 },
-  { id:'noretro',   label:'🚫 Sans utiliser les rétrofusées',    check: (s,g) => !g._usedRetro,                reward: 20 },
-  { id:'tilt',      label:'📐 Angle < 5° à l\'atterrissage',     check: (s,g) => g._landAngle !== undefined && Math.abs(g._landAngle) < 5, reward: 20 },
-  { id:'hazard',    label:'⚡ Survivre à 2 hazards',             check: (s,g) => g._hazardCount >= 2,          reward: 35 },
-  { id:'stars3',    label:'⭐ Atteindre 3 étoiles',              check: s => s.stars === 3,                    reward: 30 },
+  { id:'fast',      label:'⏱ Atterrir en moins de 35s',         desc:'Gardez un rythme agressif jusqu\'au toucher final.', check: s => s.time <= 35,                      reward: 25 },
+  { id:'fuel',      label:'⛽ Atterrir avec >70% de carburant',  desc:'Optimisez la poussée pour préserver vos réserves.',  check: (s,g) => s.fuel / g.lander.fuelMax > 0.70, reward: 30 },
+  { id:'precise',   label:'🎯 Atterrissage de précision (>250)', desc:'Posez-vous au plus près du centre de la zone.',      check: s => s.precisionBonus >= 250,           reward: 20 },
+  { id:'smooth',    label:'🪶 Vitesse ↓ < 1.5 m/s à l\'impact', desc:'Touchez le sol avec une descente parfaitement douce.', check: (s,g) => g._landVS !== undefined && g._landVS < 1.5, reward: 25 },
+  { id:'noretro',   label:'🚫 Sans utiliser les rétrofusées',    desc:'Reposez-vous uniquement sur la poussée principale.', check: (s,g) => !g._usedRetro,                reward: 20 },
+  { id:'tilt',      label:'📐 Angle < 5° à l\'atterrissage',     desc:'Gardez le module presque parfaitement droit.',       check: (s,g) => g._landAngle !== undefined && Math.abs(g._landAngle) < 5, reward: 20 },
+  { id:'hazard',    label:'⚡ Survivre à 2 hazards',             desc:'Tenez bon malgré les perturbations du terrain.',     check: (s,g) => g._hazardCount >= 2,          reward: 35 },
+  { id:'stars3',    label:'⭐ Atteindre 3 étoiles',              desc:'Réussissez une prestation irréprochable.',            check: s => s.stars === 3,                    reward: 30 },
 ];
 
 function pickMissions(bodyId, seed) {
@@ -226,6 +228,72 @@ function seededRand(seed) {
   return function () {
     s = (s * 1664525 + 1013904223) & 0xffffffff;
     return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function colorAlpha(color, alpha) {
+  if (!color) return color;
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/rgba\(([^)]+),[^,]+\)$/, `rgba($1,${alpha})`);
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `,${alpha})`);
+  }
+  return color;
+}
+
+function getShipPalette(type) {
+  if (type === 'moustique') {
+    return {
+      hullLight: '#ffe6f4',
+      hullMid: '#ff9fc9',
+      hullDark: '#7f1f53',
+      metal: '#5d3f56',
+      trim: '#ffc7e1',
+      glow: '#ff8ed0',
+      canopy: '#87f0ff',
+      canopyGlow: 'rgba(255, 180, 230, 0.35)',
+    };
+  }
+  if (type === 'tank') {
+    return {
+      hullLight: '#96a8ae',
+      hullMid: '#4e6670',
+      hullDark: '#162128',
+      metal: '#334048',
+      trim: '#bed6de',
+      glow: '#79ffd2',
+      canopy: '#8fe8ff',
+      canopyGlow: 'rgba(120, 255, 210, 0.24)',
+    };
+  }
+  if (type === 'alien') {
+    return {
+      hullLight: '#bffcff',
+      hullMid: '#39d9b0',
+      hullDark: '#035d54',
+      metal: '#0a4f48',
+      trim: '#d8fffe',
+      glow: '#66ffe0',
+      canopy: '#9afaff',
+      canopyGlow: 'rgba(100, 255, 224, 0.32)',
+    };
+  }
+  return {
+    hullLight: '#f4f8ff',
+    hullMid: '#aebcd8',
+    hullDark: '#4a5b7c',
+    metal: '#6e7d96',
+    trim: '#dde8ff',
+    glow: '#78dfff',
+    canopy: '#89d7ff',
+    canopyGlow: 'rgba(120, 220, 255, 0.26)',
   };
 }
 
@@ -297,7 +365,7 @@ class Terrain {
     ctx.moveTo(toSX(0), toSY(pts[0]));
     for (let i = 1; i < pts.length; i++) {
       ctx.lineTo(toSX(i * this.step), toSY(pts[i]));
-i    }
+    }
     ctx.lineTo(toSX(this.width), H + 10);
     ctx.lineTo(toSX(0), H + 10);
     ctx.closePath();
@@ -362,6 +430,7 @@ i    }
       ctx.fillStyle = haze;
       ctx.fillRect(0, 0, W, H * 0.4);
     }
+
   }
 
   _drawDecorations(ctx, camX, camY, scale, W, H) {
@@ -1047,6 +1116,7 @@ class Lander {
       else if (this.shipType === 'tank') thrustMult = 2.9;
       else if (this.shipType === 'alien') thrustMult = 4.5;
       if (this._thrustBonus) thrustMult *= this._thrustBonus;
+      if (cfg.thrustAssist) thrustMult *= cfg.thrustAssist;
 
       const thrust = cfg.gravity * thrustMult;
       fx += thrust * Math.sin(rad);
@@ -1062,6 +1132,7 @@ class Lander {
         let retroForce = cfg.gravity * 2.2;
         if (this.shipType === 'alien') retroForce = cfg.gravity * 3.5;
         if (this._retroBonus) retroForce *= this._retroBonus;
+        if (cfg.retroAssist) retroForce *= cfg.retroAssist;
         fx -= (this.vx / spd) * retroForce;
         fy -= (this.vy / spd) * retroForce;
       }
@@ -1143,34 +1214,48 @@ class Lander {
     ctx.translate(sx, sy);
     ctx.rotate(rad);
 
+    const palette = getShipPalette(this.shipType);
+    const glowR = Math.max(pw, ph) * (this.shipType === 'alien' ? 1.25 : 1.05);
+    const hullGlow = ctx.createRadialGradient(-pw * 0.12, -ph * 0.24, Math.max(2, pw * 0.08), 0, 0, glowR);
+    hullGlow.addColorStop(0, colorAlpha(palette.glow, this.shipType === 'tank' ? 0.16 : 0.24));
+    hullGlow.addColorStop(0.55, colorAlpha(palette.glow, 0.10));
+    hullGlow.addColorStop(1, colorAlpha(palette.glow, 0));
+    ctx.fillStyle = hullGlow;
+    ctx.beginPath();
+    ctx.arc(0, 0, glowR, 0, Math.PI * 2);
+    ctx.fill();
+
     const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
-    if (this.shipType === 'moustique') {
-      bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
-    } else if (this.shipType === 'tank') {
-      bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
-    } else if (this.shipType === 'alien') {
-      bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
-    } else {
-      bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
-    }
+    bodyGrad.addColorStop(0, palette.hullLight);
+    bodyGrad.addColorStop(0.52, palette.hullMid);
+    bodyGrad.addColorStop(1, palette.hullDark);
 
     if (this.shipType === 'moustique') {
       // Small needle shape
       ctx.fillStyle = bodyGrad;
       ctx.beginPath(); ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.fill();
       // Wings
-      ctx.fillStyle = '#623';
+      ctx.fillStyle = palette.metal;
       ctx.beginPath(); ctx.moveTo(pw*0.3, ph*0.1); ctx.lineTo(pw*0.9, ph*0.3); ctx.lineTo(pw*0.2, ph*0.3); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.1); ctx.lineTo(-pw*0.9, ph*0.3); ctx.lineTo(-pw*0.2, ph*0.3); ctx.fill();
       // Engine
-      ctx.fillStyle = '#445'; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
+      ctx.fillStyle = palette.hullDark; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
       // Legs
-      ctx.strokeStyle = '#99a'; ctx.lineWidth = Math.max(1, scale * 0.5); ctx.beginPath();
+      ctx.strokeStyle = palette.trim; ctx.lineWidth = Math.max(1, scale * 0.5); ctx.beginPath();
       ctx.moveTo(-pw/2, ph*0.1); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw-2, ph*0.6); ctx.lineTo(-pw*0.6, ph*0.6);
       ctx.moveTo(pw/2, ph*0.1); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.6, ph*0.6); ctx.lineTo(pw+2, ph*0.6);
       ctx.stroke();
       // Window
-      ctx.fillStyle='#0af'; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = palette.canopy; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = colorAlpha(palette.trim, 0.48);
+      ctx.beginPath(); ctx.moveTo(-pw * 0.1, -ph * 0.36); ctx.lineTo(pw * 0.1, -ph * 0.18); ctx.lineTo(0, ph * 0.06); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = colorAlpha(palette.glow, 0.65);
+      ctx.lineWidth = Math.max(1, scale * 0.22);
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.22, -ph * 0.18);
+      ctx.lineTo(0, -ph * 0.42);
+      ctx.lineTo(pw * 0.22, -ph * 0.18);
+      ctx.stroke();
       
     } else if (this.shipType === 'tank') {
       // Big blocky hexagon
@@ -1181,50 +1266,67 @@ class Lander {
       ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0);
       ctx.fill();
       // Armor plates
-      ctx.fillStyle = '#222'; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
+      ctx.fillStyle = palette.metal; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
       // Engine (double)
-      ctx.fillStyle = '#445';
+      ctx.fillStyle = palette.hullDark;
       ctx.fillRect(-pw*0.3, ph*0.4, pw*0.2, ph*0.15);
       ctx.fillRect(pw*0.1, ph*0.4, pw*0.2, ph*0.15);
       // Brutal Legs
-      ctx.strokeStyle = '#555'; ctx.lineWidth = Math.max(2, scale * 0.8); ctx.beginPath();
+      ctx.strokeStyle = palette.trim; ctx.lineWidth = Math.max(2, scale * 0.8); ctx.beginPath();
       ctx.moveTo(-pw/2, ph*0.2); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw*1.1, ph*0.6); ctx.lineTo(-pw*0.5, ph*0.6);
       ctx.moveTo(pw/2, ph*0.2); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.5, ph*0.6); ctx.lineTo(pw*1.1, ph*0.6);
       ctx.stroke();
       // Window (slit)
-      ctx.fillStyle='#0af'; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
+      ctx.fillStyle = palette.canopy; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
+      ctx.fillStyle = colorAlpha(palette.trim, 0.20);
+      ctx.fillRect(-pw * 0.42, -ph * 0.28, pw * 0.84, ph * 0.08);
+      ctx.strokeStyle = colorAlpha(palette.glow, 0.36);
+      ctx.lineWidth = Math.max(1, scale * 0.18);
+      ctx.strokeRect(-pw * 0.24, -ph * 0.04, pw * 0.48, ph * 0.18);
 
     } else if (this.shipType === 'alien') {
       // Saucer
       ctx.fillStyle = bodyGrad;
       ctx.beginPath(); ctx.ellipse(0, ph*0.1, pw*0.8, ph*0.25, 0, 0, Math.PI*2); ctx.fill();
       // Glass Dome
-      ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.fillStyle = palette.canopyGlow;
       ctx.beginPath(); ctx.arc(0, ph*0.1, pw*0.4, Math.PI, 0); ctx.fill();
       // Tractor beam instead of legs
-      ctx.fillStyle = 'rgba(0, 255, 200, 0.2)';
+      ctx.fillStyle = colorAlpha(palette.glow, 0.18);
       ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.2); ctx.lineTo(pw*0.3, ph*0.2);
       ctx.lineTo(pw*0.6, ph*0.8); ctx.lineTo(-pw*0.6, ph*0.8); ctx.fill();
+      ctx.strokeStyle = colorAlpha(palette.trim, 0.42);
+      ctx.lineWidth = Math.max(1, scale * 0.18);
+      ctx.beginPath();
+      ctx.ellipse(0, ph * 0.1, pw * 0.45, ph * 0.14, 0, Math.PI, 0);
+      ctx.stroke();
       // Alien pilot silhouette
-      ctx.fillStyle = '#050'; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = palette.hullDark; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
+      for (let i = 0; i < 5; i++) {
+        const lx = -pw * 0.42 + i * pw * 0.21;
+        ctx.fillStyle = colorAlpha(palette.glow, 0.65 - i * 0.07);
+        ctx.beginPath();
+        ctx.arc(lx, ph * 0.12, Math.max(1.5, pw * 0.04), 0, Math.PI * 2);
+        ctx.fill();
+      }
       
     } else {
       // Standard
-      ctx.strokeStyle = '#aaa';
+      ctx.strokeStyle = palette.trim;
       ctx.lineWidth = Math.max(1, scale * 0.5);
       const legW = pw * 0.55, legH = ph * 0.35;
       ctx.beginPath();
       ctx.moveTo(-pw * 0.4, ph * 0.1); ctx.lineTo(-legW / 2, ph * 0.5);
       ctx.moveTo(pw * 0.4, ph * 0.1); ctx.lineTo(legW / 2, ph * 0.5);
       ctx.stroke();
-      ctx.strokeStyle = '#888';
+      ctx.strokeStyle = palette.metal;
       ctx.lineWidth = Math.max(1.5, scale * 0.6);
       ctx.beginPath();
       ctx.moveTo(-legW / 2 - 3, ph * 0.5); ctx.lineTo(-legW / 2 + 3, ph * 0.5);
       ctx.moveTo(legW / 2 - 3, ph * 0.5); ctx.lineTo(legW / 2 + 3, ph * 0.5);
       ctx.stroke();
 
-      ctx.fillStyle = '#777';
+      ctx.fillStyle = palette.metal;
       ctx.beginPath();
       ctx.moveTo(-pw * 0.35, ph * 0.1); ctx.lineTo(pw * 0.35, ph * 0.1);
       ctx.lineTo(pw * 0.25, ph * 0.45); ctx.lineTo(-pw * 0.25, ph * 0.45);
@@ -1235,15 +1337,88 @@ class Lander {
       ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
       ctx.fill();
 
-      ctx.fillStyle = '#0af';
+      ctx.fillStyle = palette.canopy;
       ctx.beginPath();
       ctx.arc(0, -ph * 0.15, pw * 0.18, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(180,240,255,0.7)';
+      ctx.fillStyle = palette.canopyGlow;
       ctx.beginPath();
       ctx.arc(-pw * 0.06, -ph * 0.18, pw * 0.07, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = colorAlpha(palette.trim, 0.22);
+      ctx.fillRect(-pw * 0.32, -ph * 0.34, pw * 0.64, ph * 0.06);
+      ctx.fillStyle = colorAlpha(palette.glow, 0.16);
+      ctx.beginPath();
+      ctx.roundRect(-pw * 0.26, -ph * 0.06, pw * 0.52, ph * 0.12, 4);
+      ctx.fill();
     }
+
+    ctx.strokeStyle = colorAlpha(palette.trim, 0.85);
+    ctx.lineWidth = Math.max(1, scale * 0.22);
+    ctx.beginPath();
+    if (this.shipType === 'alien') {
+      ctx.ellipse(0, ph * 0.1, pw * 0.8, ph * 0.25, 0, 0, Math.PI * 2);
+    } else if (this.shipType === 'tank') {
+      ctx.moveTo(-pw/2, -ph*0.4); ctx.lineTo(pw/2, -ph*0.4);
+      ctx.lineTo(pw*0.6, 0); ctx.lineTo(pw/2, ph*0.4);
+      ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0);
+      ctx.closePath();
+    } else if (this.shipType === 'moustique') {
+      ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.closePath();
+    } else {
+      ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
+    }
+    ctx.stroke();
+
+    const topSheen = ctx.createLinearGradient(-pw * 0.35, -ph * 0.46, pw * 0.25, ph * 0.10);
+    topSheen.addColorStop(0, 'rgba(255,255,255,0.32)');
+    topSheen.addColorStop(0.38, 'rgba(255,255,255,0.08)');
+    topSheen.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = topSheen;
+    if (this.shipType === 'alien') {
+      ctx.beginPath();
+      ctx.ellipse(-pw * 0.04, 0, pw * 0.5, ph * 0.16, -0.08, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (this.shipType === 'tank') {
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.42, -ph * 0.30);
+      ctx.lineTo(pw * 0.30, -ph * 0.30);
+      ctx.lineTo(pw * 0.12, -ph * 0.04);
+      ctx.lineTo(-pw * 0.34, -ph * 0.08);
+      ctx.closePath();
+      ctx.fill();
+    } else if (this.shipType === 'moustique') {
+      ctx.beginPath();
+      ctx.moveTo(0, -ph * 0.58);
+      ctx.lineTo(pw * 0.18, -ph * 0.14);
+      ctx.lineTo(0, -ph * 0.06);
+      ctx.lineTo(-pw * 0.18, -ph * 0.14);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.roundRect(-pw * 0.34, -ph * 0.38, pw * 0.56, ph * 0.18, 4);
+      ctx.fill();
+    }
+
+    const accentDots = this.shipType === 'tank' ? 2 : this.shipType === 'alien' ? 5 : 3;
+    for (let i = 0; i < accentDots; i++) {
+      const t = accentDots === 1 ? 0 : i / (accentDots - 1);
+      const lx = -pw * 0.22 + t * pw * 0.44;
+      const ly = this.shipType === 'alien' ? ph * 0.12 : ph * 0.06;
+      ctx.fillStyle = colorAlpha(palette.glow, this.shipType === 'alien' ? 0.30 : 0.48);
+      ctx.beginPath();
+      ctx.arc(lx, ly, Math.max(1.2, pw * 0.032), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const engineGlow = ctx.createRadialGradient(0, ph * 0.42, 0, 0, ph * 0.42, pw * 0.42);
+    engineGlow.addColorStop(0, colorAlpha(palette.glow, 0.24));
+    engineGlow.addColorStop(1, colorAlpha(palette.glow, 0));
+    ctx.fillStyle = engineGlow;
+    ctx.beginPath();
+    ctx.ellipse(0, ph * 0.44, pw * 0.34, ph * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // Thrust flame (main)
     if (input && input.up && this.fuel > 0) {
@@ -1259,6 +1434,13 @@ class Lander {
       ctx.lineTo(fw, ph * 0.42);
       ctx.quadraticCurveTo(fw * 0.5, ph * 0.45 + fl * 0.6, 0, ph * 0.45 + fl);
       ctx.quadraticCurveTo(-fw * 0.5, ph * 0.45 + fl * 0.6, -fw, ph * 0.42);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,245,0.78)';
+      ctx.beginPath();
+      ctx.moveTo(-fw * 0.38, ph * 0.44);
+      ctx.lineTo(fw * 0.38, ph * 0.44);
+      ctx.quadraticCurveTo(fw * 0.18, ph * 0.48 + fl * 0.4, 0, ph * 0.46 + fl * 0.62);
+      ctx.quadraticCurveTo(-fw * 0.18, ph * 0.48 + fl * 0.4, -fw * 0.38, ph * 0.44);
       ctx.fill();
     }
 
@@ -1562,8 +1744,8 @@ class LanderGame {
     if (this.lander.alive) {
       this._recTimer += dt;
       if (this._recTimer >= 0.05 && this._recording.length < 3000) {
-        this._recording.push({ x: this.lander.x, y: this.lander.y, angle: this.lander.angle });
         this._recTimer = 0;
+        this._recording.push({ x: this.lander.x, y: this.lander.y, angle: this.lander.angle, up: this.input.up });
       }
     }
 

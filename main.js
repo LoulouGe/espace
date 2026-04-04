@@ -385,7 +385,7 @@ function updateShopUI() {
     
     let btnHTML = '';
     if (isActive) {
-      btnHTML = `<button class="btn shop-item-btn" disabled style="opacity:0.6;">ÉQUIPÉ</button>`;
+      btnHTML = `<button class="btn shop-item-btn" disabled>ÉQUIPÉ</button>`;
     } else if (isUnlocked) {
       btnHTML = `<button class="btn shop-item-btn" onclick="equipShip('${id}')">SÉLECTIONNER</button>`;
     } else {
@@ -393,20 +393,49 @@ function updateShopUI() {
     }
 
     div.innerHTML = `
-      <div class="shop-item-icon" style="width:56px; height:56px; flex-shrink:0; background:rgba(0,0,0,0.5); border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,255,255,0.2);">
+      <div class="shop-item-icon">
         <canvas id="cvs-shop-${id}" width="50" height="50"></canvas>
       </div>
-      <div class="shop-item-info" style="margin-left:12px; display:flex; flex-direction:column; justify-content:center;">
+      <div class="shop-item-info">
         <div class="shop-item-name">${item.name}</div>
         <div class="shop-item-desc">${item.desc}</div>
       </div>
-      <div>${btnHTML}</div>
+      <div class="shop-item-actions">${btnHTML}</div>
     `;
     list.appendChild(div);
 
     // Draw miniature asynchronously
     setTimeout(() => { drawShopShip(id); }, 0);
   }
+}
+
+function getShopShipPalette(id) {
+  if (id === 'moustique') {
+    return {
+      hullLight: '#ffe6f4', hullMid: '#ff9fc9', hullDark: '#7f1f53',
+      metal: '#5d3f56', trim: '#ffc7e1', glow: 'rgba(255, 142, 208, 0.24)',
+      canopy: '#87f0ff', canopyGlow: 'rgba(255, 180, 230, 0.34)',
+    };
+  }
+  if (id === 'tank') {
+    return {
+      hullLight: '#96a8ae', hullMid: '#4e6670', hullDark: '#162128',
+      metal: '#334048', trim: '#bed6de', glow: 'rgba(121, 255, 210, 0.22)',
+      canopy: '#8fe8ff', canopyGlow: 'rgba(120, 255, 210, 0.22)',
+    };
+  }
+  if (id === 'alien') {
+    return {
+      hullLight: '#bffcff', hullMid: '#39d9b0', hullDark: '#035d54',
+      metal: '#0a4f48', trim: '#d8fffe', glow: 'rgba(102, 255, 224, 0.24)',
+      canopy: '#9afaff', canopyGlow: 'rgba(100, 255, 224, 0.28)',
+    };
+  }
+  return {
+    hullLight: '#f4f8ff', hullMid: '#aebcd8', hullDark: '#4a5b7c',
+    metal: '#6e7d96', trim: '#dde8ff', glow: 'rgba(120, 223, 255, 0.22)',
+    canopy: '#89d7ff', canopyGlow: 'rgba(120, 220, 255, 0.24)',
+  };
 }
 
 function drawShopShip(id) {
@@ -423,38 +452,39 @@ function drawShopShip(id) {
   
   const pw = hw * 2 * S;
   const ph = hh * 2 * S;
+  const palette = getShopShipPalette(id);
   
   ctx.save();
   ctx.translate(25, 25); 
 
+    const hullGlow = ctx.createRadialGradient(-pw * 0.12, -ph * 0.24, 2, 0, 0, Math.max(pw, ph) * 0.95);
+    hullGlow.addColorStop(0, palette.glow);
+    hullGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = hullGlow;
+    ctx.beginPath(); ctx.arc(0, 0, Math.max(pw, ph) * 0.95, 0, Math.PI * 2); ctx.fill();
+
     const bodyGrad = ctx.createLinearGradient(-pw/2, -ph/2, pw/2, ph/2);
-    if (id === 'moustique') {
-      bodyGrad.addColorStop(0, '#fde'); bodyGrad.addColorStop(0.5, '#e8a'); bodyGrad.addColorStop(1, '#a25');
-    } else if (id === 'tank') {
-      bodyGrad.addColorStop(0, '#566'); bodyGrad.addColorStop(0.5, '#344'); bodyGrad.addColorStop(1, '#122');
-    } else if (id === 'alien') {
-      bodyGrad.addColorStop(0, '#aff'); bodyGrad.addColorStop(0.5, '#0fa'); bodyGrad.addColorStop(1, '#055');
-    } else {
-      bodyGrad.addColorStop(0, '#dde'); bodyGrad.addColorStop(0.5, '#bbc'); bodyGrad.addColorStop(1, '#88a');
-    }
+    bodyGrad.addColorStop(0, palette.hullLight);
+    bodyGrad.addColorStop(0.52, palette.hullMid);
+    bodyGrad.addColorStop(1, palette.hullDark);
 
     if (id === 'moustique') {
       // Small needle shape
       ctx.fillStyle = bodyGrad;
       ctx.beginPath(); ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.fill();
       // Wings
-      ctx.fillStyle = '#623';
+      ctx.fillStyle = palette.metal;
       ctx.beginPath(); ctx.moveTo(pw*0.3, ph*0.1); ctx.lineTo(pw*0.9, ph*0.3); ctx.lineTo(pw*0.2, ph*0.3); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.1); ctx.lineTo(-pw*0.9, ph*0.3); ctx.lineTo(-pw*0.2, ph*0.3); ctx.fill();
       // Engine
-      ctx.fillStyle = '#445'; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
+      ctx.fillStyle = palette.hullDark; ctx.beginPath(); ctx.rect(-pw*0.2, ph*0.2, pw*0.4, ph*0.15); ctx.fill();
       // Legs
-      ctx.strokeStyle = '#99a'; ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.strokeStyle = palette.trim; ctx.lineWidth = 1.5; ctx.beginPath();
       ctx.moveTo(-pw/2, ph*0.1); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw-3, ph*0.6); ctx.lineTo(-pw*0.6, ph*0.6);
       ctx.moveTo(pw/2, ph*0.1); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.6, ph*0.6); ctx.lineTo(pw+3, ph*0.6);
       ctx.stroke();
       // Window
-      ctx.fillStyle='#0af'; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = palette.canopy; ctx.beginPath(); ctx.arc(0, -ph*0.1, pw*0.15, 0, Math.PI*2); ctx.fill();
       
     } else if (id === 'tank') {
       // Big blocky hexagon
@@ -465,48 +495,48 @@ function drawShopShip(id) {
       ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0);
       ctx.fill();
       // Armor plates
-      ctx.fillStyle = '#222'; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
+      ctx.fillStyle = palette.metal; ctx.fillRect(-pw*0.4, -ph*0.2, pw*0.8, ph*0.4);
       // Engine (double)
-      ctx.fillStyle = '#445';
+      ctx.fillStyle = palette.hullDark;
       ctx.fillRect(-pw*0.3, ph*0.4, pw*0.2, ph*0.15);
       ctx.fillRect(pw*0.1, ph*0.4, pw*0.2, ph*0.15);
       // Brutal Legs
-      ctx.strokeStyle = '#555'; ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.strokeStyle = palette.trim; ctx.lineWidth = 2.5; ctx.beginPath();
       ctx.moveTo(-pw/2, ph*0.2); ctx.lineTo(-pw*0.8, ph*0.6); ctx.moveTo(-pw*1.1, ph*0.6); ctx.lineTo(-pw*0.5, ph*0.6);
       ctx.moveTo(pw/2, ph*0.2); ctx.lineTo(pw*0.8, ph*0.6); ctx.moveTo(pw*0.5, ph*0.6); ctx.lineTo(pw*1.1, ph*0.6);
       ctx.stroke();
       // Window (slit)
-      ctx.fillStyle='#0af'; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
+      ctx.fillStyle = palette.canopy; ctx.fillRect(-pw*0.3, -ph*0.1, pw*0.6, ph*0.1);
 
     } else if (id === 'alien') {
       // Saucer
       ctx.fillStyle = bodyGrad;
       ctx.beginPath(); ctx.ellipse(0, ph*0.1, pw*0.8, ph*0.25, 0, 0, Math.PI*2); ctx.fill();
       // Glass Dome
-      ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.fillStyle = palette.canopyGlow;
       ctx.beginPath(); ctx.arc(0, ph*0.1, pw*0.4, Math.PI, 0); ctx.fill();
       // Tractor beam instead of legs
-      ctx.fillStyle = 'rgba(0, 255, 200, 0.2)';
+      ctx.fillStyle = 'rgba(100, 255, 224, 0.18)';
       ctx.beginPath(); ctx.moveTo(-pw*0.3, ph*0.2); ctx.lineTo(pw*0.3, ph*0.2);
       ctx.lineTo(pw*0.6, ph*0.8); ctx.lineTo(-pw*0.6, ph*0.8); ctx.fill();
       // Alien pilot silhouette
-      ctx.fillStyle = '#050'; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = palette.hullDark; ctx.beginPath(); ctx.arc(0, 0, pw*0.15, Math.PI, 0); ctx.fill();
       
     } else {
       // Standard
-      ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = palette.trim; ctx.lineWidth = 1.5;
       const legW = pw * 0.55;
       ctx.beginPath();
       ctx.moveTo(-pw * 0.4, ph * 0.1); ctx.lineTo(-legW / 2, ph * 0.5);
       ctx.moveTo(pw * 0.4, ph * 0.1); ctx.lineTo(legW / 2, ph * 0.5);
       ctx.stroke();
-      ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+      ctx.strokeStyle = palette.metal; ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(-legW / 2 - 3, ph * 0.5); ctx.lineTo(-legW / 2 + 3, ph * 0.5);
       ctx.moveTo(legW / 2 - 3, ph * 0.5); ctx.lineTo(legW / 2 + 3, ph * 0.5);
       ctx.stroke();
 
-      ctx.fillStyle = '#777';
+      ctx.fillStyle = palette.metal;
       ctx.beginPath();
       ctx.moveTo(-pw * 0.35, ph * 0.1); ctx.lineTo(pw * 0.35, ph * 0.1);
       ctx.lineTo(pw * 0.25, ph * 0.45); ctx.lineTo(-pw * 0.25, ph * 0.45);
@@ -517,15 +547,31 @@ function drawShopShip(id) {
       ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
       ctx.fill();
 
-      ctx.fillStyle = '#0af';
+      ctx.fillStyle = palette.canopy;
       ctx.beginPath();
       ctx.arc(0, -ph * 0.15, pw * 0.18, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(180,240,255,0.7)';
+      ctx.fillStyle = palette.canopyGlow;
       ctx.beginPath();
       ctx.arc(-pw * 0.06, -ph * 0.18, pw * 0.07, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    ctx.strokeStyle = palette.trim;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (id === 'alien') {
+      ctx.ellipse(0, ph*0.1, pw*0.8, ph*0.25, 0, 0, Math.PI*2);
+    } else if (id === 'tank') {
+      ctx.moveTo(-pw/2, -ph*0.4); ctx.lineTo(pw/2, -ph*0.4);
+      ctx.lineTo(pw*0.6, 0); ctx.lineTo(pw/2, ph*0.4);
+      ctx.lineTo(-pw/2, ph*0.4); ctx.lineTo(-pw*0.6, 0); ctx.closePath();
+    } else if (id === 'moustique') {
+      ctx.moveTo(0, -ph*0.6); ctx.lineTo(pw*0.4, ph*0.2); ctx.lineTo(-pw*0.4, ph*0.2); ctx.closePath();
+    } else {
+      ctx.roundRect(-pw / 2, -ph / 2, pw, ph * 0.65, 4);
+    }
+    ctx.stroke();
 
   ctx.restore();
 }
@@ -548,35 +594,56 @@ window.buyShip = function(id, cost) {
 };
 
 // ─── Secondary missions ───────────────────────────────────────────────────────
+function getMissionDisplay(mission) {
+  const match = (mission.label || '').match(/^(\S+)\s+(.*)$/);
+  return {
+    icon: match ? match[1] : '◎',
+    title: match ? match[2] : (mission.label || mission.id),
+    desc: mission.desc || 'Condition en cours de suivi pendant la mission.',
+  };
+}
+
 function renderMissionsHUD(missions) {
   const hud = document.getElementById('missions-hud');
   const list = document.getElementById('missions-list');
   if (!hud || !list || !missions || !missions.length) return;
-  list.innerHTML = missions.map(m =>
-    `<div class="mission-row" data-id="${m.id}">
-       <span class="mission-status">○</span>
-       <span class="mission-label">${m.label}</span>
-       <span class="mission-reward" style="color:#0cf;margin-left:6px">+${m.reward}💎</span>
-     </div>`
-  ).join('');
+  list.innerHTML = missions.map(m => {
+    const meta = getMissionDisplay(m);
+    return `<div class="mission-row" data-id="${m.id}" data-state="pending">
+      <span class="mission-status">${meta.icon}</span>
+      <div class="mission-copy">
+        <span class="mission-label">${meta.title}</span>
+        <span class="mission-desc">${meta.desc}</span>
+      </div>
+      <div class="mission-side">
+        <span class="mission-reward">+${m.reward} 💎</span>
+        <span class="mission-state">En attente</span>
+      </div>
+    </div>`;
+  }).join('');
   hud.classList.remove('hidden');
 }
 
 function updateMissionsHUD(missions, game) {
   if (!missions || !game) return;
   const score = game.getScore ? game.getScore() : null;
+  const landed = !!(game.result && game.result.type === 'land');
   missions.forEach(m => {
     const row = document.querySelector(`.mission-row[data-id="${m.id}"]`);
     if (!row) return;
-    const done = score && m.check(score, game);
-    row.querySelector('.mission-status').textContent = done ? '✔' : '○';
-    row.style.opacity = done ? '1' : '0.6';
-    row.querySelector('.mission-status').style.color = done ? '#0f0' : 'rgba(200,180,80,0.7)';
+    const ready = !!(score && m.check(score, game));
+    const unlocked = landed && ready;
+    const meta = getMissionDisplay(m);
+    const state = unlocked ? 'complete' : ready ? 'ready' : 'pending';
+    row.dataset.state = state;
+    row.querySelector('.mission-status').textContent = unlocked ? '✔' : meta.icon;
+    row.querySelector('.mission-state').textContent =
+      unlocked ? 'Débloqué' : ready ? 'Prêt à valider' : 'En attente';
   });
 }
 
 function evaluateMissions(missions, game, score) {
-  if (!missions || trainingMode) return 0;
+  if (!missions || trainingMode || !game || !game.result || game.result.type !== 'land') return 0;
   let bonus = 0;
   missions.forEach(m => {
     if (m.check(score, game)) bonus += m.reward;
@@ -604,6 +671,7 @@ elBtnSolar.addEventListener('click', returnToSolar);
 function showSolarUI() {
   elTimeCtrl.style.display = '';
   document.getElementById('solar-top-right').style.display = '';
+  document.getElementById('solar-top-left').style.display = '';
   document.getElementById('diamond-count').textContent = globalDiamonds;
   elBtnSolar.classList.add('hidden');
   elHud.classList.add('hidden');
@@ -614,6 +682,7 @@ function showSolarUI() {
 function hideSolarUI() {
   elTimeCtrl.style.display = 'none';
   document.getElementById('solar-top-right').style.display = 'none';
+  document.getElementById('solar-top-left').style.display = 'none';
   resetViewZoom();
 }
 
@@ -663,6 +732,7 @@ function startGame() {
   const missionSeed = Date.now() ^ (selectedBody.split('').reduce((a,c) => a + c.charCodeAt(0), 0));
   game.missions = pickMissions(selectedBody, missionSeed);
   renderMissionsHUD(game.missions);
+  updateMissionsHUD(game.missions, game);
 
   // Survey phase: camera pans to show pad before countdown
   surveyTimer = 0;
@@ -693,7 +763,7 @@ function showPlanetCard(id) {
   let condHTML = cfg.conditions.map(c => `<div class="cond-row"><span class="ci">${c.ci}</span><span>${c.txt}</span></div>`).join('');
   if (best) {
     const starStr = '★'.repeat(best.stars || 0) + '☆'.repeat(3 - (best.stars || 0));
-    condHTML = `<div class="cond-row" style="border-bottom:1px solid rgba(255,200,0,0.3);padding-bottom:6px;margin-bottom:4px"><span class="ci">🏆</span><span style="color:#fc0">Meilleur score: ${best.total} pts (${starStr})</span></div>` + condHTML;
+    condHTML = `<div class="cond-row cond-row--record"><span class="ci">🏆</span><span>Meilleur score: ${best.total} pts (${starStr})</span></div>` + condHTML;
   }
   document.getElementById('card-conditions').innerHTML = condHTML;
 
@@ -707,7 +777,8 @@ function showPlanetCard(id) {
 function showResultCard(success, score, reason) {
   const titleEl = document.getElementById('res-title');
   titleEl.textContent = success ? 'ATTERRISSAGE RÉUSSI !' : 'MISSION ÉCHOUÉE';
-  titleEl.style.color = success ? '#0f0' : '#f44';
+  titleEl.classList.toggle('result-success', success);
+  titleEl.classList.toggle('result-fail', !success);
   document.getElementById('res-emoji').textContent = success ? '🎉' : '💥';
 
   const mm = String(Math.floor(score.time / 60)).padStart(2, '0');
@@ -716,13 +787,13 @@ function showResultCard(success, score, reason) {
   const fpct = ((score.fuel / fuelMax) * 100).toFixed(0);
 
   const reasonRow = (!success && reason)
-    ? `<div class="stat-row" style="color:#f88"><span class="stat-lbl">Cause</span><span class="stat-val" style="color:#faa;font-size:11px">${reason}</span></div>`
+    ? `<div class="stat-row stat-row-danger"><span class="stat-lbl">Cause</span><span class="stat-val">${reason}</span></div>`
     : '';
 
   const lb = loadLeaderboard();
   const best = lb[selectedBody];
   const bestRow = (success && best && best.total >= (score.total || 0))
-    ? `<div class="stat-row"><span class="stat-lbl">🏆 Meilleur</span><span class="stat-val" style="color:#fc0">${best.total} pts</span></div>`
+    ? `<div class="stat-row"><span class="stat-lbl">🏆 Meilleur</span><span class="stat-val stat-val-gold">${best.total} pts</span></div>`
     : '';
 
   // Feature 2: precision row
@@ -739,10 +810,10 @@ function showResultCard(success, score, reason) {
   const missionRows = (success && !isTraining && game && game.missions && game.missions.length) ?
     game.missions.map(m => {
       const done = m.check(score, game);
-      return `<div class="stat-row"><span class="stat-lbl" style="color:${done?'#fa0':'#666'}">${done?'✔':'○'} ${m.label.replace(/^[^\s]+\s/,'')}</span><span class="stat-val" style="color:${done?'#0cf':'#555'}">${done?'+'+m.reward+'💎':'—'}</span></div>`;
+      return `<div class="stat-row stat-row-mission ${done ? 'is-done' : ''}"><span class="stat-lbl">${done?'✔':'○'} ${m.label.replace(/^[^\s]+\s/,'')}</span><span class="stat-val">${done?'+'+m.reward+'💎':'—'}</span></div>`;
     }).join('') : '';
-  const diamRow = (success && !isTraining) ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
-  const trainingRow = isTraining ? `<div class="stat-row"><span class="stat-lbl" style="color:#fa0">Mode</span><span class="stat-val" style="color:#fa0;font-size:11px">🏋 Entraînement — non enregistré</span></div>` : '';
+  const diamRow = (success && !isTraining) ? `<div class="stat-row stat-row-reward"><span class="stat-lbl">💎 Récompense</span><span class="stat-val">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
+  const trainingRow = isTraining ? `<div class="stat-row stat-row-training"><span class="stat-lbl">Mode</span><span class="stat-val">🏋 Entraînement — non enregistré</span></div>` : '';
 
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}
@@ -772,6 +843,7 @@ function showResultCard(success, score, reason) {
   elBtnSolar.classList.remove('hidden');
   elHud.classList.add('hidden');
   elCtrl.classList.add('hidden');
+  document.getElementById('missions-hud').classList.add('hidden');
 }
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────

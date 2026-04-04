@@ -42,9 +42,18 @@
   </div>
 
   <!-- Secondary missions HUD (bottom-left during play) -->
-  <div id="missions-hud" class="hidden" style="position:fixed;bottom:68px;left:12px;z-index:15;pointer-events:none;">
-    <div style="color:rgba(200,180,80,0.6);font-size:9px;letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;">OBJECTIFS</div>
-    <div id="missions-list"></div>
+  <div id="missions-hud" class="hidden">
+    <div class="missions-shell">
+      <div class="missions-header">
+        <div>
+          <div class="missions-kicker">OBJECTIFS DE MISSION</div>
+          <div class="missions-title">Bonus tactiques</div>
+        </div>
+        <div class="missions-lock">Déblocage à l'atterrissage</div>
+      </div>
+      <div class="missions-subtitle">Remplissez les conditions en vol, les récompenses ne sont validées qu'après un atterrissage réussi.</div>
+      <div id="missions-list"></div>
+    </div>
   </div>
 
   <!-- Barre de contrôles -->
@@ -57,71 +66,75 @@
   <!-- Bouton système solaire -->
   <button id="btn-solar" class="hidden" title="Système Solaire">🌌</button>
 
+  <!-- Top Left: Navigation -->
+  <div id="solar-top-left" class="top-stack top-stack-left">
+    <button id="btn-daily" class="btn-s nav-btn nav-gold">📅 DÉFI DU JOUR</button>
+    <button id="btn-achievements" class="btn-s nav-btn nav-yellow">🏆 SUCCÈS</button>
+    <button id="btn-upgrades" class="btn-s nav-btn nav-magenta">🛠 AMÉLIORATIONS</button>
+  </div>
+
   <!-- Top Right: Diamonds & Shop -->
-  <div id="solar-top-right" style="position:absolute; top:20px; right:20px; display:flex; flex-direction:column; align-items:flex-end; gap:12px; z-index:40;">
-    <div id="diamond-counter" style="color:#0ff; font-family:'Orbitron', monospace; font-size:22px; text-shadow:0 0 10px rgba(0,255,255,0.7); display:flex; align-items:center; gap:8px; background:rgba(0,15,30,0.8); padding:6px 16px; border-radius:20px; border:1px solid #08f; margin-bottom: 8px;">
+  <div id="solar-top-right" class="top-stack top-stack-right">
+    <div id="diamond-counter">
       💎 <span id="diamond-count">0</span>
     </div>
-    <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-bottom: 8px;">
-      <button id="btn-daily" class="btn-s" style="border-color:#fa0; color:#fa0;">📅 DÉFI DU JOUR</button>
-      <button id="btn-achievements" class="btn-s" style="border-color:#fc0; color:#fc0;">🏆 SUCCÈS</button>
-      <button id="btn-upgrades" class="btn-s" style="border-color:#c0f; color:#c0f;">🛠 AMÉLIORATIONS</button>
-    </div>
-    <button id="btn-shop" class="btn" style="background:linear-gradient(135deg,rgba(0,200,255,0.2),rgba(0,100,255,0.4)); border:1px solid #0cf; border-radius:6px; padding:10px 20px; font-weight:bold; cursor:pointer; color:#fff; font-family:'Orbitron', monospace;">🛒 HANGAR</button>
+    <button id="btn-shop" class="btn btn-cyan nav-btn">🛒 HANGAR</button>
     <button id="btn-training">🏋 TRAINING</button>
   </div>
 
   <!-- Shop Card -->
-  <div id="card-shop" class="card hidden" style="width:460px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; top:50%; left:50%; transform:translate(-50%, -50%); position:absolute; z-index:100; box-shadow:0 0 40px rgba(0,150,255,0.3);">
-    <div class="card-title" style="color:#0cf; text-shadow:0 0 10px #0cf; text-align:center; font-size:26px; margin-bottom:5px; font-family:'Orbitron', monospace;">HANGAR SPATIAL</div>
-    <div style="font-size:15px; margin-bottom:15px; color:#ddd; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(0,255,255,0.2);">
-      Fonds disponibles: <b style="color:#0ff; font-size:18px;">💎 <span id="shop-solde">0</span></b>
+  <div id="card-shop" class="card card-modal card-cyan hidden">
+    <div class="card-title">HANGAR SPATIAL</div>
+    <div class="card-summary">
+      Fonds disponibles: <b class="currency-value">💎 <span id="shop-solde">0</span></b>
     </div>
-    <div id="shop-items" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:24px; padding-right:8px;"></div>
-    <div class="card-actions" style="margin-top:20px; text-align:center;">
-      <button id="btn-shop-close" class="btn-s" style="padding:10px 24px; font-size:16px;">FERMER</button>
+    <div id="shop-items" class="card-list card-list-loose"></div>
+    <div class="card-actions">
+      <button id="btn-shop-close" class="btn-s btn-wide">FERMER</button>
     </div>
   </div>
 
   <!-- Achievements Card -->
-  <div id="card-achievements" class="card hidden" style="width:500px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; top:50%; left:50%; transform:translate(-50%, -50%); position:absolute; z-index:100; box-shadow:0 0 40px rgba(255,200,0,0.3); border-color:#fc0;">
-    <div class="card-title" style="color:#fc0; text-shadow:0 0 10px #fc0; text-align:center; font-size:26px; margin-bottom:15px; font-family:'Orbitron', monospace;">SUCCÈS</div>
-    <div id="ach-list" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:8px; text-align:left;"></div>
-    <div class="card-actions" style="margin-top:20px; text-align:center;">
-      <button id="btn-ach-close" class="btn-s" style="padding:10px 24px; font-size:16px;">FERMER</button>
+  <div id="card-achievements" class="card card-modal card-gold hidden">
+    <div class="card-title">SUCCÈS</div>
+    <div id="ach-list" class="card-list card-list-tight"></div>
+    <div class="card-actions">
+      <button id="btn-ach-close" class="btn-s btn-wide">FERMER</button>
     </div>
   </div>
 
   <!-- Upgrades Card -->
-  <div id="card-upgrades" class="card hidden" style="width:480px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; top:50%; left:50%; transform:translate(-50%, -50%); position:absolute; z-index:100; box-shadow:0 0 40px rgba(200,0,255,0.3); border-color:#c0f;">
-    <div class="card-title" style="color:#c0f; text-shadow:0 0 10px #c0f; text-align:center; font-size:26px; margin-bottom:5px; font-family:'Orbitron', monospace;">AMÉLIORATIONS</div>
-    <div style="font-size:14px; margin-bottom:15px; color:#ddd; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(200,0,255,0.2);">
-      Vaisseau: <span id="upgrade-ship-name" style="color:#fff; font-weight:bold;"></span><br>
-      Fonds: <b style="color:#0ff;">💎 <span id="upgrade-diamonds">0</span></b>
+  <div id="card-upgrades" class="card card-modal card-magenta hidden">
+    <div class="card-title">AMÉLIORATIONS</div>
+    <div class="card-summary">
+      Vaisseau: <span id="upgrade-ship-name" class="summary-strong"></span><br>
+      Fonds: <b class="currency-value">💎 <span id="upgrade-diamonds">0</span></b>
     </div>
-    <div id="upgrade-list" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px; padding-right:8px; text-align:left;"></div>
-    <div class="card-actions" style="margin-top:20px; text-align:center;">
-      <button id="btn-upgrades-close" class="btn-s" style="padding:10px 24px; font-size:16px;">FERMER</button>
+    <div id="upgrade-list" class="card-list"></div>
+    <div class="card-actions">
+      <button id="btn-upgrades-close" class="btn-s btn-wide">FERMER</button>
     </div>
   </div>
 
   <!-- Boss Overlay Venus -->
-  <div id="boss-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(20,0,0,0.85); z-index:200; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff; text-align:center;">
-    <h1 style="font-family:'Orbitron', monospace; font-size:48px; color:#fa0; text-shadow:0 0 30px #fa0; margin-bottom:20px; letter-spacing:4px;">VÉNUS VAINCUE</h1>
-    <p style="font-size:18px; max-width:600px; margin-bottom:30px; color:#fd8; line-height:1.5;">
-      Vous avez survécu aux conditions extrêmes et avez dompté l'atmosphère infernale de Vénus. Un exploit digne des plus grands pilotes de l'Histoire !
-    </p>
-    <div id="boss-reward" style="font-size:24px; color:#0ff; text-shadow:0 0 15px #0ff; font-weight:bold; margin-bottom:40px; padding:15px 30px; border:2px dashed #0ff; border-radius:10px;"></div>
-    <button id="btn-boss-close" class="btn" style="background:linear-gradient(135deg,#fa0,#f40); color:#fff; font-family:'Orbitron', monospace; font-size:18px; padding:12px 36px; border:1px solid #ff0; border-radius:8px; cursor:pointer;">ACCEPTER LA RÉCOMPENSE</button>
+  <div id="boss-overlay" class="overlay-screen hidden">
+    <div class="overlay-card overlay-orange">
+      <h1 class="overlay-title">VÉNUS VAINCUE</h1>
+      <p class="overlay-text">
+        Vous avez survécu aux conditions extrêmes et avez dompté l'atmosphère infernale de Vénus. Un exploit digne des plus grands pilotes de l'Histoire !
+      </p>
+      <div id="boss-reward" class="reward-badge"></div>
+      <button id="btn-boss-close" class="btn btn-warm btn-wide">ACCEPTER LA RÉCOMPENSE</button>
+    </div>
   </div>
 
   <!-- Achievement Popup Alert -->
-  <div id="ach-popup" class="hidden" style="position:fixed; bottom:20px; right:20px; background:linear-gradient(135deg,rgba(20,20,0,0.9),rgba(40,30,0,0.95)); border:1px solid #fc0; border-radius:8px; padding:16px 20px; box-shadow:0 0 20px rgba(255,200,0,0.4); z-index:300; display:flex; align-items:center; gap:16px;">
-    <div style="font-size:36px;">🏆</div>
+  <div id="ach-popup" class="toast toast-gold hidden">
+    <div class="toast-icon">🏆</div>
     <div>
-      <div style="color:#fc0; font-family:'Orbitron', monospace; font-size:12px; letter-spacing:1px; margin-bottom:2px;">SUCCÈS DÉVERROUILLÉ</div>
-      <div id="ach-label" style="color:#fff; font-weight:bold; font-size:16px; margin-bottom:4px;"></div>
-      <div id="ach-desc" style="color:#aaa; font-size:12px;"></div>
+      <div class="toast-kicker">SUCCÈS DÉVERROUILLÉ</div>
+      <div id="ach-label" class="toast-title"></div>
+      <div id="ach-desc" class="toast-desc"></div>
     </div>
   </div>
 
@@ -156,8 +169,7 @@
     <button class="tbtn" data-speed="1" style="display:none">×1</button>
     <button class="tbtn" data-speed="1000" style="display:none">×1000</button>
     <button class="tbtn active" data-speed="100000" style="display:none">×100K</button>
-    <button id="btn-reset"
-      style="margin-left:15px; background:rgba(200,50,50,0.3); color:#f55; border:1px solid #f55; border-radius:4px; padding:2px 8px; cursor:pointer; font-family:'Share Tech Mono', monospace; font-size:12px;">RESET</button>
+    <button id="btn-reset" class="tbtn tbtn-reset">RESET</button>
   </div>
 
   <!-- Tooltip non atterrissable -->
