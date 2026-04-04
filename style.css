@@ -418,3 +418,39 @@ html, body {
   margin-top: 3px;
   text-shadow: 0 0 8px rgba(255,170,0,0.5);
 }
+
+/* ── Achievements ── */
+.ach-item {
+  display: flex; gap: 12px; align-items: center; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 6px;
+}
+.ach-item.done { border-color: #fc0; background: rgba(40,30,0,0.6); }
+.ach-icon { font-size: 24px; width: 32px; text-align: center; }
+.ach-name { font-weight: bold; font-family: 'Orbitron', monospace; font-size: 14px; color: #fff; margin-bottom: 2px; }
+.ach-desc-small { font-size: 11px; color: #aaa; }
+.ach-item.done .ach-name { color: #fc0; }
+
+/* ── Upgrades ── */
+.upgrade-item {
+  display: flex; align-items: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 6px; gap: 16px;
+}
+.upgrade-item.buyable { border-color: #c0f; background: rgba(20,0,40,0.6); }
+.upgrade-item.maxed { border-color: #0f4; background: rgba(0,30,10,0.6); opacity: 0.8; }
+.upgrade-item.locked { border-color: #555; background: rgba(20,20,20,0.6); opacity: 0.6; }
+.upg-info { flex: 1; text-align: left; }
+.upg-name { font-weight: bold; font-family: 'Orbitron', monospace; font-size: 14px; color: #fff; margin-bottom: 4px; display:flex; align-items:center; gap:8px;}
+.upg-desc { font-size: 11px; color: #aaa; line-height: 1.3; }
+.upg-btn { font-size: 12px; padding: 6px 12px; min-width: 70px; font-family:'Orbitron', monospace; font-weight:bold; cursor: pointer; border-radius:4px; transition: all 0.2s; }
+.upgrade-item.buyable .upg-btn { background: #90f; color:#fff; border: 1px solid #c0f; }
+.upgrade-item.buyable .upg-btn:hover { background: #b3f; border-color: #f6f; }
+.upgrade-item.locked .upg-btn { background: #333; color: #888; border: 1px solid #555; cursor: not-allowed; }
+.upgrade-item.maxed .upg-btn { background: rgba(0,100,20,0.5); border: 1px solid #0f4; color: #0f4; cursor: default; }
+
+.upg-pip { display: inline-block; width: 6px; height: 10px; background: #333; margin-right: 2px; border:1px solid #555; border-radius: 2px; }
+.upg-pip.filled { background: #0f4; border-color: #0f4; box-shadow: 0 0 5px #0f4; }
+
+/* Slide animation for achievements */
+@keyframes slideInAch { from { transform: translateX(120%); } to { transform: translateX(0); } }
+@keyframes slideOutAch { from { transform: translateX(0); } to { transform: translateX(120%); } }
+.ach-slide-in { animation: slideInAch 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.ach-slide-out { animation: slideOutAch 0.6s cubic-bezier(0.8, 0, 0.8, 0.2) forwards; }
+

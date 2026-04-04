@@ -70,14 +70,14 @@ const BODY_DATA = {
     name: 'Titan', emoji: '🟠', stars: 3,
     gravity: 1.35,
     drag: 0.012,
-    windType: 'shear', windBase: 3, windAmp: 8,
+    windType: 'shear', windBase: 3, windAmp: 6,
     groundColor: '#704214', groundAccent: '#4a2a0a', groundDark: '#2a1505',
     skyTop: '#552200', skyBot: '#aa5500',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(200,100,0,0.3)',
     terrainRoughness: 0.55,
-    padWidth: 70, startAlt: 155, startFuel: 1200,
-    maxVSpeed: 3.5, maxHSpeed: 2.2, maxAngle: 15,
+    padWidth: 82, startAlt: 155, startFuel: 1200,
+    maxVSpeed: 4.2, maxHSpeed: 2.8, maxAngle: 20,
     hazardType: 'downburst',
     conditions: [
       { ci: '💨', txt: 'Vents légers: 3–11 m/s' },
@@ -91,15 +91,15 @@ const BODY_DATA = {
     name: 'Terre', emoji: '🌍', stars: 4,
     gravity: 9.81,
     drag: 0.007,
-    windType: 'turbulent', windBase: 3, windAmp: 8,
+    windType: 'turbulent', windBase: 2, windAmp: 6,
     groundColor: '#2d7a2d', groundAccent: '#1a4a1a', groundDark: '#0a2a0a',
     skyTop: '#08204e', skyBot: '#1a5276',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(100,150,255,0.12)',
     hasClouds: true,
     terrainRoughness: 0.45,
-    padWidth: 65, startAlt: 145, startFuel: 1400,
-    maxVSpeed: 3.2, maxHSpeed: 2.0, maxAngle: 15,
+    padWidth: 75, startAlt: 145, startFuel: 1600,
+    maxVSpeed: 4.0, maxHSpeed: 2.5, maxAngle: 20,
     hazardType: 'lightning',
     conditions: [
       { ci: '🌬️', txt: 'Vent: 3–11 m/s + turbulences' },
@@ -113,14 +113,14 @@ const BODY_DATA = {
     name: 'Vénus', emoji: '🌕', stars: 5,
     gravity: 8.87,
     drag: 0.03,
-    windType: 'hurricane', windBase: 6, windAmp: 10,
+    windType: 'hurricane', windBase: 4, windAmp: 8,
     groundColor: '#5a2a05', groundAccent: '#3a1502', groundDark: '#1a0800',
     skyTop: '#5a1500', skyBot: '#aa3000',
     showStars: false, starAlpha: 0,
     hasFog: true, fogColor: 'rgba(255,80,0,0.35)',
     terrainRoughness: 0.85,
-    padWidth: 60, startAlt: 155, startFuel: 2500,
-    maxVSpeed: 3.0, maxHSpeed: 1.8, maxAngle: 12,
+    padWidth: 72, startAlt: 155, startFuel: 2500,
+    maxVSpeed: 3.8, maxHSpeed: 2.2, maxAngle: 16,
     hazardType: 'acidrain',
     conditions: [
       { ci: '🌪️', txt: 'Vents: 6–16 m/s' },
@@ -131,7 +131,94 @@ const BODY_DATA = {
     ],
     desc: 'ENFER. Vents dévastateurs et pluies d\'acide qui rongent votre carburant deux fois plus vite. Réservé aux meilleurs.',
   },
+  io: {
+    name: 'Io', emoji: '🟡', stars: 4,
+    gravity: 1.79,
+    drag: 0.002,
+    windType: 'gusty', windBase: 1, windAmp: 3, windGustChance: 0.001,
+    groundColor: '#d4a820', groundAccent: '#a07810', groundDark: '#5a3800',
+    skyTop: '#1a0800', skyBot: '#3a1200',
+    showStars: true, starAlpha: 0.65,
+    hasFog: true, fogColor: 'rgba(255,160,20,0.18)',
+    terrainRoughness: 0.92,
+    padWidth: 72, startAlt: 160, startFuel: 1300,
+    maxVSpeed: 3.8, maxHSpeed: 2.4, maxAngle: 18,
+    hazardType: 'volcano',
+    conditions: [
+      { ci: '🌋', txt: 'Éruptions volcaniques actives' },
+      { ci: '🪨', txt: 'Rochers éjectés sans prévenir' },
+      { ci: '☢️', txt: 'Radiation de Jupiter' },
+      { ci: '⚖️', txt: 'Gravité: 1.79 m/s²' },
+    ],
+    desc: 'La lune la plus volcanique du système solaire. Des éruptions projettent des rochers géants qui déstabilisent violemment votre vaisseau.',
+  },
+  europa: {
+    name: 'Europa', emoji: '🔵', stars: 4,
+    gravity: 1.31,
+    drag: 0.005,
+    windType: 'shear', windBase: 1, windAmp: 3.5,
+    groundColor: '#b8d4f8', groundAccent: '#7aaae0', groundDark: '#305898',
+    skyTop: '#000818', skyBot: '#001838',
+    showStars: true, starAlpha: 0.88,
+    hasFog: true, fogColor: 'rgba(130,185,255,0.10)',
+    terrainRoughness: 0.30,
+    padWidth: 78, startAlt: 160, startFuel: 1100,
+    maxVSpeed: 4.2, maxHSpeed: 2.8, maxAngle: 22,
+    hazardType: 'geyser',
+    conditions: [
+      { ci: '🧊', txt: 'Surface de glace fracturée' },
+      { ci: '💦', txt: 'Geysers d\'eau sous pression' },
+      { ci: '⚖️', txt: 'Gravité: 1.31 m/s²' },
+      { ci: '🌊', txt: 'Océan souterrain instable' },
+    ],
+    desc: 'Lune glacée de Jupiter. Des geysers d\'eau bouillante surgissent du sol et vous propulsent brutalement vers le haut.',
+  },
+  pluto: {
+    name: 'Pluton', emoji: '⚪', stars: 5,
+    gravity: 0.62,
+    drag: 0.001,
+    windType: 'shear', windBase: 0.8, windAmp: 2.5,
+    groundColor: '#c0aa88', groundAccent: '#907858', groundDark: '#503828',
+    skyTop: '#000004', skyBot: '#040010',
+    showStars: true, starAlpha: 1.0,
+    hasFog: false,
+    terrainRoughness: 0.68,
+    padWidth: 68, startAlt: 170, startFuel: 800,
+    maxVSpeed: 5.0, maxHSpeed: 3.5, maxAngle: 25,
+    hazardType: 'solarwind',
+    conditions: [
+      { ci: '🌬️', txt: 'Vent solaire permanent (dérive)' },
+      { ci: '🥶', txt: 'Température: −233°C' },
+      { ci: '⚖️', txt: 'Quasi-apesanteur: 0.62 m/s²' },
+      { ci: '💨', txt: 'Poussée ionique imprévisible' },
+    ],
+    desc: 'Aux confins du système solaire. Gravité quasi-nulle mais un vent solaire incessant vous pousse latéralement sans relâche.',
+  },
 };
+
+// ─── Mission secondaire definitions ──────────────────────────────────────────
+const SECONDARY_MISSIONS = [
+  { id:'fast',      label:'⏱ Atterrir en moins de 35s',         check: s => s.time <= 35,                      reward: 25 },
+  { id:'fuel',      label:'⛽ Atterrir avec >70% de carburant',  check: (s,g) => s.fuel / g.lander.fuelMax > 0.70, reward: 30 },
+  { id:'precise',   label:'🎯 Atterrissage de précision (>250)', check: s => s.precisionBonus >= 250,           reward: 20 },
+  { id:'smooth',    label:'🪶 Vitesse ↓ < 1.5 m/s à l\'impact', check: (s,g) => g._landVS !== undefined && g._landVS < 1.5, reward: 25 },
+  { id:'noretro',   label:'🚫 Sans utiliser les rétrofusées',    check: (s,g) => !g._usedRetro,                reward: 20 },
+  { id:'tilt',      label:'📐 Angle < 5° à l\'atterrissage',     check: (s,g) => g._landAngle !== undefined && Math.abs(g._landAngle) < 5, reward: 20 },
+  { id:'hazard',    label:'⚡ Survivre à 2 hazards',             check: (s,g) => g._hazardCount >= 2,          reward: 35 },
+  { id:'stars3',    label:'⭐ Atteindre 3 étoiles',              check: s => s.stars === 3,                    reward: 30 },
+];
+
+function pickMissions(bodyId, seed) {
+  const rng = seededRand(seed);
+  // Pick 2 random missions
+  const pool = [...SECONDARY_MISSIONS];
+  const picks = [];
+  while (picks.length < 2 && pool.length > 0) {
+    const idx = Math.floor(rng() * pool.length);
+    picks.push(pool.splice(idx, 1)[0]);
+  }
+  return picks;
+}
 
 // ─── Pseudo-random (seeded) ───────────────────────────────────────────────────
 function seededRand(seed) {
@@ -638,12 +725,15 @@ class HazardSystem {
     this._t += dt;
     this._impulse = null;
     switch (this.bodyId) {
-      case 'moon': this._updateMeteor(dt); break;
-      case 'mercury': this._updateFlare(dt); break;
-      case 'mars': this._updateMagnetic(dt); break;
-      case 'titan': this._updateDownburst(dt); break;
-      case 'earth': this._updateLightning(dt); break;
-      case 'venus': this._updateAcidRain(dt); break;
+      case 'moon':    this._updateMeteor(dt);    break;
+      case 'mercury': this._updateFlare(dt);     break;
+      case 'mars':    this._updateMagnetic(dt);  break;
+      case 'titan':   this._updateDownburst(dt); break;
+      case 'earth':   this._updateLightning(dt); break;
+      case 'venus':   this._updateAcidRain(dt);  break;
+      case 'io':      this._updateVolcano(dt);   break;
+      case 'europa':  this._updateGeyser(dt);    break;
+      case 'pluto':   this._updateSolarWind(dt); break;
     }
   }
 
@@ -722,17 +812,17 @@ class HazardSystem {
 
   _updateDownburst(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0007 * dt * 60) {
+      if (Math.random() < 0.0004 * dt * 60) {
         this._state = 1;
-        this._timer = 2.5;
+        this._timer = 3.0;
         this._warning = '⬇ RAFALE VERTICALE IMMINENTE !';
       }
     } else if (this._state === 1) {
       this._timer -= dt;
       if (this._timer <= 0) {
         this._state = 2;
-        this._timer = 1 + Math.random() * 1.5;
-        this._vertForce = -(16 + Math.random() * 12);
+        this._timer = 0.8 + Math.random() * 1.0;
+        this._vertForce = -(10 + Math.random() * 8);
         this._warning = '⬇ RAFALE VERTICALE !';
       }
     } else if (this._state === 2) {
@@ -747,9 +837,9 @@ class HazardSystem {
 
   _updateLightning(dt) {
     if (this._state === 0) {
-      if (Math.random() < 0.0005 * dt * 60) {
+      if (Math.random() < 0.0003 * dt * 60) {
         this._state = 1;
-        this._timer = 2.0;
+        this._timer = 2.5;
         this._warning = '⚡ FOUDRE IMMINENTE !';
       }
     } else if (this._state === 1) {
@@ -757,9 +847,9 @@ class HazardSystem {
       if (this._timer <= 0) {
         this._state = 2;
         this._timer = 0.08;
-        const mag = 12 + Math.random() * 14;
+        const mag = 7 + Math.random() * 8;
         const sign = Math.random() < 0.5 ? 1 : -1;
-        this._impulse = { vx: mag * sign, vy: 3 + Math.random() * 5 };
+        this._impulse = { vx: mag * sign, vy: 2 + Math.random() * 3 };
         this._warning = '⚡ FOUDRE !';
       }
     } else if (this._state === 2) {
@@ -769,21 +859,89 @@ class HazardSystem {
   }
 
   _updateAcidRain(_dt) {
-    const period = 12;
-    const onFraction = 0.45;
+    const period = 20;
+    const onFraction = 0.30;
     const phase = (this._t % period) / period;
 
-    if (phase > 0.8) {
+    if (phase > 0.85) {
       this._state = 1;
       this._fuelDrainMult = 1;
       this._warning = '☠ PLUIE ACIDE IMMINENTE !';
     } else if (phase < onFraction) {
       this._state = 2;
-      this._fuelDrainMult = 2.5;
+      this._fuelDrainMult = 2.0;
       this._warning = '☠ PLUIE ACIDE — Carburant corrodé !';
     } else {
       this._state = 0;
       this._fuelDrainMult = 1;
+      this._warning = null;
+    }
+  }
+
+  _updateVolcano(dt) {
+    // Io: éruption périodique projette des rochers = impulsion forte + aléatoire
+    if (this._state === 0) {
+      if (Math.random() < 0.0005 * dt * 60) {
+        this._state = 1;
+        this._timer = 2.8;
+        this._warning = '🌋 ÉRUPTION VOLCANIQUE IMMINENTE !';
+      }
+    } else if (this._state === 1) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 2;
+        this._timer = 0.15;
+        const mag = 10 + Math.random() * 12;
+        const sign = Math.random() < 0.5 ? 1 : -1;
+        this._impulse = { vx: mag * sign * 0.8, vy: 4 + Math.random() * 8 };
+        this._warning = '🌋 IMPACT DE ROCHE VOLCANIQUE !';
+      }
+    } else if (this._state === 2) {
+      this._timer -= dt;
+      if (this._timer <= 0) { this._state = 0; this._warning = null; }
+    }
+  }
+
+  _updateGeyser(dt) {
+    // Europa: geysers d'eau qui poussent vers le haut
+    if (this._state === 0) {
+      if (Math.random() < 0.0006 * dt * 60) {
+        this._state = 1;
+        this._timer = 2.5;
+        this._warning = '💦 GEYSER IMMINENT !';
+      }
+    } else if (this._state === 1) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 2;
+        this._timer = 1.2 + Math.random() * 1.0;
+        this._vertForce = 18 + Math.random() * 12; // pousse vers le HAUT
+        this._warning = '💦 GEYSER — Poussée ascendante !';
+      }
+    } else if (this._state === 2) {
+      this._timer -= dt;
+      if (this._timer <= 0) {
+        this._state = 0;
+        this._vertForce = 0;
+        this._warning = null;
+      }
+    }
+  }
+
+  _updateSolarWind(dt) {
+    // Pluton: vent solaire constant avec oscillation = dérive latérale progressive
+    const period = 18;
+    const phase = (this._t % period) / period;
+    if (phase < 0.1) {
+      this._state = 1;
+      this._warning = '☀ RAFALE SOLAIRE IMMINENTE !';
+    } else if (phase < 0.45) {
+      this._state = 2;
+      const dir = Math.floor(this._t / period) % 2 === 0 ? 1 : -1;
+      this._impulse = { vx: dir * 3.5 * dt, vy: 0 }; // continu, petit par dt
+      this._warning = '☀ VENT SOLAIRE — Dérive latérale !';
+    } else {
+      this._state = 0;
       this._warning = null;
     }
   }
@@ -865,8 +1023,11 @@ class Lander {
     // --- Rotation with inertia (Feature 8) ---
     let rotAcc = 280; // deg/s²
     let rotFriction = 0.08;
-    if (this.shipType === 'moustique') { rotAcc = 600; rotFriction = 0.01; } // Tourne hyper vite
-    else if (this.shipType === 'tank') { rotAcc = 140; rotFriction = 0.2; } // Difficile à tourner
+    if (this.shipType === 'moustique') { rotAcc = 600; rotFriction = 0.01; }
+    else if (this.shipType === 'tank') { rotAcc = 140; rotFriction = 0.2; }
+    // Upgrade bonuses
+    if (this._gyroBonus) rotAcc *= this._gyroBonus;
+    if (this._rcsBonus)  rotFriction = Math.min(0.55, rotFriction * this._rcsBonus);
 
     if (input.left) this.rotVel -= rotAcc * dt * rotMult;
     if (input.right) this.rotVel += rotAcc * dt * rotMult;
@@ -884,22 +1045,23 @@ class Lander {
       let thrustMult = 3.2;
       if (this.shipType === 'moustique') thrustMult = 2.8;
       else if (this.shipType === 'tank') thrustMult = 2.9;
-      else if (this.shipType === 'alien') thrustMult = 4.5; // Surpuissant
+      else if (this.shipType === 'alien') thrustMult = 4.5;
+      if (this._thrustBonus) thrustMult *= this._thrustBonus;
 
       const thrust = cfg.gravity * thrustMult;
-      fx += thrust * Math.sin(rad);   // incliné à droite → pousse à droite
+      fx += thrust * Math.sin(rad);
       fy += thrust * Math.cos(rad);
       this.fuel -= dt * 14 * fuelMult;
       if (this.fuel < 0) this.fuel = 0;
     }
 
     // --- Retro thrusters (space) ---
-    // Uniquement là où il y a de l'atmosphère (les planètes avec drag > 0)
     if (input.space && this.fuel > 0 && !engineOff && cfg.drag > 0) {
       const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
       if (spd > 0.1) {
         let retroForce = cfg.gravity * 2.2;
         if (this.shipType === 'alien') retroForce = cfg.gravity * 3.5;
+        if (this._retroBonus) retroForce *= this._retroBonus;
         fx -= (this.vx / spd) * retroForce;
         fy -= (this.vy / spd) * retroForce;
       }
@@ -959,7 +1121,7 @@ class Lander {
     if (vDown > cfg.maxVSpeed) return { type: 'crash', reason: `Vitesse verticale trop élevée : ${vDown.toFixed(1)} m/s (max ${cfg.maxVSpeed})` };
     if (hSpeed > cfg.maxHSpeed) return { type: 'crash', reason: `Vitesse horizontale trop élevée : ${hSpeed.toFixed(1)} m/s (max ${cfg.maxHSpeed})` };
     if (tilt > cfg.maxAngle) return { type: 'crash', reason: `Inclinaison trop forte : ${tilt.toFixed(1)}° (max ${cfg.maxAngle}°)` };
-    return { type: 'land' };
+    return { type: 'land', _impactVS: vDown, _impactAngle: tilt };
   }
 
   // Bottom-center of lander (nozzle position) for particles
@@ -1247,6 +1409,18 @@ class LanderGame {
     // Weather visuals
     this._dustStormProgress = 0;
     this.trainingMode = false;
+
+    // Missions secondaires
+    this.missions = [];  // set from outside after construction
+    this._usedRetro = false;
+    this._hazardCount = 0;
+    this._landVS = undefined;
+    this._landAngle = undefined;
+    this._lastHazardState = false;
+
+    // Replay: full frame recording (position + angle + input every frame)
+    this._replayFrames = [];
+    this._replayTimer = 0;
   }
 
   update(dt) {
@@ -1331,6 +1505,22 @@ class LanderGame {
       c.x = (c.x + c.speed * dt) % 1;
     }
 
+    // Mission tracking
+    if (this.input.space && this.lander.fuel > 0 && this.cfg.drag > 0) this._usedRetro = true;
+    const curHazard = this.hazard.isActive;
+    if (curHazard && !this._lastHazardState) this._hazardCount++;
+    this._lastHazardState = curHazard;
+
+    // Replay frame recording (every 0.05s)
+    this._replayTimer += dt;
+    if (this._replayTimer >= 0.05 && this.lander.alive) {
+      this._replayTimer = 0;
+      this._replayFrames.push({
+        x: this.lander.x, y: this.lander.y, angle: this.lander.angle,
+        up: this.input.up, space: this.input.space,
+      });
+    }
+
     // Training mode: infinite fuel
     if (this.trainingMode) {
       this.lander.fuel = this.lander.fuelMax;
@@ -1390,6 +1580,8 @@ class LanderGame {
     } else if (col && col.type === 'land') {
       this.lander.alive = false;
       this.lander.landed = true;
+      this._landVS = col._impactVS || 0;
+      this._landAngle = col._impactAngle || this.lander.angle;
       this.result = col;
       this.resultDelay = 0;
     }
@@ -1814,6 +2006,49 @@ class LanderGame {
       }
     }
 
+    if (id === 'io') {
+      // Jupiter massive en arrière-plan
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      const jx = W * 0.78, jy = H * 0.14, jr = 55;
+      const jg = ctx.createRadialGradient(jx - jr * 0.3, jy - jr * 0.3, 0, jx, jy, jr);
+      jg.addColorStop(0, '#f0c060'); jg.addColorStop(0.5, '#d08030'); jg.addColorStop(1, '#804010');
+      ctx.fillStyle = jg;
+      ctx.beginPath(); ctx.arc(jx, jy, jr, 0, Math.PI * 2); ctx.fill();
+      // Bandes de Jupiter
+      for (let b = 0; b < 5; b++) {
+        const by = jy - jr * 0.6 + b * jr * 0.3;
+        ctx.strokeStyle = b % 2 === 0 ? 'rgba(200,120,40,0.5)' : 'rgba(240,200,100,0.3)';
+        ctx.lineWidth = jr * 0.12;
+        ctx.beginPath(); ctx.ellipse(jx, by, jr * 0.98, jr * 0.08, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    if (id === 'europa') {
+      // Jupiter en fond + crackelures de glace dans le ciel
+      ctx.save();
+      ctx.globalAlpha = 0.30;
+      const jx2 = W * 0.15, jy2 = H * 0.12, jr2 = 48;
+      const jg2 = ctx.createRadialGradient(jx2, jy2, 0, jx2, jy2, jr2);
+      jg2.addColorStop(0, '#f0c060'); jg2.addColorStop(1, '#804010');
+      ctx.fillStyle = jg2;
+      ctx.beginPath(); ctx.arc(jx2, jy2, jr2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    if (id === 'pluto') {
+      // Charon (lune) visible
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      const chx = W * 0.72, chy = H * 0.08, chr = 14;
+      const chg = ctx.createRadialGradient(chx, chy, 0, chx, chy, chr);
+      chg.addColorStop(0, '#d0c0b0'); chg.addColorStop(1, '#706050');
+      ctx.fillStyle = chg;
+      ctx.beginPath(); ctx.arc(chx, chy, chr, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
     if (id === 'venus') {
       // Dense sulfuric cloud bands drifting across upper sky
       for (let i = 0; i < 4; i++) {
@@ -1891,6 +2126,56 @@ class LanderGame {
     if (id === 'earth' && (this.hazard.isActive || this.hazard.isWarning)) {
       ctx.fillStyle = `rgba(12,12,32,${this.hazard.isActive ? 0.20 : 0.09})`;
       ctx.fillRect(0, 0, W, H);
+    }
+
+    // Io: lave incandescente en arrière plan + rougeoyement lors des éruptions
+    if (id === 'io' && this.hazard.isActive) {
+      ctx.fillStyle = 'rgba(255,80,0,0.14)';
+      ctx.fillRect(0, 0, W, H);
+      // Particules de lave
+      ctx.save();
+      const rng2 = seededRand(Math.floor(this.elapsed * 30) * 7331);
+      for (let i = 0; i < 18; i++) {
+        const rx = rng2() * W, ry = rng2() * H * 0.8;
+        const rc = rng2() * 4 + 2;
+        const heat = rng2();
+        ctx.fillStyle = heat > 0.7 ? 'rgba(255,255,100,0.7)' : 'rgba(255,100,0,0.5)';
+        ctx.beginPath(); ctx.arc(rx, ry, rc, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Europa: geyser visuel (colonne d'eau)
+    if (id === 'europa' && this.hazard.isActive) {
+      const S = this.SCALE;
+      const cx2 = this.camX, cy2 = this.camY;
+      const padX = (this.terrain.padCenter - cx2) * S + W / 2;
+      const padY = H / 2 - (this.terrain.padHeight - cy2) * S;
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      const gg = ctx.createLinearGradient(padX, padY, padX, padY - H * 0.6);
+      gg.addColorStop(0, 'rgba(150,210,255,0.9)');
+      gg.addColorStop(0.6, 'rgba(100,180,255,0.4)');
+      gg.addColorStop(1, 'rgba(80,150,255,0)');
+      ctx.fillStyle = gg;
+      ctx.beginPath();
+      ctx.ellipse(padX, padY, 14, H * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Pluto: particules de vent solaire (traits horizontaux)
+    if (id === 'pluto' && this.hazard.isActive) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,220,180,0.18)';
+      ctx.lineWidth = 1;
+      const rng3 = seededRand(Math.floor(this.elapsed * 12) * 4441);
+      for (let i = 0; i < 30; i++) {
+        const rx = rng3() * W, ry = rng3() * H * 0.85;
+        const len = 20 + rng3() * 40;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + len, ry); ctx.stroke();
+      }
+      ctx.restore();
     }
   }
 

@@ -33,10 +33,20 @@ Le jeu propose une campagne progressive où chaque corps céleste doit être pos
 | 🔴 **Mars** | ★★★☆☆ | Vent et tempêtes de poussière. **Danger** : Orages magnétiques (inversent le contrôle de rotation). |
 | 🟠 **Titan** | ★★★☆☆ | Vents horizontaux forts et cisaillement. **Danger** : Rafales verticales descendantes soudaines. |
 | 🌍 **Terre** | ★★★★☆ | Forte gravité et turbulences continues. **Danger** : Coups de foudre (déséquilibrent violemment le vaisseau). |
-| 🌕 **Vénus** | ★★★★★ | Vents dévastateurs permanents. **Danger** : Pluies d'acide extrêmement corrosives (rongent le carburant 2× plus vite). |
+| 🌕 **Vénus** | ★★★★★ | Vents dévastateurs permanents. **Danger** : Boss de la campagne avec pluie d'acide ! |
+| 🌋 **Io** | ★★★★★ | Surface volcanique. **Danger** : Éruptions qui projettent des rochers (Volcans). |
+| 🧊 **Europa** | ★★★★★ | Surface glacée sans friction. **Danger** : Crevasses mortelles et geysers d'eau. |
+| 🌑 **Pluton** | ★★★★★ | Gravité quasi-nulle. **Danger** : Vent solaire constant. |
 
 ## ✨ Dernières Nouveautés & Fonctionnalités
 
+* 🪐 **3 Nouvelles Planètes Extrêmes** : Voyagez au-delà de Vénus vers **Io** (Volcans), **Europa** (Glace), et **Pluton** (Gravité quasi-nulle).
+* 🎯 **Missions Secondaires & Récompenses** : Chaque vol vous propose désormais des objectifs tactiques subsidiaires pour récolter bonus et diamants précieux.
+* 🛠️ **Arbre d'Améliorations (Upgrades) & Monnaie** : Utilisez les diamants remportés pour modifier vos vaisseaux (Fuel, Propulseur, Gyroscope...).
+* 📅 **Le Défi du Jour (Daily Challenge)** : Chaque jour, un défi unique généré aléatoirement. Un seul essai par jour !
+* 🏆 **Succès (Achievements)** : Un système complet de badges pour couronner vos exploits les plus fous in-game.
+* 👹 **Boss Vénus** : L'environnement le plus hostile abrite un Boss de campagne (Pop-up exclusif avec grosse récompense en diamants).
+* 🎥 **Replay Automatique** : Re-visonnez vos succès triomphants immédiatement intégrés à votre écran de victoire.
 * 🐔 **Célébration d'Attérissage Exotique** : Si vous vous posez avec succès sans casser la fusée, une **petite poule en combinaison spatiale** sort triomphalement du vaisseau, sautille sur le sol extraterrestre et plante son drapeau !
 * 🏆 **Leaderboards & Records Complets** : Le score final intègre votre temps, l'économie de carburant et la **précision de l'atterrissage** physique par rapport au centre de la rampe.
 * 👻 **Système de Fantômes (Ghosts)** : Votre meilleur vol (record absolu sur la planète) est enregistré en continu. La prochaine fois que vous essaierez d'améliorer votre record, votre fantôme s'affichera en transparence pour faire la course contre vous !

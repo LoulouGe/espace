@@ -29,12 +29,19 @@ const BASE_ORBIT_R = [58, 92, 128, 170, 230, 290, 345, 390];
 const MOON_EL = { id:'moon', name:'Lune', L0:218.3, dL:13.1764, color:'#b8b8b8', r:3, orbitR:0 };
 // Titan (orbits Saturn, period ~15.95 days)
 const TITAN_EL = { id:'titan', name:'Titan', L0:120.0, dL:22.577, color:'#cc8833', r:3, orbitR:0 };
+// Io (orbits Jupiter, period ~1.77 days)
+const IO_EL = { id:'io', name:'Io', L0:84.1, dL:203.49, color:'#d4a820', r:3, orbitR:0 };
+// Europa (orbits Jupiter, period ~3.55 days)
+const EUROPA_EL = { id:'europa', name:'Europa', L0:171.6, dL:101.37, color:'#7aade0', r:3, orbitR:0 };
+// Pluto (very slow, period ~248 years)
+const PLUTO_EL = { id:'pluto', name:'Pluton', L0:238.9, dL:0.00397, color:'#c0aa88', r:4, orbitR:0 };
+const PLUTO_ORBIT_R = 440; // beyond Neptune
 
 const GAS_GIANTS = new Set(['jupiter','saturn','uranus','neptune']);
-const LANDABLE   = new Set(['moon','mercury','mars','titan','earth','venus']);
+const LANDABLE   = new Set(['moon','mercury','mars','titan','earth','venus','io','europa','pluto']);
 
 // Landable body metadata for tooltip/display
-const LANDABLE_STARS = { moon:1, mercury:2, mars:3, titan:3, earth:4, venus:5 };
+const LANDABLE_STARS = { moon:1, mercury:2, mars:3, titan:3, earth:4, venus:5, io:4, europa:4, pluto:5 };
 
 const PLANET_FACTS = {
   mercury: ["Révolution : 88 jours terrestres","Surface : −180°C la nuit, +430°C le jour","Aucune lune, aucune atmosphère","Son noyau représente 85% de son rayon"],
@@ -47,12 +54,15 @@ const PLANET_FACTS = {
   neptune: ["Vents à 2 100 km/h — record du système solaire","Voyager 2 seul visiteur humain (1989)","Un an Neptune = 165 ans terrestres","Triton orbite à l'envers et se rapproche"],
   moon:    ["S'éloigne de la Terre de 3,8 cm par an","12 humains y ont marché entre 1969 et 1972","Toujours la même face est tournée vers la Terre","Ses marées ralentissent la rotation terrestre"],
   titan:   ["Seule lune du système avec une atmosphère dense","Lacs de méthane liquide en surface","Pression atm. : 1,45× celle de la Terre","Température : −179°C"],
+  io:      ["La lune la plus volcanique du système solaire","Plus de 400 volcans actifs recensés","Éruptions visibles depuis l'espace","Chauffée par les marées gravitationnelles de Jupiter"],
+  europa:  ["Possède un océan liquide sous sa glace","Surface parmi les plus lisses du système solaire","Candidat no.1 pour la vie extraterrestre","Les geysers d'eau jaillissent à 200 km de hauteur"],
+  pluto:   ["Classé planète naine depuis 2006","Son année dure 248 ans terrestres","Charon est si gros qu'ils s'orbitent mutuellement","New Horizons l'a survolé en 2015"],
 };
 
 // Semi-grand axe en UA (pour calcul de distance approximative)
 const PLANET_AU = {
   mercury:0.387, venus:0.723, earth:1.000, mars:1.524,
-  jupiter:5.203, saturn:9.537, uranus:19.19, neptune:30.07,
+  jupiter:5.203, saturn:9.537, uranus:19.19, neptune:30.07, pluto:39.48,
 };
 const AU_KM = 149597871;
 
@@ -116,8 +126,11 @@ class SolarSystem {
     ORBITAL_ELEMENTS.forEach((el, i) => {
       el.orbitR = BASE_ORBIT_R[i] * this.orbitScale;
     });
-    MOON_EL.orbitR  = 22 * this.orbitScale;
-    TITAN_EL.orbitR = 28 * this.orbitScale;
+    MOON_EL.orbitR   = 22 * this.orbitScale;
+    TITAN_EL.orbitR  = 28 * this.orbitScale;
+    IO_EL.orbitR     = 20 * this.orbitScale;
+    EUROPA_EL.orbitR = 26 * this.orbitScale;
+    PLUTO_EL.orbitR  = PLUTO_ORBIT_R * this.orbitScale;
   }
 
   resize(w, h) {
@@ -158,17 +171,28 @@ class SolarSystem {
 
   // Returns body id clicked, or null
   getBodyAt(sx, sy) {
+    // Check Pluto first (orbit outside ORBITAL_ELEMENTS list)
+    const plutoPos = this._pos(PLUTO_EL, this.simTime);
+    if (Math.hypot(sx - plutoPos.x, sy - plutoPos.y) <= Math.max(PLUTO_EL.r + 6, 14)) return 'pluto';
+
     for (const el of ORBITAL_ELEMENTS) {
       const p = this._pos(el, this.simTime);
       if (Math.hypot(sx - p.x, sy - p.y) <= Math.max(el.r + 6, 14)) return el.id;
     }
-    const earthPos = this._pos(ORBITAL_ELEMENTS[2], this.simTime);
-    const moonPos  = this._moonPos(earthPos, MOON_EL, this.simTime);
+    const earthPos  = this._pos(ORBITAL_ELEMENTS[2], this.simTime);
+    const moonPos   = this._moonPos(earthPos, MOON_EL, this.simTime);
     if (Math.hypot(sx - moonPos.x, sy - moonPos.y) <= 14) return 'moon';
 
     const saturnPos = this._pos(ORBITAL_ELEMENTS[5], this.simTime);
     const titanPos  = this._moonPos(saturnPos, TITAN_EL, this.simTime);
     if (Math.hypot(sx - titanPos.x, sy - titanPos.y) <= 14) return 'titan';
+
+    const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+    const ioPos      = this._moonPos(jupiterPos, IO_EL, this.simTime);
+    if (Math.hypot(sx - ioPos.x, sy - ioPos.y) <= 14) return 'io';
+
+    const europaPos  = this._moonPos(jupiterPos, EUROPA_EL, this.simTime);
+    if (Math.hypot(sx - europaPos.x, sy - europaPos.y) <= 14) return 'europa';
 
     return null;
   }
@@ -183,6 +207,15 @@ class SolarSystem {
       const saturnPos = this._pos(ORBITAL_ELEMENTS[5], this.simTime);
       return this._moonPos(saturnPos, TITAN_EL, this.simTime);
     }
+    if (id === 'io') {
+      const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+      return this._moonPos(jupiterPos, IO_EL, this.simTime);
+    }
+    if (id === 'europa') {
+      const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], this.simTime);
+      return this._moonPos(jupiterPos, EUROPA_EL, this.simTime);
+    }
+    if (id === 'pluto') return this._pos(PLUTO_EL, this.simTime);
     const el = ORBITAL_ELEMENTS.find(e => e.id === id);
     return el ? this._pos(el, this.simTime) : { x: this.cx, y: this.cy };
   }
@@ -236,6 +269,18 @@ class SolarSystem {
     ctx.arc(saturnPos.x, saturnPos.y, TITAN_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Io + Europa orbits (near Jupiter)
+    const jupiterPos = this._pos(ORBITAL_ELEMENTS[3], t);
+    ctx.strokeStyle = 'rgba(200,160,30,0.1)';
+    ctx.beginPath(); ctx.arc(jupiterPos.x, jupiterPos.y, IO_EL.orbitR,     0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(100,160,220,0.1)';
+    ctx.beginPath(); ctx.arc(jupiterPos.x, jupiterPos.y, EUROPA_EL.orbitR, 0, Math.PI * 2); ctx.stroke();
+
+    // Pluto orbit ring
+    ctx.strokeStyle = 'rgba(192,170,136,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(this.cx, this.cy, PLUTO_EL.orbitR, 0, Math.PI * 2); ctx.stroke();
+
     // Orbital trails (dernières positions comme pointillés)
     const TRAIL_N = 55;
     const TRAIL_DAYS = 3; // jours par point
@@ -265,6 +310,29 @@ class SolarSystem {
       const tp2   = this._moonPos(sp, TITAN_EL, pastT);
       ctx.fillStyle = `rgba(204,136,51,${((1 - k/35) * 0.4).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(tp2.x, tp2.y, 1, 0, Math.PI * 2); ctx.fill();
+    }
+    // Io trail
+    for (let k = 1; k <= 20; k++) {
+      const pastT = t - k * 0.06 * 86400000;
+      const jp2   = this._pos(ORBITAL_ELEMENTS[3], pastT);
+      const ip    = this._moonPos(jp2, IO_EL, pastT);
+      ctx.fillStyle = `rgba(212,168,32,${((1 - k/20) * 0.35).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(ip.x, ip.y, 1, 0, Math.PI * 2); ctx.fill();
+    }
+    // Europa trail
+    for (let k = 1; k <= 20; k++) {
+      const pastT = t - k * 0.12 * 86400000;
+      const jp3   = this._pos(ORBITAL_ELEMENTS[3], pastT);
+      const ep    = this._moonPos(jp3, EUROPA_EL, pastT);
+      ctx.fillStyle = `rgba(122,173,224,${((1 - k/20) * 0.35).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, 1, 0, Math.PI * 2); ctx.fill();
+    }
+    // Pluto trail (slow — 10-day intervals)
+    for (let k = 1; k <= 25; k++) {
+      const pastT = t - k * 10 * 86400000;
+      const pp2   = this._pos(PLUTO_EL, pastT);
+      ctx.fillStyle = `rgba(192,170,136,${((1 - k/25) * 0.3).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(pp2.x, pp2.y, 1, 0, Math.PI * 2); ctx.fill();
     }
 
     // Sun corona
@@ -447,6 +515,87 @@ class SolarSystem {
     }
     // Feature 1: Titan fuel bar removed
 
+    // ── Io ──
+    const ioPos = this._moonPos(jupiterPos, IO_EL, t);
+    const ioHov = hoveredId === 'io';
+    const ioLocked = lockedIds && lockedIds.has('io');
+    ctx.save();
+    if (ioLocked) ctx.globalAlpha = 0.35;
+    if (ioHov) {
+      const ig = ctx.createRadialGradient(ioPos.x, ioPos.y, 0, ioPos.x, ioPos.y, IO_EL.r * 5);
+      ig.addColorStop(0, hexAlpha(IO_EL.color, 1)); ig.addColorStop(1, hexAlpha(IO_EL.color, 0));
+      ctx.fillStyle = ig;
+      ctx.beginPath(); ctx.arc(ioPos.x, ioPos.y, IO_EL.r * 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = ioHov ? lightenColor(IO_EL.color, 40) : IO_EL.color;
+    ctx.beginPath(); ctx.arc(ioPos.x, ioPos.y, IO_EL.r, 0, Math.PI * 2); ctx.fill();
+    if (ioLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', ioPos.x, ioPos.y + IO_EL.r * 0.4); }
+    ctx.fillStyle = 'rgba(212,180,50,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Io', ioPos.x, ioPos.y + IO_EL.r + 12);
+    if (leaderboard && leaderboard['io']) {
+      const s = leaderboard['io'].stars || 0;
+      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
+      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), ioPos.x, ioPos.y + IO_EL.r + 20);
+    } else {
+      ctx.fillStyle = ioLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
+      ctx.fillText('★★★★☆', ioPos.x, ioPos.y + IO_EL.r + 20);
+    }
+    ctx.restore();
+
+    // ── Europa ──
+    const europaPos = this._moonPos(jupiterPos, EUROPA_EL, t);
+    const europaHov = hoveredId === 'europa';
+    const europaLocked = lockedIds && lockedIds.has('europa');
+    ctx.save();
+    if (europaLocked) ctx.globalAlpha = 0.35;
+    if (europaHov) {
+      const eg2 = ctx.createRadialGradient(europaPos.x, europaPos.y, 0, europaPos.x, europaPos.y, EUROPA_EL.r * 5);
+      eg2.addColorStop(0, hexAlpha(EUROPA_EL.color, 1)); eg2.addColorStop(1, hexAlpha(EUROPA_EL.color, 0));
+      ctx.fillStyle = eg2;
+      ctx.beginPath(); ctx.arc(europaPos.x, europaPos.y, EUROPA_EL.r * 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = europaHov ? lightenColor(EUROPA_EL.color, 40) : EUROPA_EL.color;
+    ctx.beginPath(); ctx.arc(europaPos.x, europaPos.y, EUROPA_EL.r, 0, Math.PI * 2); ctx.fill();
+    if (europaLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', europaPos.x, europaPos.y + EUROPA_EL.r * 0.4); }
+    ctx.fillStyle = 'rgba(122,180,230,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Europa', europaPos.x, europaPos.y + EUROPA_EL.r + 12);
+    if (leaderboard && leaderboard['europa']) {
+      const s = leaderboard['europa'].stars || 0;
+      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
+      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), europaPos.x, europaPos.y + EUROPA_EL.r + 20);
+    } else {
+      ctx.fillStyle = europaLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
+      ctx.fillText('★★★★☆', europaPos.x, europaPos.y + EUROPA_EL.r + 20);
+    }
+    ctx.restore();
+
+    // ── Pluto ──
+    const plutoPos2 = this._pos(PLUTO_EL, t);
+    const plutoHov = hoveredId === 'pluto';
+    const plutoLocked = lockedIds && lockedIds.has('pluto');
+    ctx.save();
+    if (plutoLocked) ctx.globalAlpha = 0.35;
+    if (plutoHov) {
+      const pg = ctx.createRadialGradient(plutoPos2.x, plutoPos2.y, 0, plutoPos2.x, plutoPos2.y, PLUTO_EL.r * 5);
+      pg.addColorStop(0, hexAlpha(PLUTO_EL.color, 1)); pg.addColorStop(1, hexAlpha(PLUTO_EL.color, 0));
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.arc(plutoPos2.x, plutoPos2.y, PLUTO_EL.r * 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = plutoHov ? lightenColor(PLUTO_EL.color, 40) : PLUTO_EL.color;
+    ctx.beginPath(); ctx.arc(plutoPos2.x, plutoPos2.y, PLUTO_EL.r, 0, Math.PI * 2); ctx.fill();
+    if (plutoLocked) { ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillText('🔒', plutoPos2.x, plutoPos2.y + PLUTO_EL.r * 0.4); }
+    ctx.fillStyle = 'rgba(192,180,150,0.75)'; ctx.font = '9px "Share Tech Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Pluton', plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 12);
+    if (leaderboard && leaderboard['pluto']) {
+      const s = leaderboard['pluto'].stars || 0;
+      ctx.fillStyle = '#fc0'; ctx.font = '6px monospace';
+      ctx.fillText('★'.repeat(s)+'☆'.repeat(3-s), plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 20);
+    } else {
+      ctx.fillStyle = plutoLocked ? 'rgba(180,180,100,0.5)' : '#fc0'; ctx.font = '7px monospace';
+      ctx.fillText('★★★★★', plutoPos2.x, plutoPos2.y + PLUTO_EL.r + 20);
+    }
+    ctx.restore();
+
     // Title
     ctx.fillStyle = 'rgba(150,180,255,0.5)';
     ctx.font = '12px "Share Tech Mono", monospace';
@@ -455,8 +604,10 @@ class SolarSystem {
   }
 
   getDistFromEarth(id) {
-    if (id === 'moon')  return '384 400 km';
-    if (id === 'titan') id = 'saturn'; // use saturn position
+    if (id === 'moon')   return '384 400 km';
+    if (id === 'titan')  id = 'saturn';
+    if (id === 'io')     id = 'jupiter';
+    if (id === 'europa') id = 'jupiter';
     const au = PLANET_AU[id];
     if (!au) return null;
     const earthEl  = ORBITAL_ELEMENTS[2];

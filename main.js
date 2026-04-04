@@ -184,7 +184,7 @@ let surveyTimer = 0;
 const SURVEY_DUR = 2.0;
 
 // ─── Campaign & Leaderboard ───────────────────────────────────────────────────
-const CAMPAIGN_ORDER = ['moon', 'mercury', 'mars', 'titan', 'earth', 'venus'];
+const CAMPAIGN_ORDER = ['moon', 'mercury', 'mars', 'titan', 'earth', 'venus', 'io', 'europa', 'pluto'];
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem('sl_progress') || '{}'); } catch { return {}; }
@@ -547,6 +547,43 @@ window.buyShip = function(id, cost) {
   }
 };
 
+// ─── Secondary missions ───────────────────────────────────────────────────────
+function renderMissionsHUD(missions) {
+  const hud = document.getElementById('missions-hud');
+  const list = document.getElementById('missions-list');
+  if (!hud || !list || !missions || !missions.length) return;
+  list.innerHTML = missions.map(m =>
+    `<div class="mission-row" data-id="${m.id}">
+       <span class="mission-status">○</span>
+       <span class="mission-label">${m.label}</span>
+       <span class="mission-reward" style="color:#0cf;margin-left:6px">+${m.reward}💎</span>
+     </div>`
+  ).join('');
+  hud.classList.remove('hidden');
+}
+
+function updateMissionsHUD(missions, game) {
+  if (!missions || !game) return;
+  const score = game.getScore ? game.getScore() : null;
+  missions.forEach(m => {
+    const row = document.querySelector(`.mission-row[data-id="${m.id}"]`);
+    if (!row) return;
+    const done = score && m.check(score, game);
+    row.querySelector('.mission-status').textContent = done ? '✔' : '○';
+    row.style.opacity = done ? '1' : '0.6';
+    row.querySelector('.mission-status').style.color = done ? '#0f0' : 'rgba(200,180,80,0.7)';
+  });
+}
+
+function evaluateMissions(missions, game, score) {
+  if (!missions || trainingMode) return 0;
+  let bonus = 0;
+  missions.forEach(m => {
+    if (m.check(score, game)) bonus += m.reward;
+  });
+  return bonus;
+}
+
 // ─── Planet card ─────────────────────────────────────────────────────────────
 document.getElementById('btn-launch').addEventListener('click', startGame);
 document.getElementById('btn-back').addEventListener('click', () => {
@@ -587,6 +624,8 @@ function returnToSolar() {
   elCtrl.classList.add('hidden');
   elBtnSolar.classList.add('hidden');
   document.getElementById('touch-controls').classList.add('hidden');
+  document.getElementById('missions-hud').classList.add('hidden');
+  replayFrames = null;
   game = null;
   state = S.SOLAR;
   showSolarUI();
@@ -599,6 +638,7 @@ function startGame() {
   if (!selectedBody) return;
 
   game = new LanderGame(selectedBody, canvas.width, canvas.height);
+  applyUpgrades(game, loadActiveShip());
 
   // Feature 13: load ghost for this body
   const ghostFrames = loadGhost(selectedBody);
@@ -618,6 +658,11 @@ function startGame() {
   game.trainingMode = trainingMode;
   const tBadge = document.getElementById('training-badge');
   if (tBadge) tBadge.classList.toggle('hidden', !trainingMode);
+
+  // Assign 2 random secondary missions for this run
+  const missionSeed = Date.now() ^ (selectedBody.split('').reduce((a,c) => a + c.charCodeAt(0), 0));
+  game.missions = pickMissions(selectedBody, missionSeed);
+  renderMissionsHUD(game.missions);
 
   // Survey phase: camera pans to show pad before countdown
   surveyTimer = 0;
@@ -690,7 +735,13 @@ function showResultCard(success, score, reason) {
   let earned = baseRewards[st - 1] || 10;
   if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
   const isTraining = game && game.trainingMode;
-  const diamRow = (success && !isTraining) ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}</span></div>` : '';
+  const missionBonus = score._missionBonus || 0;
+  const missionRows = (success && !isTraining && game && game.missions && game.missions.length) ?
+    game.missions.map(m => {
+      const done = m.check(score, game);
+      return `<div class="stat-row"><span class="stat-lbl" style="color:${done?'#fa0':'#666'}">${done?'✔':'○'} ${m.label.replace(/^[^\s]+\s/,'')}</span><span class="stat-val" style="color:${done?'#0cf':'#555'}">${done?'+'+m.reward+'💎':'—'}</span></div>`;
+    }).join('') : '';
+  const diamRow = (success && !isTraining) ? `<div class="stat-row" style="background:rgba(0,100,200,0.3); border-radius:4px; padding:6px 8px; margin-top:4px;"><span class="stat-lbl" style="color:#0ff">💎 Récompense</span><span class="stat-val" style="color:#0ff">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
   const trainingRow = isTraining ? `<div class="stat-row"><span class="stat-lbl" style="color:#fa0">Mode</span><span class="stat-val" style="color:#fa0;font-size:11px">🏋 Entraînement — non enregistré</span></div>` : '';
 
   document.getElementById('res-stats').innerHTML = `
@@ -700,6 +751,7 @@ function showResultCard(success, score, reason) {
     ${precisionRow}
     <div class="stat-row"><span class="stat-lbl">Score</span><span class="stat-val">${success ? score.total : 0} pts</span></div>
     ${bestRow}
+    ${missionRows}
     ${diamRow}
     ${trainingRow}
   `;
@@ -885,6 +937,7 @@ function loop(ts) {
       game.input = { ...keys };
       game.update(dt);
       updateHUD();
+      updateMissionsHUD(game.missions, game);
 
       if (game.result && !resultShown && game.resultDelay > (game.result.type === 'crash' ? 1.4 : 4.5)) {
         resultShown = true;
@@ -896,6 +949,10 @@ function loop(ts) {
           const st = BODY_DATA[selectedBody].stars || 1;
           let earned = baseRewards[st - 1] || 10;
           if (score.precisionBonus && score.precisionBonus >= 200) earned += 15;
+          // Mission secondaires bonus
+          const missionBonus = evaluateMissions(game.missions, game, score);
+          earned += missionBonus;
+          score._missionBonus = missionBonus;
           globalDiamonds += earned;
           saveDiamonds(globalDiamonds);
           document.getElementById('diamond-count').textContent = globalDiamonds;
@@ -908,6 +965,12 @@ function loop(ts) {
         }
         // Crashes and training runs never update the leaderboard
         showResultCard(game.result.type === 'land', score, game.result.reason);
+        if (game.result.type === 'land' && !game.trainingMode) {
+          checkVenusBoss(score);
+          checkAchievements(score, game);
+          const ghost = loadGhost(selectedBody);
+          if (ghost) startReplay(ghost, game);
+        }
         state = S.RESULT;
       }
 
@@ -986,7 +1049,10 @@ function loop(ts) {
       ctx.restore();
 
     } else if (state === S.PLAYING || state === S.RESULT) {
-      if (game) game.draw(ctx);
+      if (game) {
+        game.draw(ctx);
+        drawReplayOverlay(ctx, canvas.width, canvas.height);
+      }
     }
 
   } catch (err) {
@@ -1000,6 +1066,306 @@ window.addEventListener('resize', () => {
   resizeCanvas();
   solar.resize(canvas.width, canvas.height);
   if (game) { game.canvasW = canvas.width; game.canvasH = canvas.height; }
+});
+
+// ─── Boss Vénus ───────────────────────────────────────────────────────────────
+let _venusBossShown = false;
+
+function checkVenusBoss(score) {
+  if (selectedBody !== 'venus') return;
+  const lb = loadLeaderboard();
+  // Boss unlock: first successful venus landing
+  if (!lb['venus'] || lb['venus'].total < score.total) {
+    if (!_venusBossShown) {
+      _venusBossShown = true;
+      setTimeout(() => showBossVictory(), 500);
+    }
+  }
+}
+
+function showBossVictory() {
+  const el = document.getElementById('boss-overlay');
+  if (!el) return;
+  el.classList.remove('hidden');
+  // Bonus diamonds for venus boss
+  const bonus = 500;
+  globalDiamonds += bonus;
+  saveDiamonds(globalDiamonds);
+  document.getElementById('diamond-count').textContent = globalDiamonds;
+  el.querySelector('#boss-reward').textContent = '+500 💎 — Conquérant de Vénus !';
+  document.getElementById('btn-boss-close').onclick = () => el.classList.add('hidden');
+}
+
+// ─── Achievements ─────────────────────────────────────────────────────────────
+const ACHIEVEMENTS = [
+  { id:'first_land',    label:'🚀 Premier Atterrissage',    desc:'Réussir un premier atterrissage.',          check: (lb) => Object.keys(lb).length >= 1 },
+  { id:'all_planets',   label:'🌌 Grand Tour',              desc:'Atterrir sur toutes les planètes.',         check: (lb) => CAMPAIGN_ORDER.every(id => lb[id]) },
+  { id:'perfect',       label:'⭐ Pilote Parfait',          desc:'Obtenir 3★ sur n\'importe quelle planète.', check: (lb) => Object.values(lb).some(e => e.stars >= 3) },
+  { id:'speed_moon',    label:'⏱ Véloce',                  desc:'Atterrir sur la Lune en moins de 20s.',     check: (lb) => lb['moon'] && lb['moon'].time <= 20 },
+  { id:'full_fuel',     label:'⛽ Économe',                 desc:'Atterrir avec >90% de carburant.',          check: (_lb, s, g) => s && g && s.fuel / g.lander.fuelMax > 0.90 },
+  { id:'venus_clear',   label:'🔥 Conquérant de Vénus',    desc:'Atterrir sur Vénus.',                       check: (lb) => !!lb['venus'] },
+  { id:'pluto_clear',   label:'❄ Aux Confins',             desc:'Atterrir sur Pluton.',                      check: (lb) => !!lb['pluto'] },
+  { id:'no_retro',      label:'🚫 Pure Poussée',            desc:'Atterrir sans rétrofusées.',                check: (_lb, _s, g) => g && !g._usedRetro },
+  { id:'survive3',      label:'💪 Survivant',               desc:'Survivre à 3 hazards en une partie.',       check: (_lb, _s, g) => g && g._hazardCount >= 3 },
+  { id:'mission_bonus', label:'🎯 Sur-Achiever',            desc:'Compléter 2 missions secondaires.',         check: (_lb, s) => s && s._missionBonus >= 40 },
+];
+
+function loadAchievements() { try { return JSON.parse(localStorage.getItem('sl_ach') || '[]'); } catch { return []; } }
+function saveAchievements(a) { try { localStorage.setItem('sl_ach', JSON.stringify(a)); } catch {} }
+
+function checkAchievements(score, game) {
+  const unlocked = new Set(loadAchievements());
+  const lb = loadLeaderboard();
+  const newOnes = [];
+  for (const ach of ACHIEVEMENTS) {
+    if (unlocked.has(ach.id)) continue;
+    try {
+      if (ach.check(lb, score, game)) {
+        unlocked.add(ach.id);
+        newOnes.push(ach);
+      }
+    } catch {}
+  }
+  if (newOnes.length) {
+    saveAchievements([...unlocked]);
+    newOnes.forEach((a, i) => setTimeout(() => showAchievementPopup(a), 600 + i * 1800));
+  }
+}
+
+function showAchievementPopup(ach) {
+  const el = document.getElementById('ach-popup');
+  if (!el) return;
+  el.querySelector('#ach-label').textContent = ach.label;
+  el.querySelector('#ach-desc').textContent = ach.desc;
+  el.classList.remove('hidden');
+  el.classList.add('ach-slide-in');
+  setTimeout(() => {
+    el.classList.remove('ach-slide-in');
+    el.classList.add('ach-slide-out');
+    setTimeout(() => { el.classList.add('hidden'); el.classList.remove('ach-slide-out'); }, 600);
+  }, 3000);
+}
+
+function renderAchievementsModal() {
+  const unlocked = new Set(loadAchievements());
+  const list = document.getElementById('ach-list');
+  if (!list) return;
+  list.innerHTML = ACHIEVEMENTS.map(a => {
+    const done = unlocked.has(a.id);
+    return `<div class="ach-item ${done ? 'done' : 'locked'}">
+      <span class="ach-icon">${done ? '✔' : '🔒'}</span>
+      <div><div class="ach-name">${a.label}</div><div class="ach-desc-small">${a.desc}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Upgrades / Skill tree ────────────────────────────────────────────────────
+const UPGRADE_CATALOG = {
+  thrust:    { name:'🔥 Propulseur +',  desc:'Poussée +15%. Le vaisseau répond plus vite et monte plus fort.',       cost: 60,  max: 3 },
+  fuel_cap:  { name:'⛽ Réservoir +',   desc:'Capacité carburant +20%. Vous partez avec plus de temps devant vous.',  cost: 50,  max: 3 },
+  gyro:      { name:'🌀 Gyroscope +',   desc:'Rotation +20% plus rapide. Corrections plus précises.',                cost: 45,  max: 3 },
+  rcs:       { name:'🛡 Stabilisateur', desc:'Friction angulaire ×1.5. Le vaisseau se stabilise seul plus vite.',    cost: 55,  max: 2 },
+  retro:     { name:'💨 Rétro +',       desc:'Puissance rétrofusées +25%. Décélération plus efficace.',              cost: 50,  max: 2 },
+};
+
+function loadUpgrades() { try { return JSON.parse(localStorage.getItem('sl_upgrades') || '{}'); } catch { return {}; } }
+function saveUpgrades(u) { try { localStorage.setItem('sl_upgrades', JSON.stringify(u)); } catch {} }
+
+function getUpgradeLevel(shipId, upId) {
+  const u = loadUpgrades();
+  return (u[shipId] && u[shipId][upId]) || 0;
+}
+
+function buyUpgrade(shipId, upId) {
+  const u = loadUpgrades();
+  if (!u[shipId]) u[shipId] = {};
+  const cur = u[shipId][upId] || 0;
+  const cat = UPGRADE_CATALOG[upId];
+  if (!cat || cur >= cat.max) return false;
+  const cost = cat.cost + cur * 20;
+  if (globalDiamonds < cost) return false;
+  globalDiamonds -= cost;
+  saveDiamonds(globalDiamonds);
+  u[shipId][upId] = cur + 1;
+  saveUpgrades(u);
+  return true;
+}
+
+// Apply upgrades to lander at construction (called from startGame)
+function applyUpgrades(game, shipId) {
+  const u = loadUpgrades()[shipId] || {};
+  const l = game.lander;
+  const thrustLvl  = u['thrust']   || 0;
+  const fuelLvl    = u['fuel_cap'] || 0;
+  const gyroLvl    = u['gyro']     || 0;
+  const rcsLvl     = u['rcs']      || 0;
+  const retroLvl   = u['retro']    || 0;
+
+  l._thrustBonus  = 1 + thrustLvl * 0.15;
+  l._fuelCapBonus = 1 + fuelLvl   * 0.20;
+  l._gyroBonus    = 1 + gyroLvl   * 0.20;
+  l._rcsBonus     = 1 + rcsLvl    * 0.5;   // extra friction
+  l._retroBonus   = 1 + retroLvl  * 0.25;
+
+  // Apply fuel cap bonus immediately
+  if (fuelLvl > 0) {
+    l.fuel    *= l._fuelCapBonus;
+    l.fuelMax *= l._fuelCapBonus;
+  }
+}
+
+function renderUpgradeUI(shipId) {
+  const u = loadUpgrades()[shipId] || {};
+  const list = document.getElementById('upgrade-list');
+  if (!list) return;
+  list.innerHTML = '';
+  document.getElementById('upgrade-ship-name').textContent =
+    ({ standard:'Module Standard', moustique:'Le Moustique', tank:'Le Tank', alien:'Vaisseau Alien' })[shipId] || shipId;
+
+  for (const [upId, cat] of Object.entries(UPGRADE_CATALOG)) {
+    const cur = u[upId] || 0;
+    const cost = cat.cost + cur * 20;
+    const maxed = cur >= cat.max;
+    const canAfford = globalDiamonds >= cost;
+    const div = document.createElement('div');
+    div.className = 'upgrade-item' + (maxed ? ' maxed' : canAfford ? ' buyable' : ' locked');
+    const pips = Array.from({length: cat.max}, (_, i) =>
+      `<span class="upg-pip ${i < cur ? 'filled' : ''}"></span>`).join('');
+    div.innerHTML = `
+      <div class="upg-info">
+        <div class="upg-name">${cat.name} ${pips}</div>
+        <div class="upg-desc">${cat.desc}</div>
+      </div>
+      <button class="upg-btn" ${maxed || !canAfford ? 'disabled' : ''} onclick="doBuyUpgrade('${shipId}','${upId}')">
+        ${maxed ? 'MAX' : canAfford ? cost+'💎' : cost+'💎'}
+      </button>`;
+    list.appendChild(div);
+  }
+  document.getElementById('upgrade-diamonds').textContent = globalDiamonds;
+}
+
+window.doBuyUpgrade = function(shipId, upId) {
+  if (buyUpgrade(shipId, upId)) {
+    document.getElementById('diamond-count').textContent = globalDiamonds;
+    renderUpgradeUI(shipId);
+  }
+};
+
+// ─── Challenge du jour ────────────────────────────────────────────────────────
+function getDailyKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function getDailyChallenge() {
+  const key = getDailyKey();
+  const hash = key.split('').reduce((a,c) => (a * 31 + c.charCodeAt(0)) | 0, 0);
+  const idx = Math.abs(hash) % CAMPAIGN_ORDER.length;
+  const bodyId = CAMPAIGN_ORDER[idx];
+  const seed = Math.abs(hash * 7 + 13) % 999999;
+  return { bodyId, seed, key };
+}
+
+function loadDailyScore() {
+  try { return JSON.parse(localStorage.getItem('sl_daily_' + getDailyKey()) || 'null'); } catch { return null; }
+}
+function saveDailyScore(score) {
+  try { localStorage.setItem('sl_daily_' + getDailyKey(), JSON.stringify(score)); } catch {} }
+
+let dailyMode = false;
+
+function startDailyChallenge() {
+  const ch = getDailyChallenge();
+  if (!BODY_DATA[ch.bodyId]) return;
+  dailyMode = true;
+  selectedBody = ch.bodyId;
+  elTooltip.classList.add('hidden');
+  const solarPos = solar.getBodyScreenPos(ch.bodyId);
+  const pos = {
+    x: (solarPos.x - canvas.width/2) * viewZoom + canvas.width/2 + viewPanX,
+    y: (solarPos.y - canvas.height/2) * viewZoom + canvas.height/2 + viewPanY,
+  };
+  zoomOX = pos.x; zoomOY = pos.y;
+  fadeProgress = 0; zoomScale = 1;
+  state = S.FADING;
+}
+
+// ─── Replay ───────────────────────────────────────────────────────────────────
+let replayFrames = null;
+let replayIdx = 0;
+let replayTimer = 0;
+const REPLAY_FRAME_DT = 0.05;
+
+function startReplay(frames, game) {
+  replayFrames = frames;
+  replayIdx = 0;
+  replayTimer = 0;
+  // Pass terrain/config from game to replayGame
+  window._replayGame = game;
+}
+
+function drawReplayOverlay(ctx, W, H) {
+  if (!replayFrames || !window._replayGame) return;
+  const rg = window._replayGame;
+  if (replayIdx >= replayFrames.length) {
+    // Loop replay
+    replayIdx = 0;
+    replayTimer = 0;
+  }
+  replayTimer += 1/60;
+  while (replayTimer >= REPLAY_FRAME_DT && replayIdx < replayFrames.length) {
+    replayTimer -= REPLAY_FRAME_DT;
+    replayIdx++;
+  }
+  const f = replayFrames[Math.min(replayIdx, replayFrames.length - 1)];
+  if (!f) return;
+  const S = rg.SCALE;
+  const cx = rg.camX, cy = rg.camY;
+  const sx = (f.x - cx) * S + W / 2;
+  const sy = H / 2 - (f.y - cy) * S;
+  // Draw a full ghost ship at replay position
+  const ghw = rg.lander.hw * 2 * S;
+  const ghh = rg.lander.hh * 2 * S;
+  const gRad = f.angle * Math.PI / 180;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.translate(sx, sy);
+  ctx.rotate(gRad);
+  ctx.fillStyle = '#4488ff';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-ghw/2, -ghh/2, ghw, ghh*0.65, 3);
+  else ctx.rect(-ghw/2, -ghh/2, ghw, ghh*0.65);
+  ctx.fill();
+  ctx.fillStyle = '#aaccff';
+  ctx.beginPath(); ctx.arc(0, -ghh*0.15, ghw*0.18, 0, Math.PI*2); ctx.fill();
+  // Flame if thrusting
+  if (f.up) {
+    const fl = ghh * 0.45;
+    ctx.fillStyle = 'rgba(255,160,0,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(-ghw*0.2, ghh*0.1);
+    ctx.lineTo(ghw*0.2, ghh*0.1);
+    ctx.lineTo(0, ghh*0.1 + fl);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ─── Daily / Achievements / Upgrades buttons ──────────────────────────────────
+document.getElementById('btn-daily').addEventListener('click', startDailyChallenge);
+document.getElementById('btn-achievements').addEventListener('click', () => {
+  renderAchievementsModal();
+  document.getElementById('card-achievements').classList.remove('hidden');
+});
+document.getElementById('btn-ach-close').addEventListener('click', () => {
+  document.getElementById('card-achievements').classList.add('hidden');
+});
+document.getElementById('btn-upgrades').addEventListener('click', () => {
+  renderUpgradeUI(loadActiveShip());
+  document.getElementById('card-upgrades').classList.remove('hidden');
+});
+document.getElementById('btn-upgrades-close').addEventListener('click', () => {
+  document.getElementById('card-upgrades').classList.add('hidden');
 });
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
