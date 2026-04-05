@@ -16,27 +16,27 @@
   <!-- HUD (visible en jeu) -->
   <div id="hud" class="hidden">
     <div id="hud-left">
-      <div class="hrow"><span class="hlbl">ALT</span><span id="v-alt" class="hval">0 m</span></div>
-      <div class="hrow"><span class="hlbl">VIT ↓</span><span id="v-vs" class="hval safe">0.0</span><span class="hunit">
+      <div class="hrow"><span class="hlbl" data-i18n="hud.alt">ALT</span><span id="v-alt" class="hval">0 m</span></div>
+      <div class="hrow"><span class="hlbl" data-i18n="hud.vspeed">VIT ↓</span><span id="v-vs" class="hval safe">0.0</span><span class="hunit">
           m/s</span></div>
-      <div class="hrow"><span class="hlbl">VIT →</span><span id="v-hs" class="hval safe">0.0</span><span class="hunit">
+      <div class="hrow"><span class="hlbl" data-i18n="hud.hspeed">VIT →</span><span id="v-hs" class="hval safe">0.0</span><span class="hunit">
           m/s</span></div>
-      <div class="hrow"><span class="hlbl">INCL</span><span id="v-ang" class="hval safe">0.0</span><span
+      <div class="hrow"><span class="hlbl" data-i18n="hud.incl">INCL</span><span id="v-ang" class="hval safe">0.0</span><span
           class="hunit">°</span></div>
     </div>
     <div id="hud-center">
       <div id="hud-planet-name"></div>
       <div id="hud-timer">00:00</div>
-      <div id="landing-arrow" class="hidden">▼ PAD</div>
+      <div id="landing-arrow" class="hidden" data-i18n="hud.pad">▼ PAD</div>
     </div>
     <div id="hud-right">
-      <div class="hrow"><span class="hlbl">CARBURANT</span></div>
+      <div class="hrow"><span class="hlbl" data-i18n="hud.fuel">CARBURANT</span></div>
       <div id="fuel-wrap">
         <div id="fuel-bar"></div><span id="v-fuel">100%</span>
       </div>
-      <div class="hrow" id="wind-row"><span class="hlbl">VENT</span><span id="v-wind" class="hval">0.0 m/s</span></div>
-      <div class="hrow" id="storm-warn" style="display:none"><span class="warn-txt">⚠ TEMPÊTE</span></div>
-      <div class="hrow" id="best-row" style="display:none"><span class="hlbl">RECORD</span><span id="v-best" class="hval" style="color:#fc0">—</span></div>
+      <div class="hrow" id="wind-row"><span class="hlbl" data-i18n="hud.wind">VENT</span><span id="v-wind" class="hval">0.0 m/s</span></div>
+      <div class="hrow" id="storm-warn" style="display:none"><span class="warn-txt" data-i18n="hud.storm">⚠ TEMPÊTE</span></div>
+      <div class="hrow" id="best-row" style="display:none"><span class="hlbl" data-i18n="hud.record">RECORD</span><span id="v-best" class="hval" style="color:#fc0">—</span></div>
     </div>
   </div>
 
@@ -45,12 +45,12 @@
     <div class="missions-shell">
       <div class="missions-header">
         <div>
-          <div class="missions-kicker">OBJECTIFS DE MISSION</div>
-          <div class="missions-title">Bonus tactiques</div>
+          <div class="missions-kicker" data-i18n="missions.header">OBJECTIFS DE MISSION</div>
+          <div class="missions-title" data-i18n="missions.title">Bonus tactiques</div>
         </div>
-        <div class="missions-lock">Déblocage à l'atterrissage</div>
+        <div class="missions-lock" data-i18n="missions.lock">Déblocage à l'atterrissage</div>
       </div>
-      <div class="missions-subtitle">Remplissez les conditions en vol, les récompenses ne sont validées qu'après un atterrissage réussi.</div>
+      <div class="missions-subtitle" data-i18n="missions.subtitle">Remplissez les conditions en vol, les récompenses ne sont validées qu'après un atterrissage réussi.</div>
       <div id="missions-list"></div>
     </div>
   </div>
@@ -60,9 +60,10 @@
 
   <!-- Top Left: Navigation -->
   <div id="solar-top-left" class="top-stack top-stack-left">
-    <button id="btn-daily" class="btn-s nav-btn nav-gold">📅 DÉFI DU JOUR</button>
-    <button id="btn-achievements" class="btn-s nav-btn nav-yellow">🏆 SUCCÈS</button>
-    <button id="btn-upgrades" class="btn-s nav-btn nav-magenta">🛠 AMÉLIORATIONS</button>
+    <button id="btn-lang" class="btn-s nav-btn">FR / EN</button>
+    <button id="btn-daily" class="btn-s nav-btn nav-gold" data-i18n="nav.daily">📅 DÉFI DU JOUR</button>
+    <button id="btn-achievements" class="btn-s nav-btn nav-yellow" data-i18n="nav.achievements">🏆 SUCCÈS</button>
+    <button id="btn-upgrades" class="btn-s nav-btn nav-magenta" data-i18n="nav.upgrades">🛠 AMÉLIORATIONS</button>
   </div>
 
   <!-- Top Right: Diamonds & Shop -->
@@ -70,52 +71,52 @@
     <div id="diamond-counter">
       💎 <span id="diamond-count">0</span>
     </div>
-    <button id="btn-shop" class="btn btn-cyan nav-btn">🛒 HANGAR</button>
+    <button id="btn-shop" class="btn btn-cyan nav-btn" data-i18n="nav.shop">🛒 HANGAR</button>
   </div>
 
   <!-- Shop Card -->
   <div id="card-shop" class="card card-modal card-cyan hidden">
-    <div class="card-title">HANGAR SPATIAL</div>
+    <div class="card-title" data-i18n="shop.title">HANGAR SPATIAL</div>
     <div class="card-summary">
       Fonds disponibles: <b class="currency-value">💎 <span id="shop-solde">0</span></b>
     </div>
     <div id="shop-items" class="card-list card-list-loose"></div>
     <div class="card-actions">
-      <button id="btn-shop-close" class="btn-s btn-wide">FERMER</button>
+      <button id="btn-shop-close" class="btn-s btn-wide" data-i18n="shop.close">FERMER</button>
     </div>
   </div>
 
   <!-- Achievements Card -->
   <div id="card-achievements" class="card card-modal card-gold hidden">
-    <div class="card-title">SUCCÈS</div>
+    <div class="card-title" data-i18n="ach.title">SUCCÈS</div>
     <div id="ach-list" class="card-list card-list-tight"></div>
     <div class="card-actions">
-      <button id="btn-ach-close" class="btn-s btn-wide">FERMER</button>
+      <button id="btn-ach-close" class="btn-s btn-wide" data-i18n="ach.close">FERMER</button>
     </div>
   </div>
 
   <!-- Upgrades Card -->
   <div id="card-upgrades" class="card card-modal card-magenta hidden">
-    <div class="card-title">AMÉLIORATIONS</div>
+    <div class="card-title" data-i18n="upgrades.title">AMÉLIORATIONS</div>
     <div class="card-summary">
       Vaisseau: <span id="upgrade-ship-name" class="summary-strong"></span><br>
       Fonds: <b class="currency-value">💎 <span id="upgrade-diamonds">0</span></b>
     </div>
     <div id="upgrade-list" class="card-list"></div>
     <div class="card-actions">
-      <button id="btn-upgrades-close" class="btn-s btn-wide">FERMER</button>
+      <button id="btn-upgrades-close" class="btn-s btn-wide" data-i18n="upgrades.close">FERMER</button>
     </div>
   </div>
 
   <!-- Boss Overlay Venus -->
   <div id="boss-overlay" class="overlay-screen hidden">
     <div class="overlay-card overlay-orange">
-      <h1 class="overlay-title">VÉNUS VAINCUE</h1>
-      <p class="overlay-text">
+      <h1 class="overlay-title" data-i18n="boss.title">VÉNUS VAINCUE</h1>
+      <p class="overlay-text" data-i18n="boss.text">
         Vous avez survécu aux conditions extrêmes et avez dompté l'atmosphère infernale de Vénus. Un exploit digne des plus grands pilotes de l'Histoire !
       </p>
       <div id="boss-reward" class="reward-badge"></div>
-      <button id="btn-boss-close" class="btn btn-warm btn-wide">ACCEPTER LA RÉCOMPENSE</button>
+      <button id="btn-boss-close" class="btn btn-warm btn-wide" data-i18n="boss.close">ACCEPTER LA RÉCOMPENSE</button>
     </div>
   </div>
 
@@ -123,7 +124,7 @@
   <div id="ach-popup" class="toast toast-gold hidden">
     <div class="toast-icon">🏆</div>
     <div>
-      <div class="toast-kicker">SUCCÈS DÉVERROUILLÉ</div>
+      <div class="toast-kicker" data-i18n="ach.popup">SUCCÈS DÉVERROUILLÉ</div>
       <div id="ach-label" class="toast-title"></div>
       <div id="ach-desc" class="toast-desc"></div>
     </div>
@@ -137,8 +138,8 @@
     <div id="card-conditions"></div>
     <p id="card-desc"></p>
     <div class="card-btns">
-      <button id="btn-launch" class="btn-p">🚀 Lancer la Mission</button>
-      <button id="btn-back" class="btn-s">← Retour</button>
+      <button id="btn-launch" class="btn-p" data-i18n="card.launch">🚀 Lancer la Mission</button>
+      <button id="btn-back" class="btn-s" data-i18n="card.back">← Retour</button>
     </div>
   </div>
 
@@ -149,18 +150,15 @@
     <div id="res-stats"></div>
     <div id="res-stars"></div>
     <div class="card-btns">
-      <button id="btn-retry" class="btn-p">🔄 Réessayer</button>
-      <button id="btn-to-solar" class="btn-s">🌌 Système Solaire</button>
+      <button id="btn-retry" class="btn-p" data-i18n="result.retry">🔄 Réessayer</button>
+      <button id="btn-to-solar" class="btn-s" data-i18n="result.solar">🌌 Système Solaire</button>
     </div>
   </div>
 
   <!-- Contrôles temps (vue solaire) -->
   <div id="time-ctrl">
     <span id="sim-date"></span>
-    <button class="tbtn" data-speed="1" style="display:none">×1</button>
-    <button class="tbtn" data-speed="1000" style="display:none">×1000</button>
-    <button class="tbtn active" data-speed="100000" style="display:none">×100K</button>
-    <button id="btn-reset" class="tbtn tbtn-reset">RESET</button>
+    <button id="btn-reset" class="tbtn tbtn-reset" data-i18n="solar.reset">RESET</button>
   </div>
 
   <!-- Tooltip non atterrissable -->
@@ -178,9 +176,7 @@
     </div>
   </div>
 
-  <script src="astronomy.js"></script>
-  <script src="lander.js"></script>
-  <script src="main.js"></script>
+  <script type="module" src="src/app.js"></script>
 </body>
 
 </html>
