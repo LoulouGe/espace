@@ -50,7 +50,12 @@ export const AU_KM = 149597871;
 // PLANET_FACTS removed -- facts now come from i18n.
 
 export function getFact(id, idx) {
-  return t('fact.' + id + '.' + idx);
+  // Most bodies have 4 facts (indices 0-3)
+  const factCount = 4;
+  const wrappedIdx = ((idx || 0) % factCount + factCount) % factCount;
+  const key = `fact.${id}.${wrappedIdx}`;
+  const val = t(key);
+  return val !== key ? val : null;
 }
 
 export function orbitBodyName(id) {

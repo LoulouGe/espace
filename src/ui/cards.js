@@ -2,8 +2,8 @@ import { t } from '../i18n/i18n.js';
 import { BODY_DATA, bodyName, bodyDesc, bodyConditions } from '../data/bodies.js';
 import { SHOP_CATALOG, UPGRADE_CATALOG, getShipPalette, drawShipPreview, BASE_REWARDS } from '../data/shop.js';
 import {
-  loadLeaderboard, loadShips, loadActiveShip, saveActiveShip,
-  saveDiamonds, saveShips, loadUpgrades, saveUpgrades,
+  loadLeaderboard, loadShips, loadActiveShip,
+  loadUpgrades,
 } from '../storage.js';
 
 // ─── Planet card ────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ export function showPlanetCard(id, elCardPlanet) {
   let condHTML = conditions.map(c => `<div class="cond-row"><span class="ci">${c.ci}</span><span>${c.txt}</span></div>`).join('');
   if (best) {
     const starStr = '★'.repeat(best.stars || 0) + '☆'.repeat(3 - (best.stars || 0));
-    condHTML = `<div class="cond-row cond-row--record"><span class="ci">🏆</span><span>${t('result.record')} ${best.total} pts (${starStr})</span></div>` + condHTML;
+    condHTML = `<div class="cond-row cond-row--record"><span class="ci">🏆</span><span>${t('result.record', { score: best.total })} (${starStr})</span></div>` + condHTML;
   }
   document.getElementById('card-conditions').innerHTML = condHTML;
 
@@ -74,7 +74,7 @@ export function showResultCard(success, score, reason, game, selectedBody, globa
       const label = t(m.labelKey).replace(/^[^\s]+\s/, '');
       return `<div class="stat-row stat-row-mission ${done ? 'is-done' : ''}"><span class="stat-lbl">${done?'✔':'○'} ${label}</span><span class="stat-val">${done?'+'+m.reward+'💎':'—'}</span></div>`;
     }).join('') : '';
-  const diamRow = success ? `<div class="stat-row stat-row-reward"><span class="stat-lbl">${t('result.reward')}</span><span class="stat-val">+${earned}${missionBonus>0?' (dont +'+missionBonus+' missions)':''}</span></div>` : '';
+  const diamRow = success ? `<div class="stat-row stat-row-reward"><span class="stat-lbl">${t('result.reward')}</span><span class="stat-val">+${earned}${missionBonus > 0 ? ' (' + t('missions.bonus', { n: missionBonus }) + ')' : ''}</span></div>` : '';
 
   document.getElementById('res-stats').innerHTML = `
     ${reasonRow}

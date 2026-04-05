@@ -549,7 +549,7 @@ function showError(msg) {
   ctx.fillStyle = '#f44';
   ctx.font = 'bold 16px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('ERREUR JS :', canvas.width / 2, canvas.height / 2 - 20);
+  ctx.fillText(t('error.title'), canvas.width / 2, canvas.height / 2 - 20);
   ctx.fillStyle = '#faa';
   ctx.font = '13px monospace';
   ctx.fillText(String(msg).slice(0, 120), canvas.width / 2, canvas.height / 2 + 10);

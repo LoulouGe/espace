@@ -161,15 +161,20 @@ export const BODY_DATA = {
 export function bodyName(id) { return t('body.' + id + '.name'); }
 export function bodyDesc(id) { return t('body.' + id + '.desc'); }
 export function bodyConditions(id) {
-  const n = BODY_DATA[id] ? BODY_DATA[id].condCount : 0;
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    out.push({
-      ci: t('body.' + id + '.cond.' + i + '.ci'),
-      txt: t('body.' + id + '.cond.' + i + '.txt'),
-    });
+  const cfg = BODY_DATA[id];
+  if (!cfg) return [];
+  const result = [];
+  for (let i = 0; i < cfg.condCount; i++) {
+    const str = t('body.' + id + '.cond.' + i);
+    // Extract leading emoji/symbol as ci, rest as txt
+    const match = str.match(/^(\S+)\s+(.*)$/);
+    if (match) {
+      result.push({ ci: match[1], txt: match[2] });
+    } else {
+      result.push({ ci: '', txt: str });
+    }
   }
-  return out;
+  return result;
 }
 
 // ─── Campaign order ─────────────────────────────────────────────────────────
