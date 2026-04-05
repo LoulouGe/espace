@@ -1,123 +1,14 @@
-// astronomy.js — Orbital mechanics & Solar System rendering
+// src/solar/solar-system.js -- Solar system rendering
 
-const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
-
-// Safari ne supporte pas les hex 8 chiffres (#rrggbbaa) — conversion en rgba()
-function hexAlpha(hex, a) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
-
-// Each planet: L0 = mean longitude at J2000 (degrees), dL = daily motion (deg/day)
-const ORBITAL_ELEMENTS = [
-  { id:'mercury', name:'Mercure', L0:252.25, dL:4.09234, color:'#a8a8a8', r:4,  orbitR:58  },
-  { id:'venus',   name:'Vénus',   L0:181.98, dL:1.60214, color:'#e8c56a', r:7,  orbitR:92  },
-  { id:'earth',   name:'Terre',   L0:100.46, dL:0.98565, color:'#2e86ab', r:8,  orbitR:128 },
-  { id:'mars',    name:'Mars',    L0:355.43, dL:0.52404, color:'#c1440e', r:6,  orbitR:170 },
-  { id:'jupiter', name:'Jupiter', L0:34.40,  dL:0.08306, color:'#c88b3a', r:17, orbitR:230 },
-  { id:'saturn',  name:'Saturne', L0:49.94,  dL:0.03346, color:'#e4d191', r:13, orbitR:290 },
-  { id:'uranus',  name:'Uranus',  L0:313.23, dL:0.01177, color:'#7de8e8', r:11, orbitR:345 },
-  { id:'neptune', name:'Neptune', L0:304.88, dL:0.00600, color:'#3f54ba', r:10, orbitR:390 },
-];
-const EARTH_EL = ORBITAL_ELEMENTS.find(el => el.id === 'earth');
-const JUPITER_EL = ORBITAL_ELEMENTS.find(el => el.id === 'jupiter');
-const SATURN_EL = ORBITAL_ELEMENTS.find(el => el.id === 'saturn');
-
-// Orbit display radii (pixels at base scale 1.0, i.e. canvas 900px min dim)
-const BASE_ORBIT_R = [58, 92, 128, 170, 230, 290, 345, 390];
-
-// Moon (orbits Earth)
-const MOON_EL = { id:'moon', name:'Lune', L0:218.3, dL:13.1764, color:'#b8b8b8', r:3, orbitR:0 };
-// Titan (orbits Saturn, period ~15.95 days)
-const TITAN_EL = { id:'titan', name:'Titan', L0:120.0, dL:22.577, color:'#cc8833', r:3, orbitR:0 };
-// Io (orbits Jupiter, period ~1.77 days)
-const IO_EL = { id:'io', name:'Io', L0:84.1, dL:203.49, color:'#d4a820', r:3, orbitR:0 };
-// Europa (orbits Jupiter, period ~3.55 days)
-const EUROPA_EL = { id:'europa', name:'Europa', L0:171.6, dL:101.37, color:'#7aade0', r:3, orbitR:0 };
-// Pluto (very slow, period ~248 years)
-const PLUTO_EL = { id:'pluto', name:'Pluton', L0:238.9, dL:0.00397, color:'#c0aa88', r:4, orbitR:0 };
-const PLUTO_ORBIT_R = 440; // beyond Neptune
-
-const GAS_GIANTS = new Set(['jupiter','saturn','uranus','neptune']);
-const LANDABLE   = new Set(['moon','mercury','mars','titan','earth','venus','io','europa','pluto']);
-
-// Landable body metadata for tooltip/display
-const LANDABLE_STARS = { moon:1, mercury:2, mars:3, titan:3, earth:4, venus:5, io:4, europa:4, pluto:5 };
-
-const PLANET_FACTS = {
-  mercury: ["Révolution : 88 jours terrestres","Surface : −180°C la nuit, +430°C le jour","Aucune lune, aucune atmosphère","Son noyau représente 85% de son rayon"],
-  venus:   ["Rotation rétrograde — le Soleil se lève à l'ouest","Pression atm. : 90× celle de la Terre","Une journée vénusienne dure plus qu'une année","Planète la plus chaude : 462°C en permanence"],
-  earth:   ["Seule planète connue abritant la vie","71% de la surface est de l'eau","La Lune stabilise l'inclinaison axiale à 23°","Le champ magnétique dévie les vents solaires"],
-  mars:    ["Olympus Mons : 22 km de haut, 3× l'Everest","Un sol martien dure 24h 37min","La poussière colore le ciel en rose-orangé","Deux lunes : Phobos (déclin) et Deimos"],
-  jupiter: ["1 300 Terres tiendraient dans Jupiter","La Grande Tache Rouge dure depuis 350+ ans","95 lunes confirmées","Champ magnétique 20 000× celui de la Terre"],
-  saturn:  ["Anneaux : 70 000 km de large, <1 km d'épaisseur","Densité inférieure à l'eau — il flotterait !","146 lunes connues","Les anneaux disparaîtront dans ~100 Ma"],
-  uranus:  ["Axe incliné à 98° — il 'roule' autour du Soleil","Saisons de 21 ans terrestres chacune","27 lunes nommées d'après Shakespeare","Planète la plus froide : −224°C"],
-  neptune: ["Vents à 2 100 km/h — record du système solaire","Voyager 2 seul visiteur humain (1989)","Un an Neptune = 165 ans terrestres","Triton orbite à l'envers et se rapproche"],
-  moon:    ["S'éloigne de la Terre de 3,8 cm par an","12 humains y ont marché entre 1969 et 1972","Toujours la même face est tournée vers la Terre","Ses marées ralentissent la rotation terrestre"],
-  titan:   ["Seule lune du système avec une atmosphère dense","Lacs de méthane liquide en surface","Pression atm. : 1,45× celle de la Terre","Température : −179°C"],
-  io:      ["La lune la plus volcanique du système solaire","Plus de 400 volcans actifs recensés","Éruptions visibles depuis l'espace","Chauffée par les marées gravitationnelles de Jupiter"],
-  europa:  ["Possède un océan liquide sous sa glace","Surface parmi les plus lisses du système solaire","Candidat no.1 pour la vie extraterrestre","Les geysers d'eau jaillissent à 200 km de hauteur"],
-  pluto:   ["Classé planète naine depuis 2006","Son année dure 248 ans terrestres","Charon est si gros qu'ils s'orbitent mutuellement","New Horizons l'a survolé en 2015"],
-};
-
-// Semi-grand axe en UA (pour calcul de distance approximative)
-const PLANET_AU = {
-  mercury:0.387, venus:0.723, earth:1.000, mars:1.524,
-  jupiter:5.203, saturn:9.537, uranus:19.19, neptune:30.07, pluto:39.48,
-};
-const AU_KM = 149597871;
-
-// Feature 9: Meteor system for solar view
-class SolarMeteorSystem {
-  constructor() { this.meteors = []; }
-  update(dt, W, H) {
-    if (Math.random() < 0.002 * dt * 60) {
-      const fromLeft = Math.random() < 0.5;
-      this.meteors.push({
-        x: fromLeft ? -20 : W + 20,
-        y: Math.random() * H * 0.6,
-        vx: (fromLeft ? 1 : -1) * (150 + Math.random() * 200),
-        vy: 50 + Math.random() * 100,
-        len: 20 + Math.random() * 40,
-        alpha: 0.5 + Math.random() * 0.4,
-      });
-    }
-    for (let i = this.meteors.length - 1; i >= 0; i--) {
-      const m = this.meteors[i];
-      m.x += m.vx * dt; m.y += m.vy * dt;
-      if (m.x < -100 || m.x > W + 100 || m.y > H + 100) this.meteors.splice(i, 1);
-    }
-  }
-  draw(ctx) {
-    for (const m of this.meteors) {
-      const angle = Math.atan2(m.vy, m.vx);
-      ctx.save();
-      ctx.translate(m.x, m.y);
-      ctx.rotate(angle);
-      const g = ctx.createLinearGradient(-m.len, 0, 4, 0);
-      g.addColorStop(0, `rgba(255,255,255,0)`);
-      g.addColorStop(0.7, `rgba(200,220,255,${m.alpha * 0.5})`);
-      g.addColorStop(1, `rgba(255,255,255,${m.alpha})`);
-      ctx.strokeStyle = g;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(-m.len, 0); ctx.lineTo(4, 0); ctx.stroke();
-      ctx.fillStyle = `rgba(255,255,255,${m.alpha})`;
-      ctx.beginPath(); ctx.arc(0, 0, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-  }
-}
-
-function mixHex(a, b, t) {
-  const ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16), ab = parseInt(a.slice(5, 7), 16);
-  const br = parseInt(b.slice(1, 3), 16), bg = parseInt(b.slice(3, 5), 16), bb = parseInt(b.slice(5, 7), 16);
-  const r = Math.round(ar + (br - ar) * t);
-  const g = Math.round(ag + (bg - ag) * t);
-  const b2 = Math.round(ab + (bb - ab) * t);
-  return `rgb(${r},${g},${b2})`;
-}
+import {
+  J2000_MS, ORBITAL_ELEMENTS, EARTH_EL, JUPITER_EL, SATURN_EL,
+  BASE_ORBIT_R, MOON_EL, TITAN_EL, IO_EL, EUROPA_EL, PLUTO_EL,
+  PLUTO_ORBIT_R, GAS_GIANTS, LANDABLE, LANDABLE_STARS, PLANET_AU, AU_KM,
+  getFact, orbitBodyName,
+} from '../data/orbits.js';
+import { hexAlpha, mixHex, lightenColor } from '../utils.js';
+import { SolarMeteorSystem } from './solar-meteors.js';
+import { t, getLang } from '../i18n/i18n.js';
 
 function drawInfoChip(ctx, x, y, title, accent, subtitle) {
   ctx.save();
@@ -247,22 +138,20 @@ function drawOrbitalBody(ctx, body, pos, options = {}) {
     ctx.fillStyle = 'rgba(255,220,140,0.96)';
     ctx.font = `${Math.max(10, r)}px monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText('🔒', pos.x, pos.y + r * 0.38);
+    ctx.fillText('\u{1F512}', pos.x, pos.y + r * 0.38);
   }
 
-  drawInfoChip(ctx, pos.x, pos.y + r + 8, body.name, accent, subtitle);
+  drawInfoChip(ctx, pos.x, pos.y + r + 8, orbitBodyName(body.id), accent, subtitle);
 }
 
-class SolarSystem {
+export class SolarSystem {
   constructor(w, h) {
     this.w = w; this.h = h;
     this.cx = w / 2; this.cy = h / 2;
     this.simTime = Date.now();
     this._computeScale();
     this._buildStars(350);
-    // Twinkle state
     this._twinkle = new Float32Array(350).map(() => Math.random());
-    // Feature 9: meteors in solar view
     this.meteors = new SolarMeteorSystem();
   }
 
@@ -315,9 +204,7 @@ class SolarSystem {
     return { x: parentPos.x + moonEl.orbitR * Math.cos(rad), y: parentPos.y + moonEl.orbitR * Math.sin(rad) };
   }
 
-  // Returns body id clicked, or null
   getBodyAt(sx, sy) {
-    // Check Pluto first (orbit outside ORBITAL_ELEMENTS list)
     const plutoPos = this._pos(PLUTO_EL, this.simTime);
     if (Math.hypot(sx - plutoPos.x, sy - plutoPos.y) <= Math.max(PLUTO_EL.r + 6, 14)) return 'pluto';
 
@@ -343,7 +230,6 @@ class SolarSystem {
     return null;
   }
 
-  // Screen position of a body (for zoom target)
   getBodyScreenPos(id) {
     if (id === 'moon') {
       const earthPos = this._pos(EARTH_EL, this.simTime);
@@ -370,9 +256,8 @@ class SolarSystem {
     this.simTime += dt * 1000;
   }
 
-  // Feature 1 & 5: draw(ctx, dtSec, hoveredId, lockedIds, fuelInfo, leaderboard)
   draw(ctx, dtSec, hoveredId, lockedIds, fuelInfo, leaderboard) {
-    const t = this.simTime;
+    const t_ = this.simTime;
 
     // Background
     const bg = ctx.createLinearGradient(0, 0, 0, this.h);
@@ -405,7 +290,7 @@ class SolarSystem {
       ctx.fill();
     }
 
-    // Feature 9: meteors in solar view
+    // Meteors
     this.meteors.update(dtSec || 0.016, this.w, this.h);
     this.meteors.draw(ctx);
 
@@ -419,21 +304,21 @@ class SolarSystem {
     }
 
     // Moon orbit (near Earth)
-    const earthPos = this._pos(EARTH_EL, t);
+    const earthPos = this._pos(EARTH_EL, t_);
     ctx.strokeStyle = 'rgba(150,180,255,0.1)';
     ctx.beginPath();
     ctx.arc(earthPos.x, earthPos.y, MOON_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
     // Titan orbit (near Saturn)
-    const saturnPos = this._pos(SATURN_EL, t);
+    const saturnPos = this._pos(SATURN_EL, t_);
     ctx.strokeStyle = 'rgba(200,150,50,0.1)';
     ctx.beginPath();
     ctx.arc(saturnPos.x, saturnPos.y, TITAN_EL.orbitR, 0, Math.PI * 2);
     ctx.stroke();
 
     // Io + Europa orbits (near Jupiter)
-    const jupiterPos = this._pos(JUPITER_EL, t);
+    const jupiterPos = this._pos(JUPITER_EL, t_);
     ctx.strokeStyle = 'rgba(200,160,30,0.1)';
     ctx.beginPath(); ctx.arc(jupiterPos.x, jupiterPos.y, IO_EL.orbitR,     0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = 'rgba(100,160,220,0.1)';
@@ -444,12 +329,12 @@ class SolarSystem {
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(this.cx, this.cy, PLUTO_EL.orbitR, 0, Math.PI * 2); ctx.stroke();
 
-    // Orbital trails (dernières positions comme pointillés)
+    // Orbital trails
     const TRAIL_N = 55;
-    const TRAIL_DAYS = 3; // jours par point
+    const TRAIL_DAYS = 3;
     for (const el of ORBITAL_ELEMENTS) {
       for (let k = 1; k <= TRAIL_N; k++) {
-        const pastT = t - k * TRAIL_DAYS * 86400000;
+        const pastT = t_ - k * TRAIL_DAYS * 86400000;
         const pp    = this._pos(el, pastT);
         const alpha = (1 - k / TRAIL_N) * 0.5;
         ctx.fillStyle = hexAlpha(el.color, alpha);
@@ -460,7 +345,7 @@ class SolarSystem {
     }
     // Moon trail
     for (let k = 1; k <= 35; k++) {
-      const pastT = t - k * 0.7 * 86400000;
+      const pastT = t_ - k * 0.7 * 86400000;
       const ep    = this._pos(EARTH_EL, pastT);
       const mp    = this._moonPos(ep, MOON_EL, pastT);
       ctx.fillStyle = `rgba(184,184,184,${((1 - k/35) * 0.4).toFixed(2)})`;
@@ -468,7 +353,7 @@ class SolarSystem {
     }
     // Titan trail
     for (let k = 1; k <= 35; k++) {
-      const pastT = t - k * 0.5 * 86400000;
+      const pastT = t_ - k * 0.5 * 86400000;
       const sp    = this._pos(SATURN_EL, pastT);
       const tp2   = this._moonPos(sp, TITAN_EL, pastT);
       ctx.fillStyle = `rgba(204,136,51,${((1 - k/35) * 0.4).toFixed(2)})`;
@@ -476,7 +361,7 @@ class SolarSystem {
     }
     // Io trail
     for (let k = 1; k <= 20; k++) {
-      const pastT = t - k * 0.06 * 86400000;
+      const pastT = t_ - k * 0.06 * 86400000;
       const jp2   = this._pos(JUPITER_EL, pastT);
       const ip    = this._moonPos(jp2, IO_EL, pastT);
       ctx.fillStyle = `rgba(212,168,32,${((1 - k/20) * 0.35).toFixed(2)})`;
@@ -484,15 +369,15 @@ class SolarSystem {
     }
     // Europa trail
     for (let k = 1; k <= 20; k++) {
-      const pastT = t - k * 0.12 * 86400000;
+      const pastT = t_ - k * 0.12 * 86400000;
       const jp3   = this._pos(JUPITER_EL, pastT);
       const ep    = this._moonPos(jp3, EUROPA_EL, pastT);
       ctx.fillStyle = `rgba(122,173,224,${((1 - k/20) * 0.35).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(ep.x, ep.y, 1, 0, Math.PI * 2); ctx.fill();
     }
-    // Pluto trail (slow — 10-day intervals)
+    // Pluto trail
     for (let k = 1; k <= 25; k++) {
-      const pastT = t - k * 10 * 86400000;
+      const pastT = t_ - k * 10 * 86400000;
       const pp2   = this._pos(PLUTO_EL, pastT);
       ctx.fillStyle = `rgba(192,170,136,${((1 - k/25) * 0.3).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(pp2.x, pp2.y, 1, 0, Math.PI * 2); ctx.fill();
@@ -522,14 +407,14 @@ class SolarSystem {
     // Planets
     for (let i = 0; i < ORBITAL_ELEMENTS.length; i++) {
       const el = ORBITAL_ELEMENTS[i];
-      const pos = this._pos(el, t);
+      const pos = this._pos(el, t_);
       const isLocked = lockedIds && lockedIds.has(el.id);
       const isHovered = hoveredId === el.id;
       const subtitle = LANDABLE.has(el.id)
         ? (leaderboard && leaderboard[el.id]
-            ? '★'.repeat(leaderboard[el.id].stars || 0) + '☆'.repeat(3 - (leaderboard[el.id].stars || 0))
-            : '★'.repeat(LANDABLE_STARS[el.id]) + '☆'.repeat(5 - LANDABLE_STARS[el.id]))
-        : '⛔ gaz';
+            ? '\u2605'.repeat(leaderboard[el.id].stars || 0) + '\u2606'.repeat(3 - (leaderboard[el.id].stars || 0))
+            : '\u2605'.repeat(LANDABLE_STARS[el.id]) + '\u2606'.repeat(5 - LANDABLE_STARS[el.id]))
+        : t('gas_giant');
       ctx.save();
       if (isLocked) ctx.globalAlpha = 0.38;
       drawOrbitalBody(ctx, el, pos, {
@@ -542,19 +427,19 @@ class SolarSystem {
     }
 
     const moonBodies = [
-      { body: MOON_EL, pos: this._moonPos(earthPos, MOON_EL, t), key: 'moon', accent: 'rgba(210,210,220,0.18)' },
-      { body: TITAN_EL, pos: this._moonPos(saturnPos, TITAN_EL, t), key: 'titan', accent: 'rgba(228,180,90,0.18)' },
-      { body: IO_EL, pos: this._moonPos(jupiterPos, IO_EL, t), key: 'io', accent: 'rgba(240,200,90,0.18)' },
-      { body: EUROPA_EL, pos: this._moonPos(jupiterPos, EUROPA_EL, t), key: 'europa', accent: 'rgba(130,190,240,0.18)' },
-      { body: PLUTO_EL, pos: this._pos(PLUTO_EL, t), key: 'pluto', accent: 'rgba(212,196,166,0.18)' },
+      { body: MOON_EL, pos: this._moonPos(earthPos, MOON_EL, t_), key: 'moon', accent: 'rgba(210,210,220,0.18)' },
+      { body: TITAN_EL, pos: this._moonPos(saturnPos, TITAN_EL, t_), key: 'titan', accent: 'rgba(228,180,90,0.18)' },
+      { body: IO_EL, pos: this._moonPos(jupiterPos, IO_EL, t_), key: 'io', accent: 'rgba(240,200,90,0.18)' },
+      { body: EUROPA_EL, pos: this._moonPos(jupiterPos, EUROPA_EL, t_), key: 'europa', accent: 'rgba(130,190,240,0.18)' },
+      { body: PLUTO_EL, pos: this._pos(PLUTO_EL, t_), key: 'pluto', accent: 'rgba(212,196,166,0.18)' },
     ];
 
     for (const item of moonBodies) {
       const isLocked = lockedIds && lockedIds.has(item.key);
       const isHovered = hoveredId === item.key;
       const subtitle = leaderboard && leaderboard[item.key]
-        ? '★'.repeat(leaderboard[item.key].stars || 0) + '☆'.repeat(3 - (leaderboard[item.key].stars || 0))
-        : '★'.repeat(LANDABLE_STARS[item.key]) + '☆'.repeat(5 - LANDABLE_STARS[item.key]);
+        ? '\u2605'.repeat(leaderboard[item.key].stars || 0) + '\u2606'.repeat(3 - (leaderboard[item.key].stars || 0))
+        : '\u2605'.repeat(LANDABLE_STARS[item.key]) + '\u2606'.repeat(5 - LANDABLE_STARS[item.key]);
       ctx.save();
       if (isLocked) ctx.globalAlpha = 0.38;
       drawOrbitalBody(ctx, item.body, item.pos, {
@@ -566,8 +451,8 @@ class SolarSystem {
       ctx.restore();
     }
 
-    // Title
-    drawInfoChip(ctx, Math.max(150, this.w * 0.18), this.h - 30, 'Cliquez sur une planète pour atterrir', 'rgba(109, 231, 255, 0.18)', null);
+    // Bottom hint
+    drawInfoChip(ctx, Math.max(150, this.w * 0.18), this.h - 30, t('solar.hint'), 'rgba(109, 231, 255, 0.18)', null);
   }
 
   getDistFromEarth(id) {
@@ -589,20 +474,11 @@ class SolarSystem {
   }
 
   getFact(id, idx) {
-    const facts = PLANET_FACTS[id];
-    if (!facts) return null;
-    return facts[((idx || 0) % facts.length + facts.length) % facts.length];
+    return getFact(id, idx);
   }
 
   getSimDate() {
     const d = new Date(this.simTime);
-    return d.toLocaleDateString('fr-FR', { year:'numeric', month:'short', day:'numeric' });
+    return d.toLocaleDateString(getLang() === 'en' ? 'en-US' : 'fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
   }
-}
-
-function lightenColor(hex, amt) {
-  const r = Math.min(255, parseInt(hex.slice(1,3),16) + amt);
-  const g = Math.min(255, parseInt(hex.slice(3,5),16) + amt);
-  const b = Math.min(255, parseInt(hex.slice(5,7),16) + amt);
-  return `rgb(${r},${g},${b})`;
 }
