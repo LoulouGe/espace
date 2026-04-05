@@ -62,6 +62,8 @@ const app = {
   zoomOY: 0,
   selectedBody: null,
   hoveredBody: null,
+  lastHoverX: undefined,
+  lastHoverY: undefined,
   viewZoom: 1,
   viewPanX: 0,
   viewPanY: 0,
@@ -265,6 +267,8 @@ canvas.addEventListener('mousemove', e => {
   }
 
   if (app.hoveredBody) {
+    app.lastHoverX = e.clientX;
+    app.lastHoverY = e.clientY;
     const dist = app.solar.getDistFromEarth(app.hoveredBody);
     const fact = getFact(app.hoveredBody, app.hoverFactIdx);
     const locked = getLockedIds().has(app.hoveredBody);
@@ -642,6 +646,20 @@ function loop(ts) {
         if (app.factTimer >= 3) {
           app.factTimer = 0;
           app.hoverFactIdx++;
+          // Re-render tooltip with new fact
+          if (app.lastHoverX !== undefined) {
+            const dist = app.solar.getDistFromEarth(app.hoveredBody);
+            const fact = getFact(app.hoveredBody, app.hoverFactIdx);
+            const locked = getLockedIds().has(app.hoveredBody);
+            const lb = loadLeaderboard();
+            const best = lb?.[app.hoveredBody];
+            let html = `<b>${bodyName(app.hoveredBody)}</b>`;
+            if (dist) html += `<br>${t('tooltip.distance', { dist })}`;
+            if (fact) html += `<br>💡 ${fact}`;
+            if (best) html += `<br>${t('tooltip.record', { score: best.total })}`;
+            if (locked) html += `<br>${t('tooltip.locked_short')}`;
+            showTooltipHTML(elTooltip, app.lastHoverX, app.lastHoverY, html);
+          }
         }
       }
 

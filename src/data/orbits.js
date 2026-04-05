@@ -1,4 +1,5 @@
 import { t } from '../i18n/i18n.js';
+import { BODY_DATA } from './bodies.js';
 
 // ─── Orbital mechanics data ─────────────────────────────────────────────────
 // Extracted from astronomy.js. Display `name` properties removed from orbital
@@ -37,7 +38,9 @@ export const PLUTO_ORBIT_R = 440;
 export const GAS_GIANTS = new Set(['jupiter', 'saturn', 'uranus', 'neptune']);
 export const LANDABLE   = new Set(['moon', 'mercury', 'mars', 'titan', 'earth', 'venus', 'io', 'europa', 'pluto']);
 
-export const LANDABLE_STARS = { moon: 1, mercury: 2, mars: 3, titan: 3, earth: 4, venus: 5, io: 4, europa: 4, pluto: 5 };
+export const LANDABLE_STARS = Object.fromEntries(
+  [...LANDABLE].map(id => [id, BODY_DATA[id].stars])
+);
 
 // Semi-major axis in AU (for approximate distance calculations)
 export const PLANET_AU = {

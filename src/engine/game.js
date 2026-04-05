@@ -486,9 +486,6 @@ class LanderGame {
       ctx.restore();
     }
 
-    // HUD speed/tilt indicators
-    this._drawSpeedIndicators(ctx, W, H);
-
     // Landing pad arrow (when off-screen)
     this._drawPadArrow(ctx, W, H, S, cx, cy);
 
@@ -497,75 +494,6 @@ class LanderGame {
 
     // Mini-map (drawn after shake so it stays stable)
     this._drawMiniMap(ctx, W, H);
-  }
-
-  _drawSpeedIndicators(ctx, W, H) {
-    const l = this.lander;
-    if (!l.alive && !l.crashed) return;
-    const cfg = this.cfg;
-    const vs = -l.vy;   // positive = descending
-    const hs = Math.abs(l.vx);
-    const ang = Math.abs(l.angle);
-
-    // Color logic
-    const vc = vs > cfg.maxVSpeed ? '#f44' : (vs > cfg.maxVSpeed * 0.6 ? '#fa0' : '#0f0');
-    const hc = hs > cfg.maxHSpeed ? '#f44' : (hs > cfg.maxHSpeed * 0.6 ? '#fa0' : '#0f0');
-    const ac = ang > cfg.maxAngle ? '#f44' : (ang > cfg.maxAngle * 0.6 ? '#fa0' : '#0f0');
-
-    // Update DOM HUD
-    const update = (id, val, color) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.className = 'hval ' + (color === '#f44' ? 'danger' : color === '#fa0' ? 'warn' : 'safe');
-    };
-    update('v-vs', vs.toFixed(1), vc);
-    update('v-hs', hs.toFixed(1), hc);
-    update('v-ang', ang.toFixed(1), ac);
-
-    const alt = Math.max(0, l.y - this.terrain.heightAt(l.x) - l.hh).toFixed(0);
-    const altEl = document.getElementById('v-alt');
-    if (altEl) altEl.textContent = alt + ' m';
-
-    const fuelEl = document.getElementById('v-fuel');
-    const fuelBar = document.getElementById('fuel-bar');
-    const fuelPct = Math.max(0, Math.min(100, (l.fuel / (l.fuelMax || cfg.startFuel) * 100)));
-    if (fuelEl) fuelEl.textContent = fuelPct.toFixed(0) + '%';
-    if (fuelBar) fuelBar.style.setProperty('--fuel-pct', fuelPct + '%');
-
-    // Wind
-    const windEl = document.getElementById('v-wind');
-    const windRow = document.getElementById('wind-row');
-    if (windEl && windRow) {
-      windRow.style.display = cfg.windType !== 'none' ? '' : 'none';
-      const ws = this.wind.getDisplaySpeed();
-      const wdir = this.wind.current >= 0 ? '\u2192' : '\u2190';
-      windEl.textContent = wdir + ' ' + ws.toFixed(1) + ' m/s';
-    }
-
-    const stormEl = document.getElementById('storm-warn');
-    if (stormEl) {
-      const hw = this.hazard.warning;
-      const storming = this.wind.isStorming();
-      if (hw) {
-        stormEl.style.display = '';
-        const wt = stormEl.querySelector('.warn-txt');
-        if (wt) wt.textContent = hw;
-      } else if (storming) {
-        stormEl.style.display = '';
-        const wt = stormEl.querySelector('.warn-txt');
-        if (wt) wt.textContent = t('hud.storm');
-      } else {
-        stormEl.style.display = 'none';
-      }
-    }
-
-    // Speed values for DOM
-    const vsEl = document.getElementById('v-vs');
-    const hsEl = document.getElementById('v-hs');
-    const angEl = document.getElementById('v-ang');
-    if (vsEl) vsEl.textContent = vs.toFixed(1);
-    if (hsEl) hsEl.textContent = hs.toFixed(1);
-    if (angEl) angEl.textContent = ang.toFixed(1);
   }
 
   _drawPadArrow(ctx, W, H, S, cx, cy) {
